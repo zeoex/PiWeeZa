@@ -815,6 +815,9 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       <div class="nav-item" data-section="sucursales" data-tooltip="Sucursales" onclick="navTo('sucursales',this);closeSidebar()" id="navSucursales">
         <span class="nav-icon">🏢</span><span class="nav-text">Sucursales</span>
       </div>
+      <div class="nav-item" data-section="ventas-dia" data-tooltip="Ventas del Día" onclick="navTo('ventas-dia',this);closeSidebar()" id="navVentasDia">
+        <span class="nav-icon">📋</span><span class="nav-text">Ventas del Día</span>
+      </div>
       <div class="nav-item" data-section="venta" data-tooltip="Venta Directa" onclick="navTo('venta',this);closeSidebar()">
         <span class="nav-icon">🛒</span><span class="nav-text">Venta</span>
       </div>
@@ -1303,6 +1306,42 @@ input.form-control:focus{outline:none;border-color:var(--red)}
           <button class="btn btn-primary btn-sm" onclick="abrirModalSucursal()">+ Nueva Sucursal</button>
         </div>
         <div id="sucursalesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:16px"></div>
+      </div>
+
+      <!-- VENTAS DEL DÍA -->
+      <div class="section" id="sec-ventas-dia">
+        <div class="section-header">
+          <h2>📋 Ventas del Día</h2>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end">
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--gray);margin-bottom:4px">Fecha</label>
+            <input type="date" id="vdFecha" class="form-control" style="width:auto" onchange="renderVentasDia()"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--gray);margin-bottom:4px">Sucursal</label>
+            <select id="vdSucursal" class="form-control" style="width:auto;min-width:160px" onchange="renderVentasDia()">
+              <option value="">Todas las sucursales</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="renderVentasDia()">🔄 Actualizar</button>
+        </div>
+        <div id="vdResumen" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px"></div>
+        <div style="overflow-x:auto;background:#fff;border-radius:10px;border:1px solid var(--border)">
+          <table style="width:100%;border-collapse:collapse;font-size:14px">
+            <thead>
+              <tr style="background:#f8f9fa;border-bottom:2px solid var(--border)">
+                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px;text-transform:uppercase;letter-spacing:.5px">Hora</th>
+                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px;text-transform:uppercase;letter-spacing:.5px">N° Factura</th>
+                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px;text-transform:uppercase;letter-spacing:.5px">Sucursal</th>
+                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px;text-transform:uppercase;letter-spacing:.5px">Método de Pago</th>
+                <th style="padding:10px 14px;text-align:right;font-weight:700;color:var(--gray);font-size:12px;text-transform:uppercase;letter-spacing:.5px">Total</th>
+              </tr>
+            </thead>
+            <tbody id="vdTbody"></tbody>
+          </table>
+          <div id="vdEmpty" style="display:none;text-align:center;padding:40px;color:var(--gray);font-size:14px">No hay ventas para este filtro</div>
+        </div>
       </div>
 
       <!-- CONFIG -->
@@ -2692,7 +2731,7 @@ function initApp() {
       return;
     }
     const saved = (() => { try { return localStorage.getItem('pz_last_section'); } catch(e){} return null; })();
-    const validSections = ['dashboard','sucursales','venta','pedidos','mesas','delivery','productos','stock','caja','facturacion','clientes','reportes','usuarios','config','mozo-cocina'];
+    const validSections = ['dashboard','sucursales','ventas-dia','venta','pedidos','mesas','delivery','productos','stock','caja','facturacion','clientes','reportes','usuarios','config','mozo-cocina'];
     const target = (saved && validSections.includes(saved)) ? saved : 'dashboard';
     navTo(target, null);
     renderCaja();
@@ -2959,9 +2998,9 @@ function navTo(section, el) {
   else document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('sec-'+section).classList.add('active');
-  const titles = {dashboard:'Vista Principal',sucursales:'🏢 Sucursales',venta:'Venta Directa',pedidos:'Pedidos',mesas:'Mesas',delivery:'Delivery',productos:'Productos',stock:'Stock',caja:'Caja',facturacion:'Facturación',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración',mozostats:'Mis Estadísticas'};
+  const titles = {dashboard:'Vista Principal',sucursales:'🏢 Sucursales','ventas-dia':'📋 Ventas del Día',venta:'Venta Directa',pedidos:'Pedidos',mesas:'Mesas',delivery:'Delivery',productos:'Productos',stock:'Stock',caja:'Caja',facturacion:'Facturación',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración',mozostats:'Mis Estadísticas'};
   document.getElementById('topbarTitle').textContent = titles[section] || section;
-  const loaders = {dashboard:loadDashboard,sucursales:()=>renderSucursales(),venta:renderVenta,pedidos:renderDelivery,mesas:renderMesas,delivery:renderDelivery,productos:renderProductos,stock:renderStock,caja:renderCaja,facturacion:loadFacturacion,clientes:renderClientes,reportes:renderReportes,usuarios:renderUsuarios,mozostats:renderMozoStats,config:loadPrintConfigUI};
+  const loaders = {dashboard:loadDashboard,sucursales:()=>renderSucursales(),'ventas-dia':renderVentasDia,venta:renderVenta,pedidos:renderDelivery,mesas:renderMesas,delivery:renderDelivery,productos:renderProductos,stock:renderStock,caja:renderCaja,facturacion:loadFacturacion,clientes:renderClientes,reportes:renderReportes,usuarios:renderUsuarios,mozostats:renderMozoStats,config:loadPrintConfigUI};
   if(loaders[section]) loaders[section]();
   try { localStorage.setItem('pz_last_section', section); } catch(e) {}
 }
@@ -5059,6 +5098,83 @@ function renderUsuarios() {
         ${String(u.id)!==String(currentUser?.id)?`<button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="deleteUsuario('${u.id}')">🗑️</button>`:''}
       </td>
     </tr>`).join('');
+}
+
+// ======= VENTAS DEL DÍA =======
+async function renderVentasDia() {
+  const fechaInput = document.getElementById('vdFecha');
+  const sucInput   = document.getElementById('vdSucursal');
+  if (!fechaInput) return;
+  if (!fechaInput.value) fechaInput.value = new Date().toISOString().slice(0, 10);
+
+  // Poblar selector de sucursales la primera vez
+  if (sucInput && sucInput.options.length <= 1) {
+    try {
+      const r = await apiFetch('/api/sucursales');
+      const suc = await r.json();
+      const cur = sucInput.value;
+      sucInput.innerHTML = '<option value="">Todas las sucursales</option>' +
+        suc.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
+      if (cur) sucInput.value = cur;
+    } catch(e) {}
+  }
+
+  const fecha      = fechaInput.value;
+  const sucursal_id = sucInput?.value || '';
+  const params     = new URLSearchParams({ fecha });
+  if (sucursal_id) params.set('sucursal_id', sucursal_id);
+
+  let data;
+  try {
+    const r = await apiFetch('/api/ventas/diarias?' + params.toString());
+    data = await r.json();
+  } catch(e) { return; }
+
+  // Resumen
+  const resumen = document.getElementById('vdResumen');
+  if (resumen) {
+    resumen.innerHTML = `
+      <div style="background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px 20px;display:flex;flex-direction:column;gap:4px">
+        <div style="font-size:28px;font-weight:800;color:var(--primary)">${data.totalVentas}</div>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Ventas</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px 20px;display:flex;flex-direction:column;gap:4px">
+        <div style="font-size:28px;font-weight:800;color:#059669">$${(data.totalMonto||0).toLocaleString('es-AR')}</div>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Total recaudado</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px 20px;display:flex;flex-direction:column;gap:4px">
+        <div style="font-size:28px;font-weight:800;color:#7c3aed">$${(data.ticketProm||0).toLocaleString('es-AR')}</div>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Ticket promedio</div>
+      </div>
+    `;
+  }
+
+  // Tabla
+  const tbody = document.getElementById('vdTbody');
+  const empty = document.getElementById('vdEmpty');
+  if (!tbody) return;
+
+  if (!data.facturas?.length) {
+    tbody.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  const mpLabel = mp => ({ efectivo:'Efectivo', tarjeta:'Tarjeta', transferencia:'Transferencia', mercadopago:'Mercado Pago', qr:'QR' }[mp] || mp || '-');
+
+  tbody.innerHTML = data.facturas.map((f, i) => {
+    const hora = new Date(f.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    return `<tr style="background:${i%2===0?'#fff':'#f9fafb'};border-bottom:1px solid var(--border)">
+      <td style="padding:10px 14px;color:var(--gray)">${hora}</td>
+      <td style="padding:10px 14px;font-family:monospace;font-size:13px;color:var(--text)">${f.numero || '-'}</td>
+      <td style="padding:10px 14px">
+        <span style="background:#f0f9ff;color:#0369a1;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600">${f.sucursalNombre || 'Casa Central'}</span>
+      </td>
+      <td style="padding:10px 14px">${mpLabel(f.metodoPago)}</td>
+      <td style="padding:10px 14px;text-align:right;font-weight:700;color:#059669">$${(f.total||0).toLocaleString('es-AR')}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ======= SUCURSALES =======

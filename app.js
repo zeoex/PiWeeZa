@@ -1292,6 +1292,22 @@ app.get('/api/facturas/:id', (req, res) => {
   res.json({ ...factura, pedido });
 });
 
+app.get('/api/ventas/diarias', authMiddleware, (req, res) => {
+  const fecha = req.query.fecha || new Date().toISOString().slice(0, 10);
+  const sucursal_id = req.query.sucursal_id || null;
+  let facturas = db.facturas.filter(f => (f.createdAt || '').slice(0, 10) === fecha);
+  if (sucursal_id) facturas = facturas.filter(f => f.sucursal_id === sucursal_id);
+  const sucursalesMap = {};
+  (db.sucursales || []).forEach(s => { sucursalesMap[s.id] = s.nombre; });
+  const enriched = facturas
+    .map(f => ({ ...f, sucursalNombre: f.sucursal_id ? (sucursalesMap[f.sucursal_id] || 'Sucursal') : 'Casa Central' }))
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  const totalVentas = enriched.length;
+  const totalMonto  = enriched.reduce((s, f) => s + (f.total || 0), 0);
+  const ticketProm  = totalVentas ? Math.round(totalMonto / totalVentas) : 0;
+  res.json({ facturas: enriched, totalVentas, totalMonto, ticketProm });
+});
+
 app.get('/api/venta-directa/recientes', (_req, res) => {
   const ventas = db.facturas
     .filter(f => f.origen && f.origen.startsWith('Venta'))

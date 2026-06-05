@@ -34,14 +34,18 @@
 
 ---
 
-## Railway
+## Railway — PiWeeZa (este proyecto)
 
+- **URL producción**: `https://piwee-app-production.up.railway.app`
 - **Token API**: `55ea6497-1857-4e12-a4ab-a31565de4d0c`
 - **Workspace ID**: `8cfdea71-3014-4919-a9f2-ea178c15b881`
-- **Proyecto**: `javito-portal` (ID: `ea348246-a9fb-4251-89a3-1f469cb26fbc`)
-- **Servicio app**: `pizzeria-pro` (ID: `7d9be2a3-4f7c-4fdd-b93c-21f6d6796aa5`)
-- **Servicio DB**: `Postgres` (ID: `1c3c173c-a230-4e8e-8f5a-f03bb96af1ff`)
-- **Environment**: `production` (ID: `3b68f44b-d69f-4933-b8c1-063b68d23b3f`)
+- **Proyecto**: `PiWeeZa` (ID: `8d7f32e7-f214-40a2-a7b4-962f4324fe13`)
+- **Servicio app**: `piweeза-app` (ID: `93861a7c-c61b-4b3e-8981-026012f5dcb2`)
+- **Servicio DB**: `postgres` (ID: `56356d2a-d617-4972-86a9-26a6555bea87`)
+- **Environment**: `production` (ID: `a86fae8b-6e30-40d0-b2c9-236bf2e01816`)
+- **Repo GitHub**: `zeoex/PiWeeZa` (branch `main`)
+
+> ⚠️ Restito (proyecto separado) → `restito-production.up.railway.app` — NO tocar.
 
 ### Llamar la API de Railway
 ```bash
@@ -53,17 +57,15 @@ curl -s -X POST https://backboard.railway.app/graphql/v2 \
 
 ## Git — Flujo obligatorio
 
-**SIEMPRE** pushear a los 3 branches y luego deployar con SHA exacto:
+**Repo**: `zeoex/PiWeeZa`, branch `main`. Push y deploy:
 ```bash
-git push origin master-sync
-git push origin master-sync:master
-git push origin master-sync:claude/portal-replica-multiagent-H53V3
+git push origin main
 
 SHA=$(git rev-parse HEAD)
 curl -s -X POST https://backboard.railway.app/graphql/v2 \
   -H "Authorization: Bearer 55ea6497-1857-4e12-a4ab-a31565de4d0c" \
   -H "Content-Type: application/json" \
-  -d "{\"query\":\"mutation { serviceInstanceDeploy(serviceId: \\\"7d9be2a3-4f7c-4fdd-b93c-21f6d6796aa5\\\", environmentId: \\\"3b68f44b-d69f-4933-b8c1-063b68d23b3f\\\", commitSha: \\\"$SHA\\\") }\"}"
+  -d "{\"query\":\"mutation { serviceInstanceDeploy(serviceId: \\\"93861a7c-c61b-4b3e-8981-026012f5dcb2\\\", environmentId: \\\"a86fae8b-6e30-40d0-b2c9-236bf2e01816\\\", commitSha: \\\"$SHA\\\") }\"}"
 ```
 
 **IMPORTANTE**: NO usar `serviceInstanceDeployV2` — usa un commit cacheado viejo.
@@ -84,7 +86,7 @@ npm run dev          # idéntico a start (no hay hot-reload)
 - **JWT_SECRET está hardcodeado** en `app.js` (`'pizzeria-pro-secret-2024'`) — no viene de env.
 
 ### Scripts de verificación / E2E (Playwright, no usan test runner)
-Son scripts standalone que se ejecutan con `node <archivo>`. **Apuntan a la URL de producción `https://restito-production.up.railway.app`, no a localhost** — editar la constante `BASE_URL`/`BASE` para apuntar a un server local.
+Son scripts standalone que se ejecutan con `node <archivo>`. **Apuntan a la URL de producción `https://piwee-app-production.up.railway.app`, no a localhost** — editar la constante `BASE_URL`/`BASE` para apuntar a un server local.
 
 | Script | Qué hace |
 |---|---|

@@ -578,6 +578,93 @@ input.form-control:focus{outline:none;border-color:var(--red)}
 .spk-size-btn.grande:hover{background:linear-gradient(135deg,#15803d,#166534)}
 .spk-size-btn .spk-price{font-size:13px;opacity:.85}
 
+/* ===== POS VENTA DIRECTA ===== */
+.pos-wrap{display:grid;grid-template-columns:1fr 370px;height:calc(100vh - 112px);overflow:hidden;gap:0;background:#fff;border-radius:14px;border:1.5px solid var(--border)}
+.pos-catalog{overflow-y:auto;padding:16px 20px;background:#fff}
+.pos-search-bar{margin-bottom:14px}
+.pos-search{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s}
+.pos-search:focus{border-color:var(--red)}
+.pos-cat-tabs{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:6px;margin-bottom:14px}
+.pos-cat-tabs::-webkit-scrollbar{display:none}
+.pos-cat-tab{flex-shrink:0;padding:8px 18px;border-radius:20px;border:1.5px solid #d1d5db;background:#fff;font-size:13px;font-weight:700;cursor:pointer;color:#4b5563;transition:all .12s;font-family:inherit;white-space:nowrap;min-height:44px;display:flex;align-items:center}
+.pos-cat-tab:hover{border-color:var(--red);color:var(--red)}
+.pos-cat-tab.active{background:var(--red);color:#fff;border-color:var(--red);box-shadow:0 3px 10px rgba(230,57,70,.3)}
+.pos-prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:10px}
+.pos-prod-card{border:1.5px solid #e5e7eb;border-radius:14px;padding:14px 8px 12px;cursor:pointer;text-align:center;background:#fff;transition:all .15s;user-select:none;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+.pos-prod-card:hover{border-color:var(--red);background:#fff5f5;transform:translateY(-2px);box-shadow:0 4px 14px rgba(230,57,70,.18)}
+.pos-prod-card:active{transform:scale(0.95)}
+.pos-prod-img{width:56px;height:56px;border-radius:10px;object-fit:cover}
+.pos-prod-emoji{font-size:36px;line-height:1}
+.pos-prod-name{font-size:12px;font-weight:700;color:#111827;line-height:1.25;width:100%;word-break:break-word}
+.pos-prod-price{font-size:11px;color:var(--red);font-weight:700}
+.pos-prod-sizes{font-size:9px;background:#f3f4f6;color:#6b7280;padding:2px 6px;border-radius:6px;margin-top:1px;font-weight:600}
+/* Cart panel */
+.pos-cart-panel{background:#f8fafc;border-left:1.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.pos-cart-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);background:#fff;display:flex;align-items:center;gap:8px}
+.pos-cart-title{font-size:16px;font-weight:800;color:var(--blue);flex:1}
+.pos-cart-count{background:var(--red);color:#fff;font-size:12px;font-weight:700;min-width:22px;height:22px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+.pos-clear-btn{background:none;border:none;cursor:pointer;font-size:12px;color:var(--gray);padding:4px 8px;border-radius:6px;font-family:inherit;transition:background .15s}
+.pos-clear-btn:hover{background:#fee2e2;color:var(--red)}
+.pos-customer-row{padding:10px 14px;border-bottom:1px solid var(--border);background:#fff;position:relative}
+.pos-customer-input{width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .2s}
+.pos-customer-input:focus{border-color:var(--red)}
+.pos-customer-sugg{position:absolute;top:100%;left:14px;right:14px;background:#fff;border:1px solid #ddd;border-radius:8px;z-index:999;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.pos-cart-items{flex:1;overflow-y:auto;padding:6px 12px}
+.pos-cart-empty{text-align:center;padding:40px 16px;color:#9ca3af;font-size:13px;line-height:1.6}
+.pos-item-row{display:flex;align-items:center;gap:7px;padding:8px 0;border-bottom:1px solid #f3f4f6}
+.pos-item-row:last-child{border-bottom:none}
+.pos-item-emoji{font-size:20px;flex-shrink:0;width:28px;text-align:center}
+.pos-item-info{flex:1;min-width:0}
+.pos-item-name{font-size:13px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pos-item-sub{font-size:10px;color:var(--gray)}
+.pos-item-price{font-size:12px;font-weight:700;color:var(--blue);white-space:nowrap;flex-shrink:0}
+.pos-item-qty{display:flex;align-items:center;gap:3px;flex-shrink:0}
+.pos-iqbtn{width:26px;height:26px;border:1.5px solid #e5e7eb;border-radius:7px;background:#fff;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .12s;font-family:inherit;line-height:1}
+.pos-iqbtn:hover{border-color:var(--red);color:var(--red)}
+.pos-iqbtn.minus:hover{border-color:var(--danger);color:var(--danger);background:#fee2e2}
+.pos-iqnum{font-size:14px;font-weight:800;min-width:22px;text-align:center}
+.pos-item-del{border:none;background:none;cursor:pointer;color:#d1d5db;font-size:15px;padding:0 2px;line-height:1;flex-shrink:0;transition:color .12s}
+.pos-item-del:hover{color:var(--danger)}
+.pos-cart-totals{padding:12px 16px;background:#fff;border-top:1px solid var(--border)}
+.pos-total-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--gray);margin-bottom:3px}
+.pos-total-final{display:flex;justify-content:space-between;align-items:center;font-size:22px;font-weight:900;color:var(--blue);padding-top:8px;border-top:2px solid var(--border);margin-top:6px}
+.pos-payment{padding:12px 16px;background:#fff;border-top:1px solid #e2e8f0}
+.pos-pay-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--gray);margin-bottom:8px}
+.pos-pay-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:6px;margin-bottom:10px}
+.pos-pay-btn{padding:11px 6px;border:1.5px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;text-align:center;transition:all .15s;line-height:1.4}
+.pos-pay-btn:hover{border-color:var(--blue);background:#eff6ff;color:var(--blue)}
+.pos-pay-btn.selected{border-color:#16a34a;background:#f0fdf4;color:#15803d;box-shadow:0 2px 8px rgba(22,163,74,.2)}
+.pos-cobrar-btn{width:100%;padding:16px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:800;font-family:inherit;cursor:pointer;transition:all .15s;box-shadow:0 4px 16px rgba(22,163,74,.35);letter-spacing:.3px}
+.pos-cobrar-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(22,163,74,.45)}
+.pos-cobrar-btn:active:not(:disabled){transform:scale(0.98)}
+.pos-cobrar-btn:disabled{background:#9ca3af;box-shadow:none;cursor:not-allowed}
+/* Presentation picker overlay */
+.pos-pres-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1500;display:flex;align-items:center;justify-content:center;padding:20px}
+.pos-pres-modal{background:#fff;border-radius:20px;padding:24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.pos-pres-title{font-size:20px;font-weight:800;margin-bottom:4px;color:#111827}
+.pos-pres-sub{font-size:13px;color:var(--gray);margin-bottom:18px}
+.pos-pres-list{display:flex;flex-direction:column;gap:10px}
+.pos-pres-btn{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border:2px solid var(--border);border-radius:14px;background:#fff;cursor:pointer;font-size:15px;font-weight:700;font-family:inherit;transition:all .15s;width:100%}
+.pos-pres-btn:hover{border-color:var(--red);background:#fff5f5;transform:translateY(-1px)}
+.pos-pres-btn.highlight{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-color:transparent}
+.pos-pres-btn.highlight:hover{background:linear-gradient(135deg,#15803d,#166534)}
+.pos-pres-cancel{margin-top:12px;width:100%;padding:12px;background:none;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;color:var(--gray);transition:all .15s}
+.pos-pres-cancel:hover{border-color:var(--danger);color:var(--danger)}
+/* Mobile POS */
+@media(max-width:900px){
+  .pos-wrap{grid-template-columns:1fr;height:auto}
+  .pos-cart-panel{border-left:none;border-top:1.5px solid var(--border)}
+  .pos-prod-grid{grid-template-columns:repeat(auto-fill,minmax(95px,1fr))}
+}
+/* WhatsApp */
+.wa-btn{background:#25d366;color:#fff;border:none;border-radius:8px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px;transition:all .15s;text-decoration:none;white-space:nowrap}
+.wa-btn:hover{background:#20ba58;transform:scale(1.04)}
+.origen-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700}
+.origen-whatsapp{background:#e7fdf0;color:#15803d}
+.origen-instagram{background:#fce7f3;color:#be185d}
+.origen-telefono{background:#eff6ff;color:#1d4ed8}
+.origen-mostrador{background:#f5f3ff;color:#6d28d9}
+
 /* ── HOME ICON BUTTONS ──────────────────────── */
 @keyframes haFloat {
   0%,100% { transform: translateY(0); }
@@ -725,11 +812,11 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       <div class="nav-item active" data-section="dashboard" data-tooltip="Vista Principal" onclick="navTo('dashboard',this);closeSidebar()">
         <span class="nav-icon">🏠</span><span class="nav-text">Vista Principal</span>
       </div>
-      <div class="nav-item" data-section="mesas" data-tooltip="Mesas" onclick="navTo('mesas',this);closeSidebar()">
-        <span class="nav-icon">🪑</span><span class="nav-text">Mesas</span> <span class="nav-badge" id="mesasBadge">0</span>
+      <div class="nav-item" data-section="venta" data-tooltip="Venta Directa" onclick="navTo('venta',this);closeSidebar()">
+        <span class="nav-icon">🛒</span><span class="nav-text">Venta</span>
       </div>
-      <div class="nav-item" data-section="delivery" data-tooltip="Delivery" onclick="navTo('delivery',this);closeSidebar()">
-        <span class="nav-icon">🛵</span><span class="nav-text">Delivery</span> <span class="nav-badge" id="deliveryBadge">0</span>
+      <div class="nav-item" data-section="pedidos" data-tooltip="Pedidos" onclick="navTo('pedidos',this);closeSidebar()">
+        <span class="nav-icon">📱</span><span class="nav-text">Pedidos</span> <span class="nav-badge" id="deliveryBadge">0</span>
       </div>
       <div class="nav-item" data-section="productos" data-tooltip="Productos" onclick="navTo('productos',this);closeSidebar()">
         <span class="nav-icon">🍕</span><span class="nav-text">Productos</span>
@@ -786,8 +873,8 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       </div>
     </div>
     <div class="mozo-bottomtab" id="mozoBottomtab">
-      <button class="mbt-btn active" id="mbtMesas" onclick="mozoNavTo('mesas')">
-        <span class="mbt-icon">🪑</span>Mesas
+      <button class="mbt-btn active" id="mbtMesas" onclick="mozoNavTo('venta')">
+        <span class="mbt-icon">🛒</span>Venta
       </button>
       <button class="mbt-btn" id="mbtCocina" onclick="mozoNavTo('mozo-cocina')">
         <span class="mbt-icon">🍳</span>Cocina
@@ -856,19 +943,19 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         <div class="home-quick">
           <div class="home-quick-label">Acceso rápido</div>
           <div class="home-actions">
-            <button class="ha-btn" onclick="navTo('mesas',document.querySelector('[data-section=mesas]'))">
+            <button class="ha-btn" onclick="navTo('venta',document.querySelector('[data-section=venta]'))">
               <div class="ha-circle" style="background:#ede9fe;box-shadow:0 6px 18px rgba(124,58,237,0.22)">
-                🪑
-                <span class="ha-badge" id="hab-mesas" style="display:none">0</span>
+                🛒
+                <span class="ha-badge" id="hab-venta" style="display:none">0</span>
               </div>
-              <span class="ha-label">Mesas</span>
+              <span class="ha-label">Venta</span>
             </button>
-            <button class="ha-btn" onclick="navTo('delivery',document.querySelector('[data-section=delivery]'))">
+            <button class="ha-btn" onclick="navTo('pedidos',document.querySelector('[data-section=pedidos]'))">
               <div class="ha-circle" style="background:#fef3c7;box-shadow:0 6px 18px rgba(245,158,11,0.25)">
-                🛵
+                📱
                 <span class="ha-badge" id="hab-delivery" style="display:none">0</span>
               </div>
-              <span class="ha-label">Delivery</span>
+              <span class="ha-label">Pedidos</span>
             </button>
             <button class="ha-btn" onclick="navTo('productos',document.querySelector('[data-section=productos]'))">
               <div class="ha-circle" style="background:#d1fae5;box-shadow:0 6px 18px rgba(16,185,129,0.22)">
@@ -900,7 +987,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         <div class="card" style="margin-bottom:16px">
           <div class="card-header" style="display:flex;align-items:center;gap:10px">
             <h3 style="flex:1">🪑 Estado de Mesas</h3>
-            <button class="btn btn-outline btn-sm" onclick="navTo('mesas',document.querySelector('[data-section=mesas]'))">Ver todas →</button>
+            <button class="btn btn-outline btn-sm" onclick="navTo('venta',document.querySelector('[data-section=venta]'))">Ver todas →</button>
           </div>
           <div class="card-body">
             <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
@@ -916,7 +1003,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         <div class="card" style="margin-bottom:16px">
           <div class="card-header" style="display:flex;align-items:center;gap:10px">
             <h3 style="flex:1">🛵 Delivery Activo</h3>
-            <button class="btn btn-outline btn-sm" onclick="navTo('delivery',document.querySelector('[data-section=delivery]'))">Ver todos →</button>
+            <button class="btn btn-outline btn-sm" onclick="navTo('pedidos',document.querySelector('[data-section=pedidos]'))">Ver todos →</button>
           </div>
           <div class="card-body" id="dashDelivery">
             <div style="color:var(--gray);text-align:center;padding:12px 0;font-size:13px">No hay pedidos activos</div>
@@ -951,10 +1038,61 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         <div id="mozoCocinaList" class="mcc-list"></div>
       </div>
 
-      <!-- DELIVERY -->
-      <div class="section" id="sec-delivery">
+      <!-- VENTA DIRECTA POS -->
+      <div class="section" id="sec-venta">
+        <div class="section-header" style="margin-bottom:12px">
+          <h2>🛒 Venta Directa</h2>
+        </div>
+        <div class="pos-wrap">
+          <!-- LEFT: Catalog -->
+          <div class="pos-catalog">
+            <div class="pos-search-bar">
+              <input class="pos-search" id="posSearch" placeholder="🔍 Buscar producto..." oninput="posFilter(this.value)">
+            </div>
+            <div class="pos-cat-tabs" id="posCatTabs"></div>
+            <div class="pos-prod-grid" id="posProdGrid"></div>
+          </div>
+          <!-- RIGHT: Cart -->
+          <div class="pos-cart-panel">
+            <div class="pos-cart-header">
+              <span class="pos-cart-title">🧾 Ticket</span>
+              <span class="pos-cart-count" id="posCartCount" style="display:none">0</span>
+              <button class="pos-clear-btn" onclick="posClearCart()">🗑️ Limpiar</button>
+            </div>
+            <div class="pos-customer-row">
+              <input class="pos-customer-input" id="posClienteInput" placeholder="👤 Cliente (opcional)..." oninput="posClienteSearch(this.value)" autocomplete="off">
+              <div class="pos-customer-sugg" id="posClienteSugg" style="display:none"></div>
+            </div>
+            <div class="pos-cart-items" id="posCartItems">
+              <div class="pos-cart-empty">🛒<br>Seleccioná productos<br>del catálogo</div>
+            </div>
+            <div class="pos-cart-totals" id="posCartTotals" style="display:none">
+              <div class="pos-total-row"><span>Subtotal</span><span id="posTotalSub">$0</span></div>
+              <div class="pos-total-row" id="posRecargoRow" style="display:none"><span id="posRecargoLabel">Recargo</span><span id="posRecargoVal">$0</span></div>
+              <div class="pos-total-final"><span>TOTAL</span><span id="posTotal">$0</span></div>
+            </div>
+            <div class="pos-payment" id="posPayment" style="display:none">
+              <div class="pos-pay-label">Método de pago</div>
+              <div class="pos-pay-grid" id="posPayGrid"></div>
+              <button class="pos-cobrar-btn" id="posCobrarBtn" onclick="posCheckout()" disabled>💚 COBRAR</button>
+            </div>
+          </div>
+        </div>
+        <!-- Presentation picker overlay -->
+        <div class="pos-pres-overlay" id="posPresentOverlay" style="display:none" onclick="this.style.display='none'">
+          <div class="pos-pres-modal" onclick="event.stopPropagation()">
+            <div class="pos-pres-title" id="posPresentTitle"></div>
+            <div class="pos-pres-sub">Seleccioná una presentación</div>
+            <div class="pos-pres-list" id="posPresentList"></div>
+            <button class="pos-pres-cancel" onclick="document.getElementById('posPresentOverlay').style.display='none'">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PEDIDOS -->
+      <div class="section" id="sec-pedidos">
         <div class="section-header">
-          <h2>🛵 Delivery</h2>
+          <h2>📱 Pedidos</h2>
           <button class="btn btn-primary btn-sm" onclick="abrirModalNuevoDelivery()">+ Nuevo Pedido</button>
         </div>
         <div class="delivery-pipeline" id="deliveryPipeline"></div>
@@ -1522,6 +1660,15 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         </div>
         <div class="form-group"><label>Método de pago</label>
           <select class="form-control" id="dlvPago" onchange="dlvActualizarTotal()"></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Origen del pedido</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="dlvOrigenBtns">
+          <button type="button" class="btn btn-outline btn-sm origen-btn active" data-origen="whatsapp" onclick="dlvSetOrigen(this)">📱 WhatsApp</button>
+          <button type="button" class="btn btn-outline btn-sm origen-btn" data-origen="instagram" onclick="dlvSetOrigen(this)">📸 Instagram</button>
+          <button type="button" class="btn btn-outline btn-sm origen-btn" data-origen="telefono" onclick="dlvSetOrigen(this)">📞 Teléfono</button>
+          <button type="button" class="btn btn-outline btn-sm origen-btn" data-origen="mostrador" onclick="dlvSetOrigen(this)">🏪 Mostrador</button>
         </div>
       </div>
       <div class="form-group"><label>Items del pedido</label>
@@ -2436,7 +2583,7 @@ function initApp() {
   loadStateFromAPI().then(() => {
     _populateCatSelects();
     const saved = (() => { try { return localStorage.getItem('pz_last_section'); } catch(e){} return null; })();
-    const validSections = ['dashboard','mesas','delivery','productos','stock','caja','facturacion','clientes','reportes','usuarios','config','mozo-cocina'];
+    const validSections = ['dashboard','venta','pedidos','mesas','delivery','productos','stock','caja','facturacion','clientes','reportes','usuarios','config','mozo-cocina'];
     const target = (saved && validSections.includes(saved)) ? saved : 'dashboard';
     navTo(target, null);
     renderCaja();
@@ -2619,7 +2766,7 @@ function initApp() {
         const activeEl = document.querySelector('.section.active');
         if (activeEl) {
           const sec = activeEl.id.replace('sec-','');
-          const loaders = {dashboard:loadDashboard,mesas:renderMesas,delivery:renderDelivery,caja:renderCaja};
+          const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,mesas:renderMesas,delivery:renderDelivery,caja:renderCaja};
           if (loaders[sec]) loaders[sec]();
         }
       } catch(e) {}
@@ -2635,7 +2782,7 @@ function initApp() {
           const activeEl = document.querySelector('.section.active');
           if (activeEl) {
             const sec = activeEl.id.replace('sec-','');
-            const loaders = {dashboard:loadDashboard,mesas:renderMesas,delivery:renderDelivery,caja:renderCaja,facturacion:loadFacturacion};
+            const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,mesas:renderMesas,delivery:renderDelivery,caja:renderCaja,facturacion:loadFacturacion};
             if (loaders[sec]) loaders[sec]();
           }
         }
@@ -2645,9 +2792,9 @@ function initApp() {
   // Load pending print jobs and llamados on login
   loadPrintQueue();
   loadLlamados();
-  // Load first section: mozo goes straight to mesas
+  // Load first section: mozo goes straight to venta
   if (currentUser?.rol === 'mozo') {
-    mozoNavTo('mesas');
+    mozoNavTo('venta');
     loadMozoCocina();
   } else {
     loadDashboard();
@@ -2703,15 +2850,15 @@ function navTo(section, el) {
   else document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('sec-'+section).classList.add('active');
-  const titles = {dashboard:'Vista Principal',mesas:'Mesas',delivery:'Delivery',productos:'Productos',stock:'Stock',caja:'Caja',facturacion:'Facturación',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración',mozostats:'Mis Estadísticas'};
+  const titles = {dashboard:'Vista Principal',venta:'Venta Directa',pedidos:'Pedidos',mesas:'Mesas',delivery:'Delivery',productos:'Productos',stock:'Stock',caja:'Caja',facturacion:'Facturación',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración',mozostats:'Mis Estadísticas'};
   document.getElementById('topbarTitle').textContent = titles[section] || section;
-  const loaders = {dashboard:loadDashboard,mesas:renderMesas,delivery:renderDelivery,productos:renderProductos,stock:renderStock,caja:renderCaja,facturacion:loadFacturacion,clientes:renderClientes,reportes:renderReportes,usuarios:renderUsuarios,mozostats:renderMozoStats,config:loadPrintConfigUI};
+  const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,mesas:renderMesas,delivery:renderDelivery,productos:renderProductos,stock:renderStock,caja:renderCaja,facturacion:loadFacturacion,clientes:renderClientes,reportes:renderReportes,usuarios:renderUsuarios,mozostats:renderMozoStats,config:loadPrintConfigUI};
   if(loaders[section]) loaders[section]();
   try { localStorage.setItem('pz_last_section', section); } catch(e) {}
 }
 
 function mozoNavTo(section) {
-  document.getElementById('mbtMesas').classList.toggle('active', section==='mesas');
+  document.getElementById('mbtMesas').classList.toggle('active', section==='venta');
   document.getElementById('mbtCocina').classList.toggle('active', section==='mozo-cocina');
   document.getElementById('mbtStats').classList.toggle('active', section==='mozostats');
   if (section === 'mozo-cocina') {
@@ -2847,7 +2994,7 @@ function renderDashMesas() {
     const bg = m.estado==='libre'?'#d4edda':m.estado==='ocupada'?'#fff3cd':'#f8d7da';
     const cl = m.estado==='libre'?'#155724':m.estado==='ocupada'?'#856404':'#721c24';
     const items = (m.pedido||[]).reduce((s,i)=>s+i.qty,0);
-    return `<div onclick="navTo('mesas',document.querySelector('[data-section=mesas]'))" style="background:${bg};border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;min-width:64px">
+    return `<div onclick="navTo('venta',document.querySelector('[data-section=venta]'))" style="background:${bg};border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;min-width:64px">
       <div style="font-size:22px;font-weight:900;color:var(--blue);line-height:1">${m.numero}</div>
       <div style="font-size:9px;font-weight:800;color:${cl};text-transform:uppercase;margin-top:2px">${m.estado}</div>
       ${items>0?`<div style="font-size:10px;color:${cl};margin-top:1px">${items} ítem${items!==1?'s':''}</div>`:''}
@@ -2870,7 +3017,7 @@ function renderDashDelivery() {
   document.getElementById('dashDelivery').innerHTML = activos.length
     ? activos.map(o=>{
         const total = (o.items||[]).reduce((s,i)=>s+i.precio*i.qty,0);
-        return `<div onclick="navTo('delivery',document.querySelector('[data-section=delivery]'))" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer">
+        return `<div onclick="navTo('pedidos',document.querySelector('[data-section=pedidos]'))" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer">
           <span style="background:${stageBg[o.estado]};color:${stageCl[o.estado]};padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap">${stageLabel[o.estado]||o.estado}</span>
           <span style="font-weight:700;font-size:13px;flex:1">${o.cliente?.nombre||o.cliente||'-'}</span>
           <span style="font-size:12px;color:var(--gray)">${o.cliente?.telefono||o.telefono||''}</span>
@@ -3569,13 +3716,19 @@ function renderDeliveryCard(o,stage) {
     : '';
   const mp = getMediosPago().find(m => m.id === o.metodo_pago);
   const mpLabel = mp ? `${mp.icono||''} ${mp.nombre}${mp.recargo>0?` (+${mp.recargo}%)`:''}` : o.metodo_pago;
+  const waBtn = o.cliente?.telefono
+    ? `<button class="wa-btn" onclick="openWhatsApp('${o.cliente.telefono}')" title="Abrir WhatsApp">📱 WhatsApp</button>`
+    : '';
+  const origenBadge = o.origen
+    ? `<span class="origen-badge origen-${o.origen}">${{whatsapp:'📱 WhatsApp',instagram:'📸 Instagram',telefono:'📞 Tel.',mostrador:'🏪 Mostrador'}[o.origen]||o.origen}</span>`
+    : '';
   return `<div class="delivery-card">
     <div class="delivery-card-num">${o.numero}</div>
-    <div class="delivery-card-client">👤 ${o.cliente.nombre}</div>
+    <div class="delivery-card-client">👤 ${o.cliente.nombre} ${origenBadge}</div>
     <div class="delivery-card-items">${o.items.map(i=>`${i.qty}x ${i.nombre}`).join(', ')}</div>
     <div style="font-size:11px;color:var(--gray)">📍 ${o.direccion}</div>
     <div class="delivery-card-total">💰 $${o.total.toLocaleString()} · ${mpLabel}</div>
-    <div class="delivery-card-actions">${nextBtn}<button class="btn btn-outline btn-sm" onclick="imprimirDelivery(${o.id})" title="Imprimir">🖨️</button>${cancelBtn}</div>
+    <div class="delivery-card-actions">${nextBtn}<button class="btn btn-outline btn-sm" onclick="imprimirDelivery(${o.id})" title="Imprimir">🖨️</button>${waBtn}${cancelBtn}</div>
   </div>`;
 }
 
@@ -3702,6 +3855,7 @@ function crearDelivery() {
     cliente:{nombre:cliente,telefono:tel}, direccion:dir,
     items, total: totalFinal,
     metodo_pago: mpId,
+    origen: _dlvGetOrigen(),
     repartidor: document.getElementById('dlvRepartidor').value||null,
     hora: new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})
   });
@@ -5734,6 +5888,334 @@ async function printAllQueue() {
   updatePqBadge();
   renderPqList();
   showToast(`${active.length} trabajo${active.length!==1?'s':''} enviado${active.length!==1?'s':''}`, 'success');
+}
+
+// ======= POS VENTA DIRECTA =======
+let _posCart = [];
+let _posSelectedMP = null;
+let _posClienteId = null;
+let _posSearchTerm = '';
+let _posCat = 'all';
+
+function renderVenta() {
+  _posCart = _posCart || [];
+  _posSelectedMP = null;
+  _posClienteId = null;
+  _renderPosCatTabs();
+  _renderPosProdGrid();
+  _renderPosCart();
+  _renderPosPayment();
+}
+
+function _renderPosCatTabs() {
+  const tabs = document.getElementById('posCatTabs');
+  if (!tabs) return;
+  const cats = [...new Set(productosData.filter(p => p.activo).map(p => p.categoria))];
+  tabs.innerHTML = `<button class="pos-cat-tab${_posCat==='all'?' active':''}" onclick="posSetCat('all')">✨ Todos</button>` +
+    cats.map(c => `<button class="pos-cat-tab${_posCat===c?' active':''}" onclick="posSetCat('${c}')">${c.charAt(0).toUpperCase()+c.slice(1)}</button>`).join('');
+}
+
+function _renderPosProdGrid() {
+  const grid = document.getElementById('posProdGrid');
+  if (!grid) return;
+  let prods = productosData.filter(p => p.activo);
+  if (_posCat !== 'all') prods = prods.filter(p => p.categoria === _posCat);
+  if (_posSearchTerm) {
+    const t = _posSearchTerm.toLowerCase();
+    prods = prods.filter(p => p.nombre.toLowerCase().includes(t) || (p.categoria||'').toLowerCase().includes(t));
+  }
+  if (!prods.length) {
+    grid.innerHTML = '<div style="color:#9ca3af;text-align:center;padding:40px 16px;grid-column:1/-1">Sin productos</div>';
+    return;
+  }
+  grid.innerHTML = prods.map(p => {
+    const hasSizes = !!p.precio_chica;
+    const priceLabel = hasSizes ? `desde $${p.precio_chica.toLocaleString()}` : `$${(p.precio||0).toLocaleString()}`;
+    const sizeBadge = hasSizes ? '<div class="pos-prod-sizes">3 presentaciones</div>' : '';
+    const imgHtml = p.foto
+      ? `<img class="pos-prod-img" src="${p.foto}" alt="${p.nombre}">`
+      : `<div class="pos-prod-emoji">${p.emoji||'🛍️'}</div>`;
+    return `<div class="pos-prod-card" onclick="posTapProduct(${p.id})">
+      ${imgHtml}
+      <div class="pos-prod-name">${p.nombre}</div>
+      <div class="pos-prod-price">${priceLabel}</div>
+      ${sizeBadge}
+    </div>`;
+  }).join('');
+}
+
+function posSetCat(cat) {
+  _posCat = cat;
+  _renderPosCatTabs();
+  _renderPosProdGrid();
+}
+
+function posFilter(v) {
+  _posSearchTerm = v;
+  _posCat = 'all';
+  _renderPosCatTabs();
+  _renderPosProdGrid();
+}
+
+function posTapProduct(prodId) {
+  const p = productosData.find(x => x.id === prodId);
+  if (!p) return;
+  if (p.precio_chica) {
+    // Show presentation picker
+    document.getElementById('posPresentTitle').innerHTML = `${p.emoji||'🛍️'} ${p.nombre}`;
+    document.getElementById('posPresentList').innerHTML = `
+      <button class="pos-pres-btn" onclick="posAddToCart(${p.id},'Chica',${p.precio_chica});document.getElementById('posPresentOverlay').style.display='none'">
+        <span>Chica</span><span>$${p.precio_chica.toLocaleString()}</span>
+      </button>
+      <button class="pos-pres-btn" onclick="posAddToCart(${p.id},'Mediana',${p.precio_mediana});document.getElementById('posPresentOverlay').style.display='none'">
+        <span>Mediana</span><span>$${p.precio_mediana.toLocaleString()}</span>
+      </button>
+      <button class="pos-pres-btn highlight" onclick="posAddToCart(${p.id},'Grande',${p.precio_grande});document.getElementById('posPresentOverlay').style.display='none'">
+        <span>Grande ★</span><span>$${p.precio_grande.toLocaleString()}</span>
+      </button>`;
+    document.getElementById('posPresentOverlay').style.display = 'flex';
+  } else {
+    posAddToCart(p.id, null, p.precio);
+  }
+}
+
+function posAddToCart(prodId, size, precio) {
+  const p = productosData.find(x => x.id === prodId);
+  if (!p) return;
+  const key = `${prodId}_${size||''}`;
+  const existing = _posCart.find(i => i._key === key);
+  if (existing) {
+    existing.qty++;
+  } else {
+    _posCart.push({ _key: key, prodId, nombre: p.nombre, emoji: p.emoji||'🛍️', size, precio, qty: 1 });
+  }
+  _renderPosCart();
+}
+
+function posQtyChange(key, delta) {
+  const idx = _posCart.findIndex(i => i._key === key);
+  if (idx < 0) return;
+  _posCart[idx].qty += delta;
+  if (_posCart[idx].qty <= 0) _posCart.splice(idx, 1);
+  _renderPosCart();
+}
+
+function posClearCart() {
+  if (_posCart.length && !confirm('¿Limpiar el ticket actual?')) return;
+  _posCart = [];
+  _posSelectedMP = null;
+  _renderPosCart();
+}
+
+function _renderPosCart() {
+  const itemsEl = document.getElementById('posCartItems');
+  const totalsEl = document.getElementById('posCartTotals');
+  const paymentEl = document.getElementById('posPayment');
+  const countEl = document.getElementById('posCartCount');
+  if (!itemsEl) return;
+
+  const totalItems = _posCart.reduce((s, i) => s + i.qty, 0);
+  if (countEl) { countEl.textContent = totalItems; countEl.style.display = totalItems ? 'inline-flex' : 'none'; }
+
+  if (!_posCart.length) {
+    itemsEl.innerHTML = '<div class="pos-cart-empty">🛒<br>Seleccioná productos<br>del catálogo</div>';
+    if (totalsEl) totalsEl.style.display = 'none';
+    if (paymentEl) paymentEl.style.display = 'none';
+    return;
+  }
+
+  itemsEl.innerHTML = _posCart.map(i => `
+    <div class="pos-item-row">
+      <span class="pos-item-emoji">${i.emoji}</span>
+      <div class="pos-item-info">
+        <div class="pos-item-name">${i.nombre}</div>
+        ${i.size ? `<div class="pos-item-sub">${i.size}</div>` : ''}
+      </div>
+      <div class="pos-item-qty">
+        <button class="pos-iqbtn minus" onclick="posQtyChange('${i._key}',-1)">−</button>
+        <span class="pos-iqnum">${i.qty}</span>
+        <button class="pos-iqbtn" onclick="posQtyChange('${i._key}',1)">+</button>
+      </div>
+      <span class="pos-item-price">$${(i.precio*i.qty).toLocaleString()}</span>
+      <button class="pos-item-del" onclick="posQtyChange('${i._key}',-99)">✕</button>
+    </div>`).join('');
+
+  const sub = _posCart.reduce((s, i) => s + i.precio * i.qty, 0);
+  const mp = _posSelectedMP ? getMediosPago().find(m => m.id === _posSelectedMP) : null;
+  const recargo = mp?.recargo || 0;
+  const total = recargo > 0 ? Math.round(sub * (1 + recargo / 100)) : sub;
+
+  if (totalsEl) {
+    totalsEl.style.display = '';
+    const recargoRow = document.getElementById('posRecargoRow');
+    document.getElementById('posTotalSub').textContent = '$' + sub.toLocaleString();
+    if (recargo > 0 && recargoRow) {
+      recargoRow.style.display = '';
+      document.getElementById('posRecargoLabel').textContent = `Recargo ${recargo}%`;
+      document.getElementById('posRecargoVal').textContent = '+$' + (total - sub).toLocaleString();
+    } else if (recargoRow) {
+      recargoRow.style.display = 'none';
+    }
+    document.getElementById('posTotal').textContent = '$' + total.toLocaleString();
+  }
+
+  if (paymentEl) paymentEl.style.display = '';
+  _renderPosPayment();
+}
+
+function _renderPosPayment() {
+  const grid = document.getElementById('posPayGrid');
+  const btn = document.getElementById('posCobrarBtn');
+  if (!grid) return;
+  const medios = getMediosPago();
+  grid.innerHTML = medios.map(m => {
+    const sel = _posSelectedMP === m.id;
+    return `<button class="pos-pay-btn${sel?' selected':''}" onclick="posSelectMP('${m.id}')">
+      ${m.icono||''}<br>${m.nombre}${m.recargo>0?`<br><small>(+${m.recargo}%)</small>`:''}
+    </button>`;
+  }).join('');
+  if (btn) btn.disabled = !_posSelectedMP || !_posCart.length;
+}
+
+function posSelectMP(id) {
+  _posSelectedMP = id;
+  _renderPosCart();
+}
+
+function posClienteSearch(q) {
+  const sugg = document.getElementById('posClienteSugg');
+  const term = q.trim().toLowerCase();
+  if (!term) { sugg.style.display = 'none'; return; }
+  const matches = clientesData.filter(c => c.nombre.toLowerCase().includes(term) || (c.telefono||'').includes(term)).slice(0, 5);
+  if (!matches.length) { sugg.style.display = 'none'; return; }
+  sugg.innerHTML = matches.map(c =>
+    `<div onclick="posSelectCliente(${c.id})" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:13px" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">
+      <strong>${c.nombre}</strong><br><span style="color:#666">${c.telefono||''}</span>
+    </div>`
+  ).join('');
+  sugg.style.display = 'block';
+}
+
+function posSelectCliente(id) {
+  const c = clientesData.find(x => x.id === id);
+  if (!c) return;
+  _posClienteId = c.id;
+  document.getElementById('posClienteInput').value = c.nombre;
+  document.getElementById('posClienteSugg').style.display = 'none';
+}
+
+document.addEventListener('click', e => {
+  const sugg = document.getElementById('posClienteSugg');
+  if (sugg && !sugg.contains(e.target) && e.target.id !== 'posClienteInput') sugg.style.display = 'none';
+});
+
+function posCheckout() {
+  if (!_posCart.length || !_posSelectedMP) return;
+  if (!cajaAbierta) {
+    _pendingCajaAction = () => { _pendingCajaAction = null; renderVenta(); posCheckout(); };
+    document.getElementById('cajaAbrirMonto').value = '5000';
+    openModal('modalAbrirCaja');
+    return;
+  }
+  const mp = getMediosPago().find(m => m.id === _posSelectedMP);
+  const sub = _posCart.reduce((s, i) => s + i.precio * i.qty, 0);
+  const recargo = mp?.recargo || 0;
+  const total = recargo > 0 ? Math.round(sub * (1 + recargo / 100)) : sub;
+  const clienteInput = document.getElementById('posClienteInput');
+  const clienteNombre = clienteInput?.value || 'Mostrador';
+
+  // Build description
+  const desc = _posCart.map(i => `${i.qty}x ${i.nombre}${i.size?' '+i.size:''}`).join(', ');
+
+  // Register in caja
+  cajaMoves.push({
+    ..._cajaNow(), tipo: 'ingreso',
+    desc: `Venta ${clienteNombre} — ${mp?.nombre||_posSelectedMP}: ${desc}`,
+    monto: total,
+    pago: _posSelectedMP
+  });
+
+  // Register factura
+  const fNum = 'V-' + String((facturasData.filter(f=>f.numero.startsWith('V-')).length + 1)).padStart(4,'0');
+  facturasData.unshift({
+    id: Date.now(),
+    numero: fNum,
+    fecha: new Date().toLocaleString('es-AR'),
+    origen: `Venta ${clienteNombre}`,
+    items: _posCart.reduce((s, i) => s + i.qty, 0),
+    total,
+    pago: _posSelectedMP,
+    estado: 'pagada',
+    detalle: _posCart.map(i => ({ nombre: i.nombre, size: i.size, qty: i.qty, precio: i.precio }))
+  });
+
+  // Update client stats
+  if (_posClienteId) {
+    const c = clientesData.find(x => x.id === _posClienteId);
+    if (c) { c.pedidos = (c.pedidos||0)+1; c.total_gastado = (c.total_gastado||0)+total; c.ultimo = new Date().toISOString().slice(0,10); }
+  }
+
+  saveState();
+  loadDashboard();
+  showToast(`✅ Venta registrada — $${total.toLocaleString()} · ${mp?.nombre||_posSelectedMP}`, 'success');
+
+  // Print receipt option
+  if (confirm(`Venta de $${total.toLocaleString()} registrada.\n\n¿Imprimir recibo?`)) {
+    _printPosRecibo(fNum, clienteNombre, mp?.nombre||_posSelectedMP, total, sub, recargo);
+  }
+
+  // Clear cart
+  _posCart = [];
+  _posSelectedMP = null;
+  _posClienteId = null;
+  if (clienteInput) clienteInput.value = '';
+  _renderPosCart();
+}
+
+function _printPosRecibo(numero, cliente, metodoPago, total, sub, recargo) {
+  const biz = getBizConfig();
+  const fecha = new Date().toLocaleString('es-AR');
+  // Use epComprobanteX-style html print
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    body{font-family:monospace;font-size:13px;max-width:320px;margin:0 auto;padding:8px}
+    .center{text-align:center}.bold{font-weight:bold}.hr{border-top:1px dashed #000;margin:6px 0}
+    .row{display:flex;justify-content:space-between}
+  </style></head><body>
+    <div class="center bold" style="font-size:16px">${biz.nombre||'Negocio'}</div>
+    <div class="center" style="font-size:11px">${fecha}</div>
+    <div class="center" style="font-size:11px">Comprobante ${numero}</div>
+    <div class="hr"></div>
+    <div class="row"><span>Cliente</span><span>${cliente}</span></div>
+    <div class="hr"></div>
+    ${facturasData[0]?.detalle?.map(i=>`<div class="row"><span>${i.qty}x ${i.nombre}${i.size?' '+i.size:''}</span><span>$${(i.precio*i.qty).toLocaleString()}</span></div>`).join('')||''}
+    <div class="hr"></div>
+    ${recargo>0?`<div class="row"><span>Subtotal</span><span>$${sub.toLocaleString()}</span></div><div class="row"><span>Recargo ${recargo}%</span><span>+$${(total-sub).toLocaleString()}</span></div>`:''}
+    <div class="row bold"><span>TOTAL</span><span>$${total.toLocaleString()}</span></div>
+    <div class="row" style="font-size:11px"><span>Pago</span><span>${metodoPago}</span></div>
+    <div class="hr"></div>
+    <div class="center" style="font-size:11px">¡Gracias por su compra!</div>
+  </body></html>`;
+  autoPrint(html);
+}
+
+// ======= WHATSAPP =======
+function openWhatsApp(telefono, mensaje) {
+  const num = (telefono||'').replace(/\D/g,'');
+  if (!num) { showToast('Sin número de teléfono','error'); return; }
+  // Argentina: add 54 if not present; remove leading 0
+  const intl = num.startsWith('54') ? num : '54' + num.replace(/^0/,'');
+  const url = `https://wa.me/${intl}${mensaje ? '?text='+encodeURIComponent(mensaje) : ''}`;
+  window.open(url, '_blank');
+}
+
+function dlvSetOrigen(btn) {
+  document.querySelectorAll('.origen-btn').forEach(b => b.classList.remove('active', 'btn-primary'));
+  btn.classList.add('active', 'btn-primary');
+}
+
+function _dlvGetOrigen() {
+  const btn = document.querySelector('.origen-btn.active');
+  return btn ? btn.dataset.origen : 'whatsapp';
 }
 
 // ======= PWA SERVICE WORKER =======

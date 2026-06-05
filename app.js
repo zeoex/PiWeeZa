@@ -926,6 +926,7 @@ app.post('/api/delivery', (req, res) => {
     estado:          'pendiente',
     distancia:       null,
     estimacion:      estimacion || 30,
+    origen:          req.body.origen || 'whatsapp',
     createdAt:       new Date().toISOString()
   };
 
@@ -1166,6 +1167,7 @@ app.post('/api/clientes', (req, res) => {
     nombre,
     email:       email     || '',
     telefono:    telefono  || '',
+    whatsapp:    req.body.whatsapp || telefono || '',
     direcciones: (direcciones || []).map(d => ({ id: uuidv4(), ...d })),
     historial:   [],
     createdAt:   new Date().toISOString()
@@ -1188,6 +1190,7 @@ app.put('/api/clientes/:id', (req, res) => {
   if (idx === -1) return res.status(404).json({ error: 'Cliente no encontrado' });
 
   db.clientes[idx] = { ...db.clientes[idx], ...req.body, id: req.params.id };
+  if (req.body.whatsapp !== undefined) db.clientes[idx].whatsapp = req.body.whatsapp;
   res.json(db.clientes[idx]);
 });
 
@@ -1282,6 +1285,14 @@ app.get('/api/facturas/:id', (req, res) => {
 
   const pedido = factura.pedidoId ? db.pedidos.find(p => p.id === factura.pedidoId) : null;
   res.json({ ...factura, pedido });
+});
+
+app.get('/api/venta-directa/recientes', (_req, res) => {
+  const ventas = db.facturas
+    .filter(f => f.origen && f.origen.startsWith('Venta'))
+    .sort((a, b) => b.id - a.id)
+    .slice(0, 20);
+  res.json(ventas);
 });
 
 // ─────────────────────────────────────────────

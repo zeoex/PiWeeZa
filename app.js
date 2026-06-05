@@ -1665,7 +1665,7 @@ app.get('/api/sucursales', authMiddleware, (req, res) => {
   res.json(db.sucursales || []);
 });
 
-app.post('/api/sucursales', authMiddleware, (req, res) => {
+app.post('/api/sucursales', authMiddleware, async (req, res) => {
   if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
   const { nombre, direccion, telefono } = req.body;
   if (!nombre?.trim()) return res.status(400).json({ error: 'Nombre requerido' });
@@ -1684,7 +1684,7 @@ app.post('/api/sucursales', authMiddleware, (req, res) => {
   res.json(nueva);
 });
 
-app.put('/api/sucursales/:id', authMiddleware, (req, res) => {
+app.put('/api/sucursales/:id', authMiddleware, async (req, res) => {
   if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
   const idx = (db.sucursales || []).findIndex(s => s.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Sucursal no encontrada' });
@@ -1698,7 +1698,7 @@ app.put('/api/sucursales/:id', authMiddleware, (req, res) => {
   res.json(db.sucursales[idx]);
 });
 
-app.delete('/api/sucursales/:id', authMiddleware, (req, res) => {
+app.delete('/api/sucursales/:id', authMiddleware, async (req, res) => {
   if (req.user.rol !== 'admin') return res.status(403).json({ error: 'Solo admin' });
   const idx = (db.sucursales || []).findIndex(s => s.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'No encontrada' });

@@ -238,19 +238,19 @@ const db = {
   // ---------- USUARIOS ----------
   const hash = pwd => bcrypt.hashSync(pwd, 10);
   db.users = [
-    { id: uuidv4(), nombre: 'Administrador',  email: 'admin@restito.com',      password: hash('admin123'),    rol: 'admin',      activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Supervisor',     email: 'supervisor@restito.com', password: hash('super123'),    rol: 'supervisor', activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Cajero 01',      email: 'cajero01@restito.com',   password: hash('cajero123'),   rol: 'cajero',     activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Carlos Mozo',    email: 'carlos@restito.com',     password: hash('mozo123'),     rol: 'mozo',       activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Mozo Martín',    email: 'mozo01@restito.com',     password: hash('mozo123'),     rol: 'mozo',       activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Mozo Laura',     email: 'mozo02@restito.com',     password: hash('mozo456'),     rol: 'mozo',       activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Cocinero Pedro', email: 'cocinero@restito.com',   password: hash('cocina123'),   rol: 'cocinero',   activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Repartidor 01',  email: 'repartidor@restito.com', password: hash('delivery123'), rol: 'repartidor', activo: true, createdAt: new Date().toISOString() }
+    { id: uuidv4(), nombre: 'Administrador',  email: 'admin@pizzaya.com',      password: hash('admin123'),    rol: 'admin',      activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Supervisor',     email: 'supervisor@pizzaya.com', password: hash('super123'),    rol: 'supervisor', activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Cajero 01',      email: 'cajero01@pizzaya.com',   password: hash('cajero123'),   rol: 'cajero',     activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Vendedor 01',    email: 'vendedor@pizzaya.com',   password: hash('mozo123'),     rol: 'mozo',       activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Vendedor 02',    email: 'vendedor2@pizzaya.com',  password: hash('mozo123'),     rol: 'mozo',       activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Vendedor 03',    email: 'vendedor3@pizzaya.com',  password: hash('mozo456'),     rol: 'mozo',       activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Cocinero Pedro', email: 'cocinero@pizzaya.com',   password: hash('cocina123'),   rol: 'cocinero',   activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Repartidor 01',  email: 'repartidor@pizzaya.com', password: hash('delivery123'), rol: 'repartidor', activo: true, createdAt: new Date().toISOString() }
   ];
 
   // ---------- MESAS ----------
-  const mozoA = db.users.find(u => u.email === 'mozo01@restito.com').id;
-  const mozoB = db.users.find(u => u.email === 'mozo02@restito.com').id;
+  const mozoA = db.users.find(u => u.email === 'vendedor2@pizzaya.com').id;
+  const mozoB = db.users.find(u => u.email === 'vendedor3@pizzaya.com').id;
   const mozoANombre = db.users.find(u => u.id === mozoA)?.nombre || null;
   const mozoBNombre = db.users.find(u => u.id === mozoB)?.nombre || null;
   db.mesas = [
@@ -1449,7 +1449,7 @@ app.get('/api/qz/certificate', (_req, res) => {
 
 // Download cert as .crt file for QZ Tray trusted store
 app.get('/api/qz/certificate.crt', (_req, res) => {
-  res.setHeader('Content-Disposition', 'attachment; filename="restito-qz.crt"');
+  res.setHeader('Content-Disposition', 'attachment; filename="piweeза-qz.crt"');
   res.type('application/x-x509-ca-cert').send(_qzCert || '');
 });
 

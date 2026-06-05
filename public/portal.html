@@ -395,34 +395,36 @@
       <svg class="brand-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" aria-hidden="true">
         <defs>
           <linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%"   stop-color="#a78bfa"/>
-            <stop offset="55%"  stop-color="#818cf8"/>
-            <stop offset="100%" stop-color="#38bdf8"/>
+            <stop offset="0%"   stop-color="#fbbf24"/>
+            <stop offset="55%"  stop-color="#f97316"/>
+            <stop offset="100%" stop-color="#ef4444"/>
           </linearGradient>
         </defs>
-        <!-- Tenedor: 3 dientes -->
-        <rect x="6"    y="3" width="2.8" height="13" rx="1.4" fill="url(#fg)"/>
-        <rect x="11.5" y="3" width="2.8" height="13" rx="1.4" fill="url(#fg)"/>
-        <rect x="17"   y="3" width="2.8" height="13" rx="1.4" fill="url(#fg)"/>
-        <!-- Tenedor: puente -->
-        <rect x="6" y="15" width="13.8" height="2.8" rx="1.4" fill="url(#fg)"/>
-        <!-- Tenedor: mango -->
-        <rect x="11.5" y="17" width="2.8" height="24" rx="1.4" fill="url(#fg)"/>
-        <!-- Cuchillo: hoja -->
-        <path d="M27 3 C27 3 37 4 37 17 L27 20 Z" fill="url(#fg)"/>
-        <!-- Cuchillo: mango -->
-        <rect x="27" y="18" width="2.8" height="23" rx="1.4" fill="url(#fg)"/>
+        <!-- Pizza slice pointing up -->
+        <path d="M22 4 L40 40 Q22 46 4 40 Z" fill="url(#fg)"/>
+        <!-- Crust (curved bottom) -->
+        <path d="M4 40 Q22 48 40 40" stroke="#d97706" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <!-- Sauce layer -->
+        <path d="M22 9 L36 38 Q22 42 8 38 Z" fill="#ef4444" opacity="0.45"/>
+        <!-- Pepperoni toppings -->
+        <circle cx="22" cy="19" r="4.5" fill="#dc2626"/>
+        <circle cx="14" cy="31" r="3.5" fill="#dc2626"/>
+        <circle cx="30" cy="31" r="3.5" fill="#dc2626"/>
+        <!-- Pepperoni shine -->
+        <circle cx="21" cy="18" r="1.5" fill="rgba(255,255,255,0.3)"/>
+        <circle cx="13" cy="30" r="1.2" fill="rgba(255,255,255,0.3)"/>
+        <circle cx="29" cy="30" r="1.2" fill="rgba(255,255,255,0.3)"/>
       </svg>
-      <h1 class="brand-name">ResTito</h1>
+      <h1 class="brand-name">PiWeeZa</h1>
     </div>
-    <p class="brand-sub">Sistema Gastronómico</p>
+    <p class="brand-sub">Sistema POS · Pizzerías</p>
     <div class="brand-divider"></div>
   </header>
 
   <!-- TILES -->
   <main class="grid">
 
-    <a href="/admin" class="tile admin" onclick="['restito_token','restito_user','pizzeria_token','pizzeria_user'].forEach(function(k){localStorage.removeItem(k);})">
+    <a href="/admin" class="tile admin" onclick="['pz_token','pz_user','pizzeria_token','pizzeria_user','restito_token','restito_user'].forEach(function(k){localStorage.removeItem(k);})">
       <div class="tile-icon"><img src="/icon-admin.svg" alt="Admin"/></div>
       <div class="tile-body">
         <span class="tile-label">Administración</span>
@@ -431,7 +433,7 @@
       <span class="tile-arrow">→</span>
     </a>
 
-    <a href="/mozo" class="tile mozo" onclick="['restito_mozo_token','restito_mozo_user'].forEach(function(k){localStorage.removeItem(k);})">
+    <a href="/mozo" class="tile mozo" onclick="['pz_mozo_token','pz_mozo_user','restito_mozo_token','restito_mozo_user'].forEach(function(k){localStorage.removeItem(k);})">
       <div class="tile-icon"><img src="/icon-mozo.svg" alt="Mozo"/></div>
       <div class="tile-body">
         <span class="tile-label">Panel Mozo</span>

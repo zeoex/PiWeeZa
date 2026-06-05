@@ -1946,8 +1946,8 @@ function marcarEntregado(id) {
 }
 
 /* ── HISTORY ─────────────────────────────────────── */
-let repComments = (() => { try { return JSON.parse(localStorage.getItem('restito_rep_comments') || '{}'); } catch(e) { return {}; } })();
-let repHistory  = (() => { try { return JSON.parse(localStorage.getItem('restito_rep_history')  || '[]'); } catch(e) { return [];  } })();
+let repComments = (() => { try { return JSON.parse(localStorage.getItem('pz_rep_comments') || '{}'); } catch(e) { return {}; } })();
+let repHistory  = (() => { try { return JSON.parse(localStorage.getItem('pz_rep_history')  || '[]'); } catch(e) { return [];  } })();
 
 function saveToHistory(p) {
   const today = new Date().toLocaleDateString('es-AR');
@@ -1963,7 +1963,7 @@ function saveToHistory(p) {
     fecha: today
   });
   if (repHistory.length > 300) repHistory = repHistory.slice(0, 300);
-  localStorage.setItem('restito_rep_history', JSON.stringify(repHistory));
+  localStorage.setItem('pz_rep_history', JSON.stringify(repHistory));
 }
 
 function toggleCommentInput(id) {
@@ -1981,7 +1981,7 @@ function saveComment(id) {
   const ta = document.getElementById('comment-ta-' + id);
   const text = (ta?.value || '').trim();
   if (text) repComments[id] = text; else delete repComments[id];
-  localStorage.setItem('restito_rep_comments', JSON.stringify(repComments));
+  localStorage.setItem('pz_rep_comments', JSON.stringify(repComments));
   document.getElementById('comment-row-' + id)?.classList.remove('open');
   renderHistory();
 }

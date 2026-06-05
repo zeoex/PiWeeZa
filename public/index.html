@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>ResTito – Sistema POS</title>
+<title>PiWeeZa – Sistema POS</title>
 <!-- PWA -->
 <link rel="manifest" href="/manifest-mozo.json" id="pwaManifest"/>
 <meta name="theme-color" content="#1d3557" id="pwaTheme"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="ResTito"/>
+<meta name="apple-mobile-web-app-title" content="PiWeeZa"/>
 <link rel="apple-touch-icon" href="/icon-mozo.svg" id="pwaIcon"/>
 <script>
 (function(){
@@ -802,9 +802,9 @@ input.form-control:focus{outline:none;border-color:var(--red)}
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
   <div class="sidebar">
     <div class="sidebar-logo" id="sidebarLogoWrap" style="cursor:pointer" onclick="navTo('config',document.querySelector('[data-section=config]'));closeSidebar()">
-      <span class="s-emoji" id="sidebarEmoji">🍴</span>
+      <span class="s-emoji" id="sidebarEmoji">🍕</span>
       <span class="sidebar-logo-text">
-        <h2 id="sidebarName">ResTito</h2>
+        <h2 id="sidebarName">PiWeeZa</h2>
         <p id="sidebarBiz">Sistema POS</p>
       </span>
     </div>
@@ -857,14 +857,14 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         </div>
       </div>
       <button class="btn btn-outline btn-sm btn-block" onclick="doLogout()">🔴 Cerrar sesión</button>
-      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.35);margin-top:10px;letter-spacing:.5px">ResTito By ZeODev</div>
+      <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.35);margin-top:10px;letter-spacing:.5px">PiWeeZa By ZeODev</div>
     </div>
   </div>
 
   <div class="main" id="mainContent">
     <!-- Mozo-only top navigation bar -->
     <div class="mozo-topnav" id="mozoTopnav">
-      <div class="mtn-logo"><span>🍴</span> ResTito</div>
+      <div class="mtn-logo"><span>🍕</span> PiWeeZa</div>
       <div class="mtn-avatar-wrap" id="mozoAvatarWrap">
         <div class="mtn-avatar" id="mozoAvatar" title="" onclick="toggleMozoMenu()">CM</div>
         <div class="mtn-avatar-menu" id="mozoAvatarMenu">
@@ -1294,7 +1294,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
           <div class="card">
             <div class="card-header"><h3>🏢 Datos del Negocio</h3></div>
             <div class="card-body">
-              <div class="form-group"><label>Nombre del local</label><input class="form-control" id="cfgNombre" value="ResTito"/></div>
+              <div class="form-group"><label>Nombre del local</label><input class="form-control" id="cfgNombre" value="Pizza Ya"/></div>
               <div class="form-group"><label>Dirección</label><input class="form-control" id="cfgDir" value=""/></div>
               <div class="form-group"><label>Teléfono</label><input class="form-control" id="cfgTel" value=""/></div>
               <div class="form-group"><label>Pie de recibo</label><input class="form-control" id="cfgRecibo" value="¡Gracias por su visita!"/></div>
@@ -1320,7 +1320,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
             <div class="card-body">
               <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Los cambios en mesas, delivery, clientes y demás se guardan automáticamente en este navegador.</p>
               <button class="btn btn-danger" onclick="confirmarResetDemo()">🗑️ Restablecer datos demo</button>
-              <p style="font-size:11px;color:var(--gray);margin-top:16px;margin-bottom:0">ResTito By ZeODev</p>
+              <p style="font-size:11px;color:var(--gray);margin-top:16px;margin-bottom:0">PiWeeZa By ZeODev</p>
             </div>
           </div>
           <div class="card" id="cardComanderas">
@@ -1378,7 +1378,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
                           <strong>✅ Solución permanente — Site Manager:</strong><br>
                           1. Clic derecho en QZ Tray (ícono en la barra del sistema) → <strong>Site Manager</strong><br>
                           2. Hacé clic en el botón <strong>+</strong><br>
-                          3. En "Site URL" ingresá: <code style="background:#c3e6cb;padding:1px 5px;border-radius:3px">https://restito-production.up.railway.app</code><br>
+                          3. En "Site URL" ingresá: <code style="background:#c3e6cb;padding:1px 5px;border-radius:3px">https://piwee-app-production.up.railway.app</code><br>
                           4. Marcá <strong>Allow</strong> → <strong>Save</strong><br>
                           5. Listo — no volverá a pedir autorización
                         </div>
@@ -1393,7 +1393,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
                       <li>Volvé acá y hacé clic en <strong>"Conectar QZ"</strong>, luego elegí tu impresora térmica en el desplegable</li>
                     </ol>
                     <div style="margin-top:8px;padding:8px 10px;background:#d1ecf1;border-radius:6px;color:#0c5460;font-size:11px">
-                      💡 <strong>Certificado (opcional):</strong> si QZ Tray sigue mostrando advertencias de certificado, descargá <a href="/api/qz/certificate.crt" download="restito-qz.crt" style="color:#0c5460;font-weight:700">📥 restito-qz.crt</a> y copialo a <span style="font-family:monospace;font-size:11px">C:\Program Files\QZ Tray\certs\</span>. Reiniciá QZ Tray.
+                      💡 <strong>Certificado (opcional):</strong> si QZ Tray sigue mostrando advertencias de certificado, descargá <a href="/api/qz/certificate.crt" download="piweeза-qz.crt" style="color:#0c5460;font-weight:700">📥 piweeза-qz.crt</a> y copialo a <span style="font-family:monospace;font-size:11px">C:\Program Files\QZ Tray\certs\</span>. Reiniciá QZ Tray.
                     </div>
                     <div style="margin-top:6px;padding:6px 10px;background:#fff3cd;border-radius:6px;color:#856404;font-size:11px">
                       ⚠️ El menú <em>Advanced → Properties</em> que aparece en otras guías <strong>no existe en Windows</strong>. Usá el Site Manager o editá el archivo directamente como se indica arriba.
@@ -1783,7 +1783,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
     <div class="modal-body">
       <input type="hidden" id="usrEditId"/>
       <div class="form-group"><label>Nombre</label><input class="form-control" id="usrNombre" placeholder="Carlos López"/></div>
-      <div class="form-group"><label>Email</label><input class="form-control" id="usrEmail" placeholder="carlos@restito.com"/></div>
+      <div class="form-group"><label>Email</label><input class="form-control" id="usrEmail" placeholder="vendedor@pizzaya.com"/></div>
       <div class="form-group"><label id="usrPassLabel">Contraseña</label><input class="form-control" id="usrPass" type="password" placeholder="••••••••"/></div>
       <div class="form-group"><label>Rol</label>
         <select class="form-control" id="usrRol">
@@ -1865,12 +1865,17 @@ input:checked+.slider:before{transform:translateX(20px)}
 const API = '/api';
 // Path-based session isolation: /mozo and /admin have independent tokens
 const _IS_MOZO_PATH = window.location.pathname === '/mozo' || window.location.pathname.startsWith('/mozo/');
-const _TOKEN_KEY = _IS_MOZO_PATH ? 'restito_mozo_token' : 'restito_token';
-const _USER_KEY  = _IS_MOZO_PATH ? 'restito_mozo_user'  : 'restito_user';
-// Migrate old auth keys (admin path only)
-if (!_IS_MOZO_PATH && !localStorage.getItem('restito_token') && localStorage.getItem('pizzeria_token')) {
-  localStorage.setItem('restito_token', localStorage.getItem('pizzeria_token'));
-  localStorage.setItem('restito_user', localStorage.getItem('pizzeria_user') || 'null');
+const _TOKEN_KEY = _IS_MOZO_PATH ? 'pz_mozo_token' : 'pz_token';
+const _USER_KEY  = _IS_MOZO_PATH ? 'pz_mozo_user'  : 'pz_user';
+// Migrate old auth keys (restito → pz)
+if (!localStorage.getItem(_TOKEN_KEY)) {
+  const oldKey = _IS_MOZO_PATH ? 'restito_mozo_token' : (localStorage.getItem('restito_token') ? 'restito_token' : 'pizzeria_token');
+  const oldVal = localStorage.getItem(oldKey);
+  if (oldVal) {
+    localStorage.setItem(_TOKEN_KEY, oldVal);
+    const oldUser = _IS_MOZO_PATH ? localStorage.getItem('restito_mozo_user') : (localStorage.getItem('restito_user') || localStorage.getItem('pizzeria_user'));
+    if (oldUser) localStorage.setItem(_USER_KEY, oldUser);
+  }
 }
 let token = localStorage.getItem(_TOKEN_KEY);
 let currentUser = (() => { try { return JSON.parse(localStorage.getItem(_USER_KEY) || 'null'); } catch(e) { return null; } })();
@@ -2038,7 +2043,7 @@ function epCuenta(mesa, items) {
   } else {
     lines.push(E+'E\x01'+'TOTAL'+' '.repeat(Math.max(1,cols-5-ts.length))+ts+E+'E\x00');
   }
-  return _ep(mesa, lines, biz.nombre||'ResTito', biz.recibo||'Gracias por su visita');
+  return _ep(mesa, lines, biz.nombre||'Pizza Ya', biz.recibo||'Gracias por su visita');
 }
 
 function epComprobanteX(f) {
@@ -2049,7 +2054,7 @@ function epComprobanteX(f) {
   const pagoLabel = {efectivo:'EFECTIVO',tarjeta:'TARJETA',transferencia:'TRANSFERENCIA'}[f.pago] || (f.pago||'').toUpperCase();
   let s = E+'@';
   // Header: biz name
-  s += E+'a\x01'+E+'E\x01'+G+'!\x10'+(biz.nombre||'ResTito')+NL+G+'!\x00'+E+'E\x00';
+  s += E+'a\x01'+E+'E\x01'+G+'!\x10'+(biz.nombre||'Pizza Ya')+NL+G+'!\x00'+E+'E\x00';
   if (biz.dir) s += E+'a\x01'+biz.dir+NL;
   if (biz.tel) s += E+'a\x01'+'Tel: '+biz.tel+NL;
   s += E+'a\x01'+'COMPROBANTE X'+NL;
@@ -2117,7 +2122,7 @@ function _buildComprobanteHtml(f) {
     .meta{font-size:10px;color:#444;margin:1px 0}
   </style></head><body>
   ${logoHtml}
-  <h1>${biz.nombre||'ResTito'}</h1>
+  <h1>${biz.nombre||'Pizza Ya'}</h1>
   ${biz.dir?`<div class="center meta">${biz.dir}</div>`:''}
   ${biz.tel?`<div class="center meta">Tel: ${biz.tel}</div>`:''}
   <h2>COMPROBANTE X</h2>
@@ -2177,7 +2182,7 @@ function verComprobanteX(id) {
 
   document.getElementById('comprobanteXContent').innerHTML = `
     ${logoHtml}
-    <div style="text-align:center;font-size:16px;font-weight:900;letter-spacing:1px">${biz.nombre||'ResTito'}</div>
+    <div style="text-align:center;font-size:16px;font-weight:900;letter-spacing:1px">${biz.nombre||'Pizza Ya'}</div>
     ${biz.dir ? `<div style="text-align:center;font-size:11px;color:#666">${biz.dir}</div>` : ''}
     ${biz.tel ? `<div style="text-align:center;font-size:11px;color:#666">Tel: ${biz.tel}</div>` : ''}
     <div style="text-align:center;font-size:11px;font-weight:700;letter-spacing:2px;margin-top:4px;color:#444">COMPROBANTE X</div>
@@ -2314,11 +2319,11 @@ const DEMO_CLIENTES = [
   {id:5,nombre:'Roberto Silva',telefono:'11-7777-8888',email:'roberto@email.com',pedidos:15,total_gastado:55000,ultimo:'2026-05-27'},
 ];
 const DEMO_USUARIOS = [
-  {id:1,nombre:'Admin Principal',email:'admin@restito.com',rol:'admin',activo:true,ultimo:'2026-05-30 14:00'},
-  {id:2,nombre:'Carlos Mozo',email:'carlos@restito.com',rol:'mozo',activo:true,ultimo:'2026-05-30 13:30'},
-  {id:3,nombre:'Ana Moza',email:'ana@restito.com',rol:'mozo',activo:true,ultimo:'2026-05-30 12:00'},
-  {id:4,nombre:'Pedro Cajero',email:'pedro@restito.com',rol:'cajero',activo:true,ultimo:'2026-05-30 09:00'},
-  {id:5,nombre:'Luis Cocina',email:'luis@restito.com',rol:'cocina',activo:false,ultimo:'2026-05-25 18:00'},
+  {id:1,nombre:'Admin Principal',email:'admin@pizzaya.com',rol:'admin',activo:true,ultimo:'2026-05-30 14:00'},
+  {id:2,nombre:'Vendedor 01',email:'vendedor@pizzaya.com',rol:'mozo',activo:true,ultimo:'2026-05-30 13:30'},
+  {id:3,nombre:'Vendedor 02',email:'vendedor2@pizzaya.com',rol:'mozo',activo:true,ultimo:'2026-05-30 12:00'},
+  {id:4,nombre:'Cajero 01',email:'cajero01@pizzaya.com',rol:'cajero',activo:true,ultimo:'2026-05-30 09:00'},
+  {id:5,nombre:'Cocinero Pedro',email:'cocinero@pizzaya.com',rol:'cocina',activo:false,ultimo:'2026-05-25 18:00'},
 ];
 const _HOY = new Date().toISOString().slice(0,10);
 const DEMO_CAJA_MOV = [
@@ -2514,8 +2519,8 @@ async function doLogin() {
       currentUser = data.usuario || data.user;
     } else {
       const demoMap = {
-        'admin@restito.com':{ id:1, nombre:'Admin Principal', email, rol:'admin' },
-        'carlos@restito.com':{ id:2, nombre:'Carlos Mozo', email, rol:'mozo' },
+        'admin@pizzaya.com':{ id:1, nombre:'Admin Principal', email, rol:'admin' },
+        'vendedor@pizzaya.com':{ id:2, nombre:'Vendedor 01', email, rol:'mozo' },
       };
       const demoUser = demoMap[email];
       if (demoUser && (pass === 'admin123' || pass === 'mozo123')) {
@@ -2524,8 +2529,8 @@ async function doLogin() {
     }
   } catch(e) {
     const demoMap = {
-      'admin@restito.com':{ id:1, nombre:'Admin Principal', email, rol:'admin' },
-      'carlos@restito.com':{ id:2, nombre:'Carlos Mozo', email, rol:'mozo' },
+      'admin@pizzaya.com':{ id:1, nombre:'Admin Principal', email, rol:'admin' },
+      'vendedor@pizzaya.com':{ id:2, nombre:'Vendedor 01', email, rol:'mozo' },
     };
     const demoUser = demoMap[email];
     if (demoUser && (pass === 'admin123' || pass === 'mozo123')) {
@@ -2551,7 +2556,8 @@ loadBizConfig();
 
 function doLogout() {
   token = null; currentUser = null;
-  ['restito_token','restito_user','restito_mozo_token','restito_mozo_user',
+  ['pz_token','pz_user','pz_mozo_token','pz_mozo_user',
+   'restito_token','restito_user','restito_mozo_token','restito_mozo_user',
    'pizzeria_token','pizzeria_user'].forEach(function(k){ localStorage.removeItem(k); });
   if (socket) socket.disconnect();
   window.location.href = '/';
@@ -2805,10 +2811,10 @@ function initApp() {
 (function setupLoginBranding() {
   const path = window.location.pathname;
   const roles = {
-    '/mozo':  { iconSrc:'/icon-mozo.svg',  title:'Módulo Mozo',           email:'carlos@restito.com', pass:'mozo123',  hint:'Mozo: carlos@restito.com / mozo123', accent:'#059669', accentL:'#34d399' },
-    '/admin': { iconSrc:'/icon-admin.svg', title:'Módulo Administración', email:'admin@restito.com',  pass:'admin123', hint:'Admin: admin@restito.com / admin123',  accent:'#7c3aed', accentL:'#a78bfa' },
+    '/mozo':  { iconSrc:'/icon-mozo.svg',  title:'Módulo Vendedor',       email:'vendedor@pizzaya.com', pass:'mozo123',  hint:'Vendedor: vendedor@pizzaya.com / mozo123', accent:'#059669', accentL:'#34d399' },
+    '/admin': { iconSrc:'/icon-admin.svg', title:'Módulo Administración', email:'admin@pizzaya.com',    pass:'admin123', hint:'Admin: admin@pizzaya.com / admin123',          accent:'#7c3aed', accentL:'#a78bfa' },
   };
-  const cfg = roles[path] || { iconSrc:'/icon-admin.svg', title:'Módulo Administración', email:'admin@restito.com', pass:'admin123', hint:'Admin: admin@restito.com / admin123', accent:'#7c3aed', accentL:'#a78bfa' };
+  const cfg = roles[path] || { iconSrc:'/icon-admin.svg', title:'Módulo Administración', email:'admin@pizzaya.com', pass:'admin123', hint:'Admin: admin@pizzaya.com / admin123', accent:'#7c3aed', accentL:'#a78bfa' };
   const le = document.getElementById('loginEmoji');
   if (le) {
     le.innerHTML = `<img src="${cfg.iconSrc}" alt="icon" style="width:88px;height:88px;object-fit:contain;border-radius:20px;display:block">`;
@@ -3879,7 +3885,7 @@ function epComandaDelivery(o) {
   const cols = printConfig.paperWidth==='58mm' ? 32 : 42;
   const SEP = '-'.repeat(cols);
   let s = E+'@';
-  s += E+'a\x01'+E+'E\x01'+G+'!\x10'+(biz.nombre||'ResTito')+NL+G+'!\x00'+E+'E\x00';
+  s += E+'a\x01'+E+'E\x01'+G+'!\x10'+(biz.nombre||'Pizza Ya')+NL+G+'!\x00'+E+'E\x00';
   s += SEP+NL;
   s += E+'a\x01'+G+'!\x11'+E+'E\x01'+'DELIVERY '+o.numero+NL+G+'!\x00'+E+'E\x00';
   s += E+'a\x01'+new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+NL;
@@ -5271,7 +5277,7 @@ function descargarPDFQRCarta() {
     _loadJsPDF(() => {
       const biz = getBizConfig();
       const url = window.location.origin + '/menu';
-      const nombre = biz.nombre || 'ResTito';
+      const nombre = biz.nombre || 'Pizza Ya';
 
       _buildQRCanvas(url, 512, biz.logo || null, (qrDataUrl) => {
         if (!qrDataUrl) { showToast('Error al generar QR','error'); return; }
@@ -5353,8 +5359,8 @@ function descargarPDFQRCarta() {
 // ======= CONFIG =======
 // ======= BIZ CONFIG + LOGO =======
 function getBizConfig() {
-  try { return {...{nombre:'ResTito',dir:'',tel:'',recibo:'¡Gracias por su visita!',logo:null}, ...JSON.parse(localStorage.getItem('pz_biz_cfg')||'{}')}; }
-  catch(e) { return {nombre:'ResTito',dir:'',tel:'',recibo:'¡Gracias por su visita!',logo:null}; }
+  try { return {...{nombre:'Pizza Ya',dir:'',tel:'',recibo:'¡Gracias por su visita!',logo:null}, ...JSON.parse(localStorage.getItem('pz_biz_cfg')||'{}')}; }
+  catch(e) { return {nombre:'Pizza Ya',dir:'',tel:'',recibo:'¡Gracias por su visita!',logo:null}; }
 }
 
 function loadBizConfig() {
@@ -5452,7 +5458,7 @@ function removeLogoConfig() {
 
 function saveConfig() {
   const biz = getBizConfig();
-  biz.nombre  = document.getElementById('cfgNombre')?.value?.trim() || 'ResTito';
+  biz.nombre  = document.getElementById('cfgNombre')?.value?.trim() || 'Pizza Ya';
   biz.dir     = document.getElementById('cfgDir')?.value?.trim()    || '';
   biz.tel     = document.getElementById('cfgTel')?.value?.trim()    || '';
   biz.recibo  = document.getElementById('cfgRecibo')?.value?.trim() || '¡Gracias por su visita!';

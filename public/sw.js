@@ -1,5 +1,5 @@
-// ResTito — Service Worker
-const CACHE = 'restito-v1';
+// PiWeeZa — Service Worker
+const CACHE = 'piweeза-v1';
 
 // Pre-cache the app shells so they launch offline
 const SHELL = ['/mozo', '/repartidor', '/portal', '/admin'];

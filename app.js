@@ -71,7 +71,9 @@ async function initPG() {
         updated_at TIMESTAMPTZ DEFAULT NOW()
       );
       ALTER TABLE app_state ADD COLUMN IF NOT EXISTS categorias JSONB DEFAULT '[]';
-      ALTER TABLE app_state ADD COLUMN IF NOT EXISTS biz_cfg JSONB DEFAULT '{}'
+      ALTER TABLE app_state ADD COLUMN IF NOT EXISTS biz_cfg JSONB DEFAULT '{}';
+      ALTER TABLE app_state ADD COLUMN IF NOT EXISTS users_accounts JSONB DEFAULT '[]';
+      ALTER TABLE app_state ADD COLUMN IF NOT EXISTS sucursales_data JSONB DEFAULT '[]'
     `);
     console.log('[PG] app_state table ready');
   } catch(e) {
@@ -306,18 +308,44 @@ async function restoreStateFromPG() {
     const { rows } = await pool.query('SELECT * FROM app_state WHERE id = 1');
     const state = rows[0];
     if (!state) { console.log('[PG] No saved state found — using seed data'); return; }
-    if (Array.isArray(state.mesas)     && state.mesas.length     > 0) db.mesas     = state.mesas;
-    if (Array.isArray(state.delivery)  && state.delivery.length  > 0) db.delivery  = state.delivery;
-    if (Array.isArray(state.productos) && state.productos.length > 0) db.productos = state.productos;
-    if (Array.isArray(state.clientes)  && state.clientes.length  > 0) db.clientes  = state.clientes;
-    if (Array.isArray(state.categorias)&& state.categorias.length> 0) db.categorias= state.categorias;
-    console.log(`[PG] State restored — mesas:${db.mesas.length} delivery:${db.delivery.length} productos:${db.productos.length}`);
+    if (Array.isArray(state.mesas)          && state.mesas.length          > 0) db.mesas      = state.mesas;
+    if (Array.isArray(state.delivery)       && state.delivery.length       > 0) db.delivery   = state.delivery;
+    if (Array.isArray(state.productos)      && state.productos.length      > 0) db.productos  = state.productos;
+    if (Array.isArray(state.clientes)       && state.clientes.length       > 0) db.clientes   = state.clientes;
+    if (Array.isArray(state.categorias)     && state.categorias.length     > 0) db.categorias = state.categorias;
+    if (Array.isArray(state.users_accounts) && state.users_accounts.length > 0) db.users      = state.users_accounts;
+    if (Array.isArray(state.sucursales_data)&& state.sucursales_data.length> 0) db.sucursales = state.sucursales_data;
+    console.log(`[PG] State restored — productos:${db.productos.length} users:${db.users.length} sucursales:${db.sucursales.length}`);
   } catch(e) {
     console.error('[PG] restoreStateFromPG failed:', e.message);
   }
 }
 
 initPG().then(() => restoreStateFromPG());
+
+async function saveUsersToPG() {
+  const pool = getPool();
+  if (!pool) return;
+  try {
+    await pool.query(
+      `INSERT INTO app_state (id, users_accounts, updated_at) VALUES (1, $1, NOW())
+       ON CONFLICT (id) DO UPDATE SET users_accounts=$1, updated_at=NOW()`,
+      [JSON.stringify(db.users)]
+    );
+  } catch(e) { console.error('[PG] saveUsersToPG:', e.message); }
+}
+
+async function saveSucursalesToPG() {
+  const pool = getPool();
+  if (!pool) return;
+  try {
+    await pool.query(
+      `INSERT INTO app_state (id, sucursales_data, updated_at) VALUES (1, $1, NOW())
+       ON CONFLICT (id) DO UPDATE SET sucursales_data=$1, updated_at=NOW()`,
+      [JSON.stringify(db.sucursales)]
+    );
+  } catch(e) { console.error('[PG] saveSucursalesToPG:', e.message); }
+}
 
 // ─────────────────────────────────────────────
 //  HELPERS
@@ -1587,6 +1615,7 @@ app.post('/api/users', authMiddleware, async (req, res) => {
     createdAt:   new Date().toISOString()
   };
   db.users.push(nuevoUsuario);
+  saveUsersToPG();
   const { password: _p, ...safe } = nuevoUsuario;
   res.status(201).json(safe);
 });
@@ -1602,6 +1631,7 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
   if (activo    !== undefined) db.users[idx].activo    = Boolean(activo);
   if (sucursal_id !== undefined) db.users[idx].sucursal_id = sucursal_id || null;
   if (password) db.users[idx].password = bcrypt.hashSync(password, 10);
+  saveUsersToPG();
   const { password: _p, ...safe } = db.users[idx];
   res.json(safe);
 });
@@ -1612,6 +1642,7 @@ app.delete('/api/users/:id', authMiddleware, (req, res) => {
   const idx = db.users.findIndex(u => u.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
   db.users.splice(idx, 1);
+  saveUsersToPG();
   res.json({ ok: true });
 });
 
@@ -1644,6 +1675,7 @@ app.post('/api/sucursales', authMiddleware, (req, res) => {
   };
   if (!db.sucursales) db.sucursales = [];
   db.sucursales.push(nueva);
+  saveSucursalesToPG();
   io.emit('sucursal:update', nueva);
   res.json(nueva);
 });
@@ -1657,6 +1689,7 @@ app.put('/api/sucursales/:id', authMiddleware, (req, res) => {
   if (direccion !== undefined) db.sucursales[idx].direccion = direccion.trim();
   if (telefono  !== undefined) db.sucursales[idx].telefono  = telefono.trim();
   if (activa    !== undefined) db.sucursales[idx].activa    = Boolean(activa);
+  saveSucursalesToPG();
   io.emit('sucursal:update', db.sucursales[idx]);
   res.json(db.sucursales[idx]);
 });
@@ -1668,6 +1701,7 @@ app.delete('/api/sucursales/:id', authMiddleware, (req, res) => {
   const usersEnSucursal = db.users.filter(u => u.sucursal_id === req.params.id);
   if (usersEnSucursal.length > 0) return res.status(400).json({ error: `Tiene ${usersEnSucursal.length} usuario(s) asignado(s). Reasignálos antes.` });
   const [deleted] = db.sucursales.splice(idx, 1);
+  saveSucursalesToPG();
   io.emit('sucursal:deleted', { id: deleted.id });
   res.json({ ok: true });
 });

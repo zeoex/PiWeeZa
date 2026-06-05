@@ -412,6 +412,8 @@ app.use('/api', (req, res, next) => {
   if (req.path.startsWith('/cocina')) return next();
   // Mozo sends print jobs — no auth required (internal intranet actions)
   if (req.path === '/print' && req.method === 'POST') return next();
+  // Portal necesita listar sucursales sin autenticación
+  if (req.path === '/sucursales/publicas' && req.method === 'GET') return next();
   authMiddleware(req, res, next);
 });
 

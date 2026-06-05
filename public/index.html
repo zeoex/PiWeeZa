@@ -14,10 +14,10 @@
 <link rel="apple-touch-icon" href="/icon-mozo.svg" id="pwaIcon"/>
 <script>
 (function(){
-  const isAdmin = window.location.pathname.startsWith('/admin');
-  if (isAdmin) {
+  const p = window.location.pathname;
+  if (p.startsWith('/admin') || p.startsWith('/sucursal')) {
     document.getElementById('pwaManifest').href = '/manifest-admin.json';
-    document.getElementById('pwaTheme').content   = '#7c3aed';
+    document.getElementById('pwaTheme').content   = p.startsWith('/sucursal') ? '#f97316' : '#7c3aed';
     document.getElementById('pwaIcon').href        = '/icon-admin.svg';
   }
 })();
@@ -2790,6 +2790,25 @@ function initApp() {
 
 // Role-specific login customization based on URL path
 (function setupLoginBranding() {
+  const sucMatch = window.location.pathname.match(/^\/sucursal\/([^/]+)/);
+  if (sucMatch) {
+    const sucId = sucMatch[1];
+    const le = document.getElementById('loginEmoji');
+    if (le) { le.textContent = '🏪'; le.style.fontSize = '72px'; }
+    document.getElementById('loginTitle').textContent  = 'POS Sucursal';
+    document.getElementById('loginEmail').value        = '';
+    document.getElementById('loginEmail').placeholder  = 'Email';
+    document.getElementById('loginPass').value         = '';
+    document.getElementById('loginDemo').textContent   = '';
+    document.documentElement.style.setProperty('--login-accent',   '#f97316');
+    document.documentElement.style.setProperty('--login-accent-l', '#fb923c');
+    fetch('/api/sucursales/publicas').then(r=>r.json()).then(suc => {
+      const found = suc.find(s => String(s.id) === String(sucId));
+      if (found) document.getElementById('loginTitle').textContent = found.nombre;
+    }).catch(()=>{});
+    return;
+  }
+  // Admin login branding
   const cfg = { iconSrc:'/icon-admin.svg', title:'Módulo Administración', email:'admin@pizzaya.com', pass:'admin123', hint:'Admin: admin@pizzaya.com / admin123', accent:'#7c3aed', accentL:'#a78bfa' };
   const le = document.getElementById('loginEmoji');
   if (le) {

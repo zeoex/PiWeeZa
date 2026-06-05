@@ -486,7 +486,7 @@
         var sec   = document.getElementById('sucursalesSection');
         var delay = 0.06;
         grid.innerHTML = suc.map(function(s, i) {
-          return '<a href="/admin" class="tile sucursal" style="animation-delay:' + (delay + i * 0.07) + 's" ' +
+          return '<a href="/sucursal/' + s.id + '" class="tile sucursal" style="animation-delay:' + (delay + i * 0.07) + 's" ' +
             'onclick="[\'pz_token\',\'pz_user\'].forEach(function(k){localStorage.removeItem(k);})">' +
             '<div class="tile-icon" style="font-size:32px">🏪</div>' +
             '<div class="tile-body">' +

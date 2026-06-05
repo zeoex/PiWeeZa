@@ -374,6 +374,7 @@ app.get('/menu',  (_req, res) => { noCache(res); res.sendFile(path.join(__dirnam
 app.get('/cocina', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'cocina.html')); });
 app.get('/repartidor', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'repartidor.html')); });
 app.get('/cliente', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'cliente.html')); });
+app.get('/sucursal/:id', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
 app.use(express.static(path.join(__dirname, 'public'), { etag: false, lastModified: false, setHeaders: (res) => { res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); } }));
 

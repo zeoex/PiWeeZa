@@ -316,6 +316,10 @@ async function restoreStateFromPG() {
     if (Array.isArray(state.users_accounts) && state.users_accounts.length > 0) db.users      = state.users_accounts;
     if (Array.isArray(state.sucursales_data)&& state.sucursales_data.length> 0) db.sucursales = state.sucursales_data;
     console.log(`[PG] State restored — productos:${db.productos.length} users:${db.users.length} sucursales:${db.sucursales.length}`);
+    // Si users_accounts estaba vacío, guardar los seeds para futuras reinicios
+    if (!(Array.isArray(state.users_accounts) && state.users_accounts.length > 0)) {
+      saveUsersToPG().catch(e => console.error('[PG] seed users save failed:', e.message));
+    }
   } catch(e) {
     console.error('[PG] restoreStateFromPG failed:', e.message);
   }
@@ -1615,7 +1619,7 @@ app.post('/api/users', authMiddleware, async (req, res) => {
     createdAt:   new Date().toISOString()
   };
   db.users.push(nuevoUsuario);
-  saveUsersToPG();
+  await saveUsersToPG();
   const { password: _p, ...safe } = nuevoUsuario;
   res.status(201).json(safe);
 });
@@ -1631,18 +1635,18 @@ app.put('/api/users/:id', authMiddleware, async (req, res) => {
   if (activo    !== undefined) db.users[idx].activo    = Boolean(activo);
   if (sucursal_id !== undefined) db.users[idx].sucursal_id = sucursal_id || null;
   if (password) db.users[idx].password = bcrypt.hashSync(password, 10);
-  saveUsersToPG();
+  await saveUsersToPG();
   const { password: _p, ...safe } = db.users[idx];
   res.json(safe);
 });
 
-app.delete('/api/users/:id', authMiddleware, (req, res) => {
+app.delete('/api/users/:id', authMiddleware, async (req, res) => {
   if (req.user.rol !== 'admin') return res.status(403).json({ error: 'Solo admin' });
   if (req.params.id === req.user.id) return res.status(400).json({ error: 'No podés eliminarte a vos mismo' });
   const idx = db.users.findIndex(u => u.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
   db.users.splice(idx, 1);
-  saveUsersToPG();
+  await saveUsersToPG();
   res.json({ ok: true });
 });
 
@@ -1675,7 +1679,7 @@ app.post('/api/sucursales', authMiddleware, (req, res) => {
   };
   if (!db.sucursales) db.sucursales = [];
   db.sucursales.push(nueva);
-  saveSucursalesToPG();
+  await saveSucursalesToPG();
   io.emit('sucursal:update', nueva);
   res.json(nueva);
 });
@@ -1689,7 +1693,7 @@ app.put('/api/sucursales/:id', authMiddleware, (req, res) => {
   if (direccion !== undefined) db.sucursales[idx].direccion = direccion.trim();
   if (telefono  !== undefined) db.sucursales[idx].telefono  = telefono.trim();
   if (activa    !== undefined) db.sucursales[idx].activa    = Boolean(activa);
-  saveSucursalesToPG();
+  await saveSucursalesToPG();
   io.emit('sucursal:update', db.sucursales[idx]);
   res.json(db.sucursales[idx]);
 });
@@ -1701,7 +1705,7 @@ app.delete('/api/sucursales/:id', authMiddleware, (req, res) => {
   const usersEnSucursal = db.users.filter(u => u.sucursal_id === req.params.id);
   if (usersEnSucursal.length > 0) return res.status(400).json({ error: `Tiene ${usersEnSucursal.length} usuario(s) asignado(s). Reasignálos antes.` });
   const [deleted] = db.sucursales.splice(idx, 1);
-  saveSucursalesToPG();
+  await saveSucursalesToPG();
   io.emit('sucursal:deleted', { id: deleted.id });
   res.json({ ok: true });
 });

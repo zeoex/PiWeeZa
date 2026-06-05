@@ -46,11 +46,6 @@ function getPool() {
 }
 
 async function initPG() {
-  // Debug: listar variables de entorno relacionadas con DB
-  const dbEnvKeys = Object.keys(process.env).filter(k =>
-    k.includes('DATABASE') || k.includes('POSTGRES') || k.includes('PG') || k.includes('PGHOST')
-  );
-  console.log('[PG] DB env vars found:', dbEnvKeys.length ? dbEnvKeys.join(', ') : 'NONE');
   const pool = getPool();
   if (!pool) {
     console.log('[PG] DATABASE_URL not set — skipping PostgreSQL init');
@@ -330,9 +325,13 @@ async function restoreStateFromPG() {
   }
 }
 
-initPG().then(() => restoreStateFromPG());
+initPG().then(async () => {
+  restoreStateFromFile();    // File first (local, fast)
+  await restoreStateFromPG(); // PG overrides file if available
+});
 
 async function saveUsersToPG() {
+  saveStateToFile({ users_accounts: db.users });
   const pool = getPool();
   if (!pool) return;
   try {
@@ -345,6 +344,7 @@ async function saveUsersToPG() {
 }
 
 async function saveSucursalesToPG() {
+  saveStateToFile({ sucursales_data: db.sucursales });
   const pool = getPool();
   if (!pool) return;
   try {
@@ -354,6 +354,47 @@ async function saveSucursalesToPG() {
       [JSON.stringify(db.sucursales)]
     );
   } catch(e) { console.error('[PG] saveSucursalesToPG:', e.message); }
+}
+
+// ─────────────────────────────────────────────
+//  FILE-BASED PERSISTENCE (Railway Volume at /data)
+// ─────────────────────────────────────────────
+const FILE_STATE_PATH = process.env.FILE_STATE_PATH || '/data/piweedb.json';
+
+function _readFileState() {
+  try {
+    if (fs.existsSync(FILE_STATE_PATH)) {
+      return JSON.parse(fs.readFileSync(FILE_STATE_PATH, 'utf8'));
+    }
+  } catch(e) { console.error('[FILE] read error:', e.message); }
+  return {};
+}
+
+function saveStateToFile(partial) {
+  try {
+    const existing = _readFileState();
+    const merged = { ...existing, ...partial, updated_at: new Date().toISOString() };
+    const dir = path.dirname(FILE_STATE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(FILE_STATE_PATH, JSON.stringify(merged));
+    console.log('[FILE] State saved —', Object.keys(partial).join(', '));
+  } catch(e) { console.error('[FILE] saveStateToFile:', e.message); }
+}
+
+function restoreStateFromFile() {
+  const state = _readFileState();
+  if (!state || !state.updated_at) {
+    console.log('[FILE] No saved file state');
+    return;
+  }
+  if (Array.isArray(state.users_accounts)  && state.users_accounts.length  > 0) db.users      = state.users_accounts;
+  if (Array.isArray(state.sucursales_data) && state.sucursales_data.length > 0) db.sucursales = state.sucursales_data;
+  if (Array.isArray(state.mesas)           && state.mesas.length           > 0) db.mesas      = state.mesas;
+  if (Array.isArray(state.delivery)        && state.delivery.length        > 0) db.delivery   = state.delivery;
+  if (Array.isArray(state.productos)       && state.productos.length       > 0) db.productos  = state.productos;
+  if (Array.isArray(state.clientes)        && state.clientes.length        > 0) db.clientes   = state.clientes;
+  if (Array.isArray(state.categorias)      && state.categorias.length      > 0) db.categorias = state.categorias;
+  console.log(`[FILE] State restored — users:${db.users.length} sucursales:${db.sucursales.length} productos:${db.productos.length}`);
 }
 
 // ─────────────────────────────────────────────
@@ -1518,10 +1559,22 @@ app.get('/api/state', async (_req, res) => {
 
 app.post('/api/state', authMiddleware, async (req, res) => {
   try {
-    const pool = getPool();
-    if (!pool) return res.json({ ok: true, skipped: true });
     const { mesas, delivery, facturas, clientes, usuarios, productos, mozo_historial,
             caja_abierta, caja_inicial, caja_moves, caja_cierres, categorias, biz_cfg } = req.body;
+    // Always persist to file (Railway Volume) regardless of PG availability
+    saveStateToFile({ mesas, delivery, facturas, clientes, productos, mozo_historial,
+      caja_abierta, caja_inicial, caja_moves, caja_cierres, categorias, biz_cfg });
+    const pool = getPool();
+    if (!pool) {
+      // Sync in-memory state even when PG is unavailable
+      if (Array.isArray(mesas))      db.mesas      = mesas;
+      if (Array.isArray(delivery))   db.delivery   = delivery;
+      if (Array.isArray(productos))  db.productos  = productos;
+      if (Array.isArray(clientes))   db.clientes   = clientes;
+      if (Array.isArray(categorias)) db.categorias = categorias;
+      io.emit('state:changed', { updated_at: new Date().toISOString() });
+      return res.json({ ok: true, persisted: 'file' });
+    }
     await pool.query(`
       INSERT INTO app_state (id, mesas, delivery, facturas, clientes, usuarios, productos, mozo_historial,
         caja_abierta, caja_inicial, caja_moves, caja_cierres, categorias, biz_cfg, updated_at)

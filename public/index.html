@@ -800,7 +800,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
 <!-- APP -->
 <div id="app">
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
     <div class="sidebar-logo" id="sidebarLogoWrap" style="cursor:pointer" onclick="navTo('config',document.querySelector('[data-section=config]'));closeSidebar()">
       <span class="s-emoji" id="sidebarEmoji">🍕</span>
       <span class="sidebar-logo-text">
@@ -811,6 +811,9 @@ input.form-control:focus{outline:none;border-color:var(--red)}
     <nav class="sidebar-nav">
       <div class="nav-item active" data-section="dashboard" data-tooltip="Vista Principal" onclick="navTo('dashboard',this);closeSidebar()">
         <span class="nav-icon">🏠</span><span class="nav-text">Vista Principal</span>
+      </div>
+      <div class="nav-item" data-section="sucursales" data-tooltip="Sucursales" onclick="navTo('sucursales',this);closeSidebar()" id="navSucursales">
+        <span class="nav-icon">🏢</span><span class="nav-text">Sucursales</span>
       </div>
       <div class="nav-item" data-section="venta" data-tooltip="Venta Directa" onclick="navTo('venta',this);closeSidebar()">
         <span class="nav-icon">🛒</span><span class="nav-text">Venta</span>
@@ -1238,6 +1241,12 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       <!-- REPORTES -->
       <div class="section" id="sec-reportes">
         <div class="section-header"><h2>📈 Reportes</h2></div>
+        <div id="reportesSucursalesPanel" style="margin-bottom:24px">
+          <h3 style="font-size:16px;font-weight:700;margin-bottom:12px">📊 Estadísticas por Sucursal (hoy)</h3>
+          <div id="sucursalesStatsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px">
+            <div style="color:var(--gray);font-size:13px">Cargando...</div>
+          </div>
+        </div>
         <div class="filter-bar">
           <div class="tabs" style="margin-bottom:0">
             <div class="tab active" onclick="setReporteRange('hoy',this)">Hoy</div>
@@ -1285,6 +1294,15 @@ input.form-control:focus{outline:none;border-color:var(--red)}
             <tbody id="usuariosTbody"></tbody>
           </table></div>
         </div>
+      </div>
+
+      <!-- SUCURSALES -->
+      <div class="section" id="sec-sucursales">
+        <div class="section-header">
+          <h2>🏢 Sucursales</h2>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalSucursal()">+ Nueva Sucursal</button>
+        </div>
+        <div id="sucursalesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:16px"></div>
       </div>
 
       <!-- CONFIG -->
@@ -1793,10 +1811,31 @@ input.form-control:focus{outline:none;border-color:var(--red)}
           <option value="cocina">Cocina</option>
         </select>
       </div>
+      <div class="form-group"><label>Sucursal asignada</label>
+        <select class="form-control" id="usrSucursal">
+          <option value="">— Admin Central (sin sucursal) —</option>
+        </select>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modalUsuario')">Cancelar</button>
       <button class="btn btn-primary" id="btnGuardarUsuario" onclick="guardarUsuario()">Crear</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalSucursal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="modalSucTitulo">Nueva Sucursal</h3><button class="modal-close" onclick="cerrarModalSucursal()">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="sucEditId"/>
+      <div class="form-group"><label>Nombre *</label><input class="form-control" id="sucNombre" placeholder="Ej: Sucursal Centro"/></div>
+      <div class="form-group"><label>Dirección</label><input class="form-control" id="sucDir" placeholder="Av. Corrientes 1234"/></div>
+      <div class="form-group"><label>Teléfono</label><input class="form-control" id="sucTel" placeholder="11-1234-5678"/></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModalSucursal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarSucursal()">Guardar</button>
     </div>
   </div>
 </div>
@@ -1859,6 +1898,11 @@ input.form-control:focus{outline:none;border-color:var(--red)}
 input:checked+.slider{background:var(--red)}
 input:checked+.slider:before{transform:translateX(20px)}
 .form-group{margin-bottom:14px}
+/* ── Modo sucursal: solo muestra Venta y Pedidos en el nav ── */
+.sidebar.sucursal-mode .nav-item { display: none !important; }
+.sidebar.sucursal-mode .nav-item[data-section="venta"],
+.sidebar.sucursal-mode .nav-item[data-section="pedidos"] { display: flex !important; }
+.sidebar.sucursal-mode .sidebar-logo { cursor: default; pointer-events: none; }
 </style>
 
 <script>
@@ -1879,6 +1923,20 @@ if (!localStorage.getItem(_TOKEN_KEY)) {
 }
 let token = localStorage.getItem(_TOKEN_KEY);
 let currentUser = (() => { try { return JSON.parse(localStorage.getItem(_USER_KEY) || 'null'); } catch(e) { return null; } })();
+// ── Multi-sucursal: decode JWT payload to detect branch mode ──
+function _decodeJWT(t) {
+  try { return JSON.parse(atob(t.split('.')[1])); } catch(e) { return {}; }
+}
+let _currentSucursalId = null;
+let _currentSucursalNombre = null;
+if (token) {
+  const _payload = _decodeJWT(token);
+  _currentSucursalId = _payload.sucursal_id || null;
+}
+// Re-apply sucursal mode on page reload once DOM is ready
+if (token && _currentSucursalId) {
+  window.addEventListener('DOMContentLoaded', () => { try { _setSucursalMode(_currentSucursalId); } catch(e) {} });
+}
 let socket = null;
 let currentMesaTab = 'salon';
 let printConfig = (() => {
@@ -2567,6 +2625,37 @@ function apiFetch(url, opts={}) {
   return fetch(API+url, { ...opts, headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token, ...(opts.headers||{}) } });
 }
 
+// ── Multi-sucursal: activar/desactivar modo sucursal en el sidebar ──
+function _setSucursalMode(sucursalId) {
+  _currentSucursalId = sucursalId || null;
+  const sidebar = document.getElementById('sidebar');
+  if (!_currentSucursalId) {
+    // Modo admin central: mostrar todo
+    if (sidebar) sidebar.classList.remove('sucursal-mode');
+    document.querySelectorAll('.nav-item').forEach(el => el.style.display = '');
+    const biz = document.getElementById('sidebarBiz');
+    if (biz) biz.textContent = 'Sistema POS';
+    return;
+  }
+  // Modo sucursal: ocultar todo excepto Venta y Pedidos (CSS + inline por las dudas)
+  if (sidebar) sidebar.classList.add('sucursal-mode');
+  document.querySelectorAll('.nav-item').forEach(el => {
+    const sec = el.getAttribute('data-section');
+    el.style.display = (sec === 'venta' || sec === 'pedidos') ? '' : 'none';
+  });
+  // Mostrar nombre de la sucursal en el sidebar
+  apiFetch('/sucursales').then(r => r.json()).then(suc => {
+    const s = (suc || []).find(x => x.id === _currentSucursalId);
+    if (s) {
+      _currentSucursalNombre = s.nombre;
+      const el = document.getElementById('sidebarBiz');
+      if (el) el.textContent = s.nombre;
+    }
+  }).catch(() => {});
+  // En modo sucursal ir directo a Venta
+  navTo('venta', document.querySelector('[data-section="venta"]'));
+}
+
 // ======= INIT =======
 function initApp() {
   document.getElementById('loginScreen').style.display = 'none';
@@ -2581,6 +2670,14 @@ function initApp() {
   document.getElementById('userRole').textContent = roles[currentUser?.rol] || currentUser?.rol || '';
   // Hide usuarios for non-admin
   if (currentUser?.rol !== 'admin') document.getElementById('navUsuarios').style.display = 'none';
+  // Sucursales section only for admin/supervisor
+  if (!['admin','supervisor'].includes(currentUser?.rol)) {
+    const navSuc = document.getElementById('navSucursales');
+    if (navSuc) navSuc.style.display = 'none';
+  }
+  // Multi-sucursal: detectar modo sucursal desde el JWT
+  const _suc = _decodeJWT(token).sucursal_id || null;
+  _currentSucursalId = _suc;
   // Mesa management (create/edit/delete) only for admin and supervisor
   const esAdminRole = ['admin','supervisor'].includes(currentUser?.rol);
   document.getElementById('btnNuevaMesa').style.display = esAdminRole ? '' : 'none';
@@ -2588,8 +2685,14 @@ function initApp() {
   loadState();
   loadStateFromAPI().then(() => {
     _populateCatSelects();
+    if (_currentSucursalId) {
+      // Modo sucursal: ocultar nav y abrir Venta
+      _setSucursalMode(_currentSucursalId);
+      renderCaja();
+      return;
+    }
     const saved = (() => { try { return localStorage.getItem('pz_last_section'); } catch(e){} return null; })();
-    const validSections = ['dashboard','venta','pedidos','mesas','delivery','productos','stock','caja','facturacion','clientes','reportes','usuarios','config','mozo-cocina'];
+    const validSections = ['dashboard','sucursales','venta','pedidos','mesas','delivery','productos','stock','caja','facturacion','clientes','reportes','usuarios','config','mozo-cocina'];
     const target = (saved && validSections.includes(saved)) ? saved : 'dashboard';
     navTo(target, null);
     renderCaja();
@@ -2856,9 +2959,9 @@ function navTo(section, el) {
   else document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('sec-'+section).classList.add('active');
-  const titles = {dashboard:'Vista Principal',venta:'Venta Directa',pedidos:'Pedidos',mesas:'Mesas',delivery:'Delivery',productos:'Productos',stock:'Stock',caja:'Caja',facturacion:'Facturación',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración',mozostats:'Mis Estadísticas'};
+  const titles = {dashboard:'Vista Principal',sucursales:'🏢 Sucursales',venta:'Venta Directa',pedidos:'Pedidos',mesas:'Mesas',delivery:'Delivery',productos:'Productos',stock:'Stock',caja:'Caja',facturacion:'Facturación',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración',mozostats:'Mis Estadísticas'};
   document.getElementById('topbarTitle').textContent = titles[section] || section;
-  const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,mesas:renderMesas,delivery:renderDelivery,productos:renderProductos,stock:renderStock,caja:renderCaja,facturacion:loadFacturacion,clientes:renderClientes,reportes:renderReportes,usuarios:renderUsuarios,mozostats:renderMozoStats,config:loadPrintConfigUI};
+  const loaders = {dashboard:loadDashboard,sucursales:()=>renderSucursales(),venta:renderVenta,pedidos:renderDelivery,mesas:renderMesas,delivery:renderDelivery,productos:renderProductos,stock:renderStock,caja:renderCaja,facturacion:loadFacturacion,clientes:renderClientes,reportes:renderReportes,usuarios:renderUsuarios,mozostats:renderMozoStats,config:loadPrintConfigUI};
   if(loaders[section]) loaders[section]();
   try { localStorage.setItem('pz_last_section', section); } catch(e) {}
 }
@@ -4857,6 +4960,30 @@ function setReporteRange(range, el) {
 }
 
 function renderReportes() {
+  // Stats por sucursal (panel superior)
+  apiFetch('/reportes/sucursales').then(r => r.json()).then(data => {
+    const grid = document.getElementById('sucursalesStatsGrid');
+    if (!grid) return;
+    if (!Array.isArray(data) || !data.length) {
+      grid.innerHTML = '<div style="color:var(--gray);font-size:13px">Sin sucursales configuradas</div>';
+      return;
+    }
+    grid.innerHTML = data.map(s => `
+      <div style="background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-weight:700">${s.nombre}</div>
+          <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:${s.activa?'#d1fae5':'#fee2e2'};color:${s.activa?'#065f46':'#991b1b'}">${s.activa?'Activa':'Inactiva'}</span>
+        </div>
+        <div style="font-size:13px;color:var(--gray)">Ventas hoy: <strong style="color:var(--text)">${s.ventasHoy||0}</strong></div>
+        <div style="font-size:14px;font-weight:700;color:#059669;margin-top:4px">$${(s.totalHoy||0).toLocaleString('es-AR')}</div>
+        <div style="font-size:12px;color:var(--gray);margin-top:4px">Vendedores: ${s.vendedores||0} · Total histórico: $${(s.totalHistorico||0).toLocaleString('es-AR')}</div>
+      </div>
+    `).join('');
+  }).catch(() => {
+    const grid = document.getElementById('sucursalesStatsGrid');
+    if (grid) grid.innerHTML = '';
+  });
+
   const multiplier = reporteRange==='hoy'?1:reporteRange==='semana'?7:30;
   const baseVentas = 48600;
   const ventas = baseVentas * multiplier;
@@ -4934,6 +5061,129 @@ function renderUsuarios() {
     </tr>`).join('');
 }
 
+// ======= SUCURSALES =======
+let _sucursalesData = [];
+
+async function renderSucursales() {
+  try {
+    const r = await apiFetch('/sucursales');
+    _sucursalesData = await r.json();
+    if (!Array.isArray(_sucursalesData)) _sucursalesData = [];
+  } catch(e) { _sucursalesData = []; }
+  const grid = document.getElementById('sucursalesGrid');
+  if (!grid) return;
+  if (!_sucursalesData.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray)">No hay sucursales. Creá la primera.</div>';
+    return;
+  }
+  grid.innerHTML = _sucursalesData.map(s => `
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <h3 style="margin:0;font-size:16px">${s.nombre}</h3>
+        <span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;
+          background:${s.activa ? '#d1fae5' : '#fee2e2'};
+          color:${s.activa ? '#065f46' : '#991b1b'}">
+          ${s.activa ? 'Activa' : 'Inactiva'}
+        </span>
+      </div>
+      ${s.direccion ? `<div style="font-size:13px;color:var(--gray);margin-bottom:4px">📍 ${s.direccion}</div>` : ''}
+      ${s.telefono ? `<div style="font-size:13px;color:var(--gray);margin-bottom:8px">📞 ${s.telefono}</div>` : ''}
+      <div id="suc-stats-${s.id}" style="margin-bottom:12px;font-size:13px;color:var(--gray)">Cargando stats...</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="editarSucursal('${s.id}')">✏️ Editar</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleSucursal('${s.id}',${!s.activa})">${s.activa ? 'Desactivar' : 'Activar'}</button>
+        <button class="btn btn-danger btn-sm" onclick="eliminarSucursal('${s.id}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+  _sucursalesData.forEach(s => _loadSucursalStats(s.id));
+}
+
+async function _loadSucursalStats(id) {
+  try {
+    const r = await apiFetch('/sucursales/' + id + '/stats');
+    const stats = await r.json();
+    const el = document.getElementById('suc-stats-' + id);
+    if (!el) return;
+    el.innerHTML = `Hoy: <strong>$${(stats.totalHoy||0).toLocaleString('es-AR')}</strong> (${stats.ventasHoy||0} ventas) · Pedidos activos: <strong>${stats.pedidosActivos||0}</strong>`;
+  } catch(e) {}
+}
+
+function abrirModalSucursal() {
+  document.getElementById('sucEditId').value = '';
+  document.getElementById('sucNombre').value = '';
+  document.getElementById('sucDir').value = '';
+  document.getElementById('sucTel').value = '';
+  document.getElementById('modalSucTitulo').textContent = 'Nueva Sucursal';
+  openModal('modalSucursal');
+  setTimeout(() => document.getElementById('sucNombre').focus(), 50);
+}
+
+function cerrarModalSucursal() {
+  closeModal('modalSucursal');
+}
+
+function editarSucursal(id) {
+  const s = _sucursalesData.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('sucEditId').value = s.id;
+  document.getElementById('sucNombre').value = s.nombre;
+  document.getElementById('sucDir').value = s.direccion || '';
+  document.getElementById('sucTel').value = s.telefono || '';
+  document.getElementById('modalSucTitulo').textContent = 'Editar Sucursal';
+  openModal('modalSucursal');
+}
+
+async function guardarSucursal() {
+  const nombre = document.getElementById('sucNombre').value.trim();
+  if (!nombre) { showToast('El nombre es requerido','error'); return; }
+  const id = document.getElementById('sucEditId').value;
+  const body = {
+    nombre,
+    direccion: document.getElementById('sucDir').value.trim(),
+    telefono: document.getElementById('sucTel').value.trim()
+  };
+  try {
+    const r = await apiFetch(id ? '/sucursales/' + id : '/sucursales', {
+      method: id ? 'PUT' : 'POST',
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) { const e = await r.json().catch(()=>({})); showToast(e.error || 'Error','error'); return; }
+    cerrarModalSucursal();
+    showToast(id ? 'Sucursal actualizada' : 'Sucursal creada','success');
+    renderSucursales();
+  } catch(e) { showToast('Error de conexión','error'); }
+}
+
+async function toggleSucursal(id, activa) {
+  try {
+    await apiFetch('/sucursales/' + id, { method: 'PUT', body: JSON.stringify({ activa }) });
+    renderSucursales();
+  } catch(e) { showToast('Error de conexión','error'); }
+}
+
+async function eliminarSucursal(id) {
+  if (!confirm('¿Eliminar sucursal? Esta acción no se puede deshacer.')) return;
+  try {
+    const r = await apiFetch('/sucursales/' + id, { method: 'DELETE' });
+    if (!r.ok) { const e = await r.json().catch(()=>({})); showToast(e.error || 'Error','error'); return; }
+    showToast('Sucursal eliminada','success');
+    renderSucursales();
+  } catch(e) { showToast('Error de conexión','error'); }
+}
+
+// Poblar el select de sucursales del form de usuario; opcionalmente seleccionar una
+function _populateSucursalSelect(selectedId) {
+  const selSuc = document.getElementById('usrSucursal');
+  if (!selSuc) return;
+  apiFetch('/sucursales').then(r => r.json()).then(suc => {
+    const list = Array.isArray(suc) ? suc : [];
+    selSuc.innerHTML = '<option value="">— Admin Central (sin sucursal) —</option>' +
+      list.filter(s => s.activa).map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
+    if (selectedId) selSuc.value = selectedId;
+  }).catch(() => {});
+}
+
 function editarUsuario(id) {
   const u = usuariosData.find(x=>String(x.id)===String(id));
   if(!u) return;
@@ -4944,6 +5194,7 @@ function editarUsuario(id) {
   document.getElementById('usrPass').value = '';
   document.getElementById('usrPassLabel').textContent = 'Contraseña (dejar vacío para no cambiar)';
   document.getElementById('usrRol').value = u.rol;
+  _populateSucursalSelect(u.sucursal_id || '');
   document.getElementById('btnGuardarUsuario').textContent = 'Guardar';
   openModal('modalUsuario');
 }
@@ -4967,17 +5218,18 @@ function guardarUsuario() {
   const email=document.getElementById('usrEmail').value.trim();
   const pass=document.getElementById('usrPass').value;
   const rol=document.getElementById('usrRol').value;
+  const sucursal_id=document.getElementById('usrSucursal')?.value || null;
   const editId=document.getElementById('usrEditId').value;
   if(!nombre||!email){ showToast('Completá nombre y email','error'); return; }
   if(editId) {
     const u = usuariosData.find(x=>String(x.id)===String(editId));
-    if(u) { u.nombre=nombre; u.email=email; u.rol=rol; if(pass) u.password=pass; }
+    if(u) { u.nombre=nombre; u.email=email; u.rol=rol; u.sucursal_id=sucursal_id; if(pass) u.password=pass; }
     closeModal('modalUsuario');
     saveState(); renderUsuarios();
     showToast('Usuario actualizado','success');
   } else {
     if(!pass){ showToast('Ingresá una contraseña','error'); return; }
-    usuariosData.push({id:Date.now(),nombre,email,password:pass,rol,activo:true,ultimo:'-'});
+    usuariosData.push({id:Date.now(),nombre,email,password:pass,rol,sucursal_id,activo:true,ultimo:'-'});
     closeModal('modalUsuario');
     saveState(); renderUsuarios();
     showToast('Usuario creado','success');
@@ -4992,6 +5244,7 @@ function _resetModalUsuario() {
   document.getElementById('usrPass').value='';
   document.getElementById('usrPassLabel').textContent='Contraseña';
   document.getElementById('usrRol').value='mozo';
+  _populateSucursalSelect('');
   document.getElementById('btnGuardarUsuario').textContent='Crear';
 }
 

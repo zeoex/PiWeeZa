@@ -250,29 +250,7 @@ const db = {
   ];
 
   // ---------- MESAS ----------
-  const mozoA = db.users.find(u => u.email === 'vendedor2@pizzaya.com').id;
-  const mozoB = db.users.find(u => u.email === 'vendedor3@pizzaya.com').id;
-  const mozoANombre = db.users.find(u => u.id === mozoA)?.nombre || null;
-  const mozoBNombre = db.users.find(u => u.id === mozoB)?.nombre || null;
-  db.mesas = [
-    { id: uuidv4(), numero: 1,  zona: 'salon',   capacidad: 4, estado: 'libre',    mozoid: null,  mozo: null,       apertura: null, tiempo: null,  consumo: 0, pedido: [], pedidos: [] },
-    { id: uuidv4(), numero: 2,  zona: 'salon',   capacidad: 4, estado: 'ocupada',  mozoid: mozoA, mozo: mozoANombre, apertura: new Date(Date.now() - 45 * 60000).toISOString(), tiempo: '00:45', consumo: 3200, pedido: [
-      { productoId: db.productos[0].id, nombre: 'Muzzarella', size: 'grande', precio: 2100, qty: 1, categoria: 'pizzas', nota: '' },
-      { productoId: db.productos[7].id, nombre: 'Coca-Cola',  size: '1.5L',   precio: 900,  qty: 2, categoria: 'bebidas', nota: '' }
-    ], pedidos: [] },
-    { id: uuidv4(), numero: 3,  zona: 'salon',   capacidad: 2, estado: 'libre',    mozoid: null,  mozo: null,       apertura: null, tiempo: null,  consumo: 0, pedido: [], pedidos: [] },
-    { id: uuidv4(), numero: 4,  zona: 'salon',   capacidad: 6, estado: 'libre',    mozoid: null,  mozo: null,       apertura: null, tiempo: null,  consumo: 0, pedido: [], pedidos: [] },
-    { id: uuidv4(), numero: 5,  zona: 'salon',   capacidad: 4, estado: 'libre',    mozoid: null,  mozo: null,       apertura: null, tiempo: null,  consumo: 0, pedido: [], pedidos: [] },
-    { id: uuidv4(), numero: 6,  zona: 'salon',   capacidad: 4, estado: 'cuenta',   mozoid: mozoA, mozo: mozoANombre, apertura: new Date(Date.now() - 90 * 60000).toISOString(), tiempo: '01:30', consumo: 4200, pedido: [
-      { productoId: db.productos[1].id, nombre: 'Napolitana', size: 'grande', precio: 2400, qty: 1, categoria: 'pizzas', nota: '' },
-      { productoId: db.productos[7].id, nombre: 'Coca-Cola',  size: '500ml',  precio: 600,  qty: 3, categoria: 'bebidas', nota: '' }
-    ], pedidos: [] },
-    { id: uuidv4(), numero: 1,  zona: 'vereda',  capacidad: 4, estado: 'libre',    mozoid: null,  mozo: null,       apertura: null, tiempo: null,  consumo: 0, pedido: [], pedidos: [] },
-    { id: uuidv4(), numero: 2,  zona: 'vereda',  capacidad: 2, estado: 'ocupada',  mozoid: mozoB, mozo: mozoBNombre, apertura: new Date(Date.now() - 20 * 60000).toISOString(), tiempo: '00:20', consumo: 1850, pedido: [
-      { productoId: db.productos[1].id, nombre: 'Napolitana', size: 'mediana', precio: 1850, qty: 1, categoria: 'pizzas', nota: 'Sin ajo' }
-    ], pedidos: [] },
-    { id: uuidv4(), numero: 3,  zona: 'vereda',  capacidad: 4, estado: 'libre',    mozoid: null,  mozo: null,       apertura: null, tiempo: null,  consumo: 0, pedido: [], pedidos: [] }
-  ];
+  db.mesas = [];
 
   // ---------- CLIENTES ----------
   db.clientes = [
@@ -390,7 +368,7 @@ const noCache = (res) => { res.setHeader('Cache-Control','no-cache, no-store, mu
 app.get('/', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'portal.html')); });
 app.get('/portal', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'portal.html')); });
 app.get('/admin', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'index.html')); });
-app.get('/mozo',  (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'index.html')); });
+app.get('/mozo',  (_req, res) => { res.redirect(301, '/admin'); });
 app.get('/carta', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'carta.html')); });
 app.get('/menu',  (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'menu.html')); });
 app.get('/cocina', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'cocina.html')); });

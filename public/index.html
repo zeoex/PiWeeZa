@@ -847,9 +847,6 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       <div class="nav-item" data-section="usuarios" data-tooltip="Usuarios" onclick="navTo('usuarios',this);closeSidebar()" id="navUsuarios">
         <span class="nav-icon">👤</span><span class="nav-text">Usuarios</span>
       </div>
-      <div class="nav-item" data-section="mozostats" data-tooltip="Mis Estadísticas" onclick="navTo('mozostats',this);closeSidebar()" id="navMozoStats" style="display:none">
-        <span class="nav-icon">📊</span><span class="nav-text">Mis Estadísticas</span>
-      </div>
       <div class="nav-item" data-section="config" data-tooltip="Configuración" onclick="navTo('config',this);closeSidebar()">
         <span class="nav-icon">⚙️</span><span class="nav-text">Configuración</span>
       </div>
@@ -868,28 +865,6 @@ input.form-control:focus{outline:none;border-color:var(--red)}
   </div>
 
   <div class="main" id="mainContent">
-    <!-- Mozo-only top navigation bar -->
-    <div class="mozo-topnav" id="mozoTopnav">
-      <div class="mtn-logo"><span>🍕</span> PiWeeZa</div>
-      <div class="mtn-avatar-wrap" id="mozoAvatarWrap">
-        <div class="mtn-avatar" id="mozoAvatar" title="" onclick="toggleMozoMenu()">CM</div>
-        <div class="mtn-avatar-menu" id="mozoAvatarMenu">
-          <button onclick="doLogout()">🔴 Cerrar sesión</button>
-        </div>
-      </div>
-    </div>
-    <div class="mozo-bottomtab" id="mozoBottomtab">
-      <button class="mbt-btn active" id="mbtMesas" onclick="mozoNavTo('venta')">
-        <span class="mbt-icon">🛒</span>Venta
-      </button>
-      <button class="mbt-btn" id="mbtCocina" onclick="mozoNavTo('mozo-cocina')">
-        <span class="mbt-icon">🍳</span>Cocina
-        <span class="mbt-dot" id="mtnCocinaNotif" style="display:none"></span>
-      </button>
-      <button class="mbt-btn" id="mbtStats" onclick="mozoNavTo('mozostats')">
-        <span class="mbt-icon">📊</span>Stats
-      </button>
-    </div>
     <div class="topbar" id="mainTopbar">
       <button class="hamburger" onclick="toggleSidebar()" aria-label="Abrir menú">☰</button>
       <div class="topbar-title" id="topbarTitle">Vista Principal</div>
@@ -923,9 +898,6 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         <button class="btn btn-outline btn-sm" style="width:100%" onclick="llamarMesaManual()">➕ Llamar mesa manualmente</button>
       </div>
     </div>
-
-    <!-- Mozo llamado overlay (full screen) -->
-    <div id="mzLlamadoOverlay" style="display:none"></div>
 
     <!-- Print Queue Drawer -->
     <div class="pq-overlay" id="pqOverlay" onclick="closePrintQueue()"></div>
@@ -1023,27 +995,6 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       </div>
 
       <!-- MESAS -->
-      <div class="section" id="sec-mesas">
-        <div class="section-header">
-          <h2>🪑 Mesas</h2>
-          <button class="btn btn-primary btn-sm" id="btnNuevaMesa" onclick="abrirModalNuevaMesa()">+ Nueva Mesa</button>
-        </div>
-        <div class="tabs" id="mesasTabs">
-          <div class="tab active" id="tabSalon" onclick="switchTab('salon')">🏠 Salón</div>
-          <div class="tab" id="tabVereda" onclick="switchTab('vereda')">🌿 Vereda</div>
-        </div>
-        <div class="mesas-grid" id="mesasGrid"></div>
-      </div>
-
-      <!-- MOZO COCINA PANEL -->
-      <div class="section" id="sec-mozo-cocina">
-        <div class="section-header">
-          <h2>🍳 Estado en Cocina</h2>
-          <button class="btn btn-outline btn-sm" onclick="loadMozoCocina()">↻ Actualizar</button>
-        </div>
-        <div id="mozoCocinaList" class="mcc-list"></div>
-      </div>
-
       <!-- VENTA DIRECTA POS -->
       <div class="section" id="sec-venta">
         <div class="section-header" style="margin-bottom:12px">
@@ -1514,37 +1465,6 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       </div>
 
       <!-- MOZO STATS -->
-      <div class="section" id="sec-mozostats">
-        <div class="section-header"><h2>📊 Mis Estadísticas</h2></div>
-
-        <!-- Hero counters -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-          <div style="background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.07);display:flex;flex-direction:column;gap:4px">
-            <div style="width:40px;height:40px;background:#dcfce7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:4px">🪑</div>
-            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Mesas hoy</div>
-            <div id="mz-hoy" style="font-size:38px;font-weight:900;color:#16a34a;line-height:1">0</div>
-          </div>
-          <div style="background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.07);display:flex;flex-direction:column;gap:4px">
-            <div style="width:40px;height:40px;background:#dbeafe;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:4px">📅</div>
-            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Este mes</div>
-            <div id="mz-mes" style="font-size:38px;font-weight:900;color:var(--blue);line-height:1">0</div>
-          </div>
-        </div>
-
-        <!-- Day filter -->
-        <div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.06);display:flex;align-items:center;gap:12px">
-          <span style="font-size:13px;font-weight:700;color:#374151">📅 Ver día:</span>
-          <input type="date" id="mzFechaFiltro" class="form-control" style="flex:1;max-width:200px;font-size:14px" onchange="renderMozoStats()"/>
-          <button onclick="document.getElementById('mzFechaFiltro').value='';renderMozoStats()" style="border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:#9ca3af;font-family:inherit">Todos</button>
-        </div>
-
-        <!-- History -->
-        <div class="card">
-          <div class="card-header"><h3 id="mzHistorialTitle">🗓️ Historial</h3></div>
-          <div class="card-body" id="mzHistorialBody" style="padding:0"></div>
-        </div>
-      </div>
-
     </div><!-- end content -->
   </div><!-- end main -->
 </div><!-- end app -->
@@ -1947,16 +1867,14 @@ input:checked+.slider:before{transform:translateX(20px)}
 <script>
 const API = '/api';
 // Path-based session isolation: /mozo and /admin have independent tokens
-const _IS_MOZO_PATH = window.location.pathname === '/mozo' || window.location.pathname.startsWith('/mozo/');
-const _TOKEN_KEY = _IS_MOZO_PATH ? 'pz_mozo_token' : 'pz_token';
-const _USER_KEY  = _IS_MOZO_PATH ? 'pz_mozo_user'  : 'pz_user';
-// Migrate old auth keys (restito → pz)
+const _TOKEN_KEY = 'pz_token';
+const _USER_KEY  = 'pz_user';
+// Migrate old auth keys
 if (!localStorage.getItem(_TOKEN_KEY)) {
-  const oldKey = _IS_MOZO_PATH ? 'restito_mozo_token' : (localStorage.getItem('restito_token') ? 'restito_token' : 'pizzeria_token');
-  const oldVal = localStorage.getItem(oldKey);
+  const oldVal = localStorage.getItem('restito_token') || localStorage.getItem('pizzeria_token');
   if (oldVal) {
     localStorage.setItem(_TOKEN_KEY, oldVal);
-    const oldUser = _IS_MOZO_PATH ? localStorage.getItem('restito_mozo_user') : (localStorage.getItem('restito_user') || localStorage.getItem('pizzeria_user'));
+    const oldUser = localStorage.getItem('restito_user') || localStorage.getItem('pizzeria_user');
     if (oldUser) localStorage.setItem(_USER_KEY, oldUser);
   }
 }
@@ -2634,14 +2552,6 @@ async function doLogin() {
       token = 'demo-token'; currentUser = demoUser;
     } else { errEl.style.display = 'block'; return; }
   }
-  // Validate role: /mozo only accepts mozo role; /admin accepts all roles
-  const rolValido = !_IS_MOZO_PATH || currentUser.rol === 'mozo';
-  if (!rolValido) {
-    errEl.textContent = 'Este módulo es solo para mozos';
-    errEl.style.display = 'block';
-    token = null; currentUser = null;
-    return;
-  }
   localStorage.setItem(_TOKEN_KEY, token);
   localStorage.setItem(_USER_KEY, JSON.stringify(currentUser));
   initApp();
@@ -2718,8 +2628,6 @@ function initApp() {
   const _suc = _decodeJWT(token).sucursal_id || null;
   _currentSucursalId = _suc;
   // Mesa management (create/edit/delete) only for admin and supervisor
-  const esAdminRole = ['admin','supervisor'].includes(currentUser?.rol);
-  document.getElementById('btnNuevaMesa').style.display = esAdminRole ? '' : 'none';
   // Restore persisted state
   loadState();
   loadStateFromAPI().then(() => {
@@ -2731,30 +2639,12 @@ function initApp() {
       return;
     }
     const saved = (() => { try { return localStorage.getItem('pz_last_section'); } catch(e){} return null; })();
-    const validSections = ['dashboard','sucursales','ventas-dia','venta','pedidos','mesas','delivery','productos','stock','caja','facturacion','clientes','reportes','usuarios','config','mozo-cocina'];
+    const validSections = ['dashboard','sucursales','ventas-dia','venta','pedidos','delivery','productos','stock','caja','facturacion','clientes','reportes','usuarios','config'];
     const target = (saved && validSections.includes(saved)) ? saved : 'dashboard';
     navTo(target, null);
     renderCaja();
     if (target !== 'dashboard') loadDashboard();
   });
-  // Mozo: hide sidebar, show custom top nav
-  if (currentUser?.rol === 'mozo') {
-    // Hide sidebar entirely and adjust layout
-    document.querySelector('.sidebar').style.display = 'none';
-    document.getElementById('sidebarOverlay').style.display = 'none';
-    document.getElementById('mainContent').classList.add('mozo-layout');
-    // Show mozo topnav, hide regular topbar
-    document.getElementById('mozoTopnav').classList.add('visible');
-    document.getElementById('mozoBottomtab').classList.add('visible');
-    document.getElementById('mainTopbar').style.display = 'none';
-    document.getElementById('mesasTabs').classList.add('tabs-full');
-    // Set avatar initials (up to 2 words)
-    const nombre = currentUser?.nombre || '';
-    const initials = nombre.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
-    const av = document.getElementById('mozoAvatar');
-    av.textContent = initials || 'M';
-    av.title = nombre;
-  }
   // QZ Tray auto-connect (only for roles that print)
   if (['admin','cajero','supervisor'].includes(currentUser?.rol)) {
     setTimeout(() => QzTray.connect().catch(()=>{}), 1500);
@@ -2783,7 +2673,6 @@ function initApp() {
       if (_mb) _mb.textContent = _ocu || '';
       const _hm = document.getElementById('hab-mesas');
       if (_hm) { _hm.textContent = _ocu; _hm.style.display = _ocu > 0 ? 'flex' : 'none'; }
-      if (document.getElementById('sec-mesas').classList.contains('active')) renderMesas();
       if (document.getElementById('sec-dashboard').classList.contains('active')) loadDashboard();
     });
     socket.on('delivery:update', (updated) => {
@@ -2803,7 +2692,6 @@ function initApp() {
         if (!_cocinaComandas.find(c => String(c.id) === String(comanda.id))) {
           _cocinaComandas.unshift({...comanda, createdAt: new Date(comanda.createdAt || Date.now())});
         }
-        if (currentUser?.rol === 'mozo') renderMozoCocina();
       }
       showToast('Nueva comanda en cocina','success');
     });
@@ -2815,10 +2703,6 @@ function initApp() {
         } else {
           c.estado = estado;
         }
-        if (currentUser?.rol === 'mozo') {
-          if (estado === 'listo') showToast(`✅ Mesa ${c.mesa} — listo para servir!`, 'success');
-          renderMozoCocina();
-        }
       }
     });
     socket.on('comanda:replace', (comanda) => {
@@ -2826,7 +2710,6 @@ function initApp() {
       const idx = _cocinaComandas.findIndex(c => String(c.id) === String(comanda.id));
       if (idx >= 0) {
         _cocinaComandas[idx] = {...comanda, createdAt: new Date(comanda.createdAt)};
-        if (currentUser?.rol === 'mozo') renderMozoCocina();
       }
     });
     socket.on('print:job', (job) => {
@@ -2875,18 +2758,10 @@ function initApp() {
       if (!llamado) return;
       const idx = llamados.findIndex(l => l.id === llamado.id);
       if (idx >= 0) llamados[idx] = llamado; else llamados.unshift(llamado);
-      const rol = currentUser?.rol;
-      if (rol === 'mozo') {
-        // Show overlay only if this mozo is assigned to that mesa
-        const misMesas = mesasData.filter(m => m.mozoid === currentUser?.id || m.mozo === currentUser?.nombre);
-        const esMia = misMesas.some(m => m.numero === llamado.mesaNumero);
-        if (esMia || !llamado.mozoid) showMozoLlamado(llamado);
-      } else {
-        updateLldBadge();
-        playBell(llamado.recallCount > 0 ? 'recall' : 'mesa');
-        showToast(`🔔 Mesa #${llamado.mesaNumero} lista${llamado.mozo ? ' — ' + llamado.mozo : ''}`, 'success');
-        if (document.getElementById('lldDrawer')?.classList.contains('open')) renderLldList();
-      }
+      updateLldBadge();
+      playBell(llamado.recallCount > 0 ? 'recall' : 'mesa');
+      showToast(`🔔 Mesa #${llamado.mesaNumero} lista${llamado.mozo ? ' — ' + llamado.mozo : ''}`, 'success');
+      if (document.getElementById('lldDrawer')?.classList.contains('open')) renderLldList();
     });
     socket.on('llamado:delivery', (llamado) => {
       if (!llamado) return;
@@ -2914,7 +2789,7 @@ function initApp() {
         const activeEl = document.querySelector('.section.active');
         if (activeEl) {
           const sec = activeEl.id.replace('sec-','');
-          const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,mesas:renderMesas,delivery:renderDelivery,caja:renderCaja};
+          const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,caja:renderCaja};
           if (loaders[sec]) loaders[sec]();
         }
       } catch(e) {}
@@ -2930,7 +2805,7 @@ function initApp() {
           const activeEl = document.querySelector('.section.active');
           if (activeEl) {
             const sec = activeEl.id.replace('sec-','');
-            const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,mesas:renderMesas,delivery:renderDelivery,caja:renderCaja,facturacion:loadFacturacion};
+            const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,caja:renderCaja,facturacion:loadFacturacion};
             if (loaders[sec]) loaders[sec]();
           }
         }
@@ -2940,23 +2815,13 @@ function initApp() {
   // Load pending print jobs and llamados on login
   loadPrintQueue();
   loadLlamados();
-  // Load first section: mozo goes straight to venta
-  if (currentUser?.rol === 'mozo') {
-    mozoNavTo('venta');
-    loadMozoCocina();
-  } else {
-    loadDashboard();
-  }
+  // Load first section
+  loadDashboard();
 }
 
 // Role-specific login customization based on URL path
 (function setupLoginBranding() {
-  const path = window.location.pathname;
-  const roles = {
-    '/mozo':  { iconSrc:'/icon-mozo.svg',  title:'Módulo Vendedor',       email:'vendedor@pizzaya.com', pass:'mozo123',  hint:'Vendedor: vendedor@pizzaya.com / mozo123', accent:'#059669', accentL:'#34d399' },
-    '/admin': { iconSrc:'/icon-admin.svg', title:'Módulo Administración', email:'admin@pizzaya.com',    pass:'admin123', hint:'Admin: admin@pizzaya.com / admin123',          accent:'#7c3aed', accentL:'#a78bfa' },
-  };
-  const cfg = roles[path] || { iconSrc:'/icon-admin.svg', title:'Módulo Administración', email:'admin@pizzaya.com', pass:'admin123', hint:'Admin: admin@pizzaya.com / admin123', accent:'#7c3aed', accentL:'#a78bfa' };
+  const cfg = { iconSrc:'/icon-admin.svg', title:'Módulo Administración', email:'admin@pizzaya.com', pass:'admin123', hint:'Admin: admin@pizzaya.com / admin123', accent:'#7c3aed', accentL:'#a78bfa' };
   const le = document.getElementById('loginEmoji');
   if (le) {
     le.innerHTML = `<img src="${cfg.iconSrc}" alt="icon" style="width:88px;height:88px;object-fit:contain;border-radius:20px;display:block">`;
@@ -2972,16 +2837,7 @@ function initApp() {
 })();
 
 if (token && currentUser) {
-  const rolOk = !_IS_MOZO_PATH || currentUser.rol === 'mozo';
-  if (rolOk) {
-    initApp();
-  } else {
-    // Saved session is for the wrong module — clear it and show login
-    token = null; currentUser = null;
-    localStorage.removeItem(_TOKEN_KEY);
-    localStorage.removeItem(_USER_KEY);
-    document.getElementById('loginScreen').style.display = 'flex';
-  }
+  initApp();
 } else {
   document.getElementById('loginScreen').style.display = 'flex';
 }
@@ -2998,71 +2854,14 @@ function navTo(section, el) {
   else document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('sec-'+section).classList.add('active');
-  const titles = {dashboard:'Vista Principal',sucursales:'🏢 Sucursales','ventas-dia':'📋 Ventas del Día',venta:'Venta Directa',pedidos:'Pedidos',mesas:'Mesas',delivery:'Delivery',productos:'Productos',stock:'Stock',caja:'Caja',facturacion:'Facturación',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración',mozostats:'Mis Estadísticas'};
+  const titles = {dashboard:'Vista Principal',sucursales:'🏢 Sucursales','ventas-dia':'📋 Ventas del Día',venta:'Venta Directa',pedidos:'Pedidos',delivery:'Delivery',productos:'Productos',stock:'Stock',caja:'Caja',facturacion:'Facturación',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración'};
   document.getElementById('topbarTitle').textContent = titles[section] || section;
-  const loaders = {dashboard:loadDashboard,sucursales:()=>renderSucursales(),'ventas-dia':renderVentasDia,venta:renderVenta,pedidos:renderDelivery,mesas:renderMesas,delivery:renderDelivery,productos:renderProductos,stock:renderStock,caja:renderCaja,facturacion:loadFacturacion,clientes:renderClientes,reportes:renderReportes,usuarios:renderUsuarios,mozostats:renderMozoStats,config:loadPrintConfigUI};
+  const loaders = {dashboard:loadDashboard,sucursales:()=>renderSucursales(),'ventas-dia':renderVentasDia,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,productos:renderProductos,stock:renderStock,caja:renderCaja,facturacion:loadFacturacion,clientes:renderClientes,reportes:renderReportes,usuarios:renderUsuarios,config:loadPrintConfigUI};
   if(loaders[section]) loaders[section]();
   try { localStorage.setItem('pz_last_section', section); } catch(e) {}
 }
 
-function mozoNavTo(section) {
-  document.getElementById('mbtMesas').classList.toggle('active', section==='venta');
-  document.getElementById('mbtCocina').classList.toggle('active', section==='mozo-cocina');
-  document.getElementById('mbtStats').classList.toggle('active', section==='mozostats');
-  if (section === 'mozo-cocina') {
-    loadMozoCocina();
-    document.getElementById('mtnCocinaNotif').style.display = 'none';
-  }
-  navTo(section, null);
-}
 let _cocinaComandas = [];
-
-function loadMozoCocina() {
-  fetch('/api/cocina/comandas')
-    .then(r => r.json())
-    .then(data => {
-      if (Array.isArray(data)) {
-        _cocinaComandas = data.map(c => ({...c, createdAt: new Date(c.createdAt)}));
-      }
-      renderMozoCocina();
-    }).catch(() => renderMozoCocina());
-}
-
-function renderMozoCocina() {
-  const container = document.getElementById('mozoCocinaList');
-  if (!container) return;
-  const myName = currentUser?.nombre;
-  const mine = _cocinaComandas.filter(c =>
-    c.tipo !== 'delivery' && c.estado !== 'entregado' &&
-    (!myName || !c.mozo || c.mozo === myName)
-  );
-  if (!mine.length) {
-    container.innerHTML = `<div class="mcc-empty"><div style="font-size:40px;margin-bottom:8px">✅</div><p style="font-weight:600;font-size:15px">Sin comandas activas</p></div>`;
-    document.getElementById('mtnCocinaNotif').style.display = 'none';
-    return;
-  }
-  const stateLabel = {pendiente:'Pendiente',preparacion:'En Preparación',listo:'✅ Listo para servir'};
-  const nowMs = Date.now();
-  container.innerHTML = mine.map(c => {
-    const mins = Math.floor((nowMs - new Date(c.createdAt).getTime()) / 60000);
-    const itemsHtml = (c.items||[]).map(i => {
-      const v = i.variante && i.variante !== 'unica' ? ` (${i.variante})` : '';
-      const n = i.nota ? ` — <em style="color:#6b7280">${i.nota}</em>` : '';
-      return `${i.qty}× ${i.nombre}${v}${n}`;
-    }).join('<br>');
-    return `<div class="mcc-card ${c.estado}">
-      <div class="mcc-header">
-        <span class="mcc-mesa">Mesa ${c.mesa}</span>
-        <span class="mcc-badge ${c.estado}">${stateLabel[c.estado]||c.estado}</span>
-        <span class="mcc-time">${mins}m</span>
-      </div>
-      <div class="mcc-items">${itemsHtml||'<em style="color:#9ca3af">Sin ítems</em>'}</div>
-    </div>`;
-  }).join('');
-  const listos = mine.filter(c => c.estado === 'listo').length;
-  const notif = document.getElementById('mtnCocinaNotif');
-  if (notif) notif.style.display = listos > 0 ? 'inline-block' : 'none';
-}
 
 function cambiarZonaMesa(id, zona) {
   const m = mesasData.find(x=>String(x.id)===String(id));
@@ -3109,16 +2908,6 @@ async function syncMesa(m) {
     });
   } catch(e) {}
 }
-function toggleMozoMenu() {
-  document.getElementById('mozoAvatarMenu').classList.toggle('open');
-}
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('#mozoAvatarWrap')) {
-    const m = document.getElementById('mozoAvatarMenu');
-    if (m) m.classList.remove('open');
-  }
-});
-
 // ======= DASHBOARD =======
 function loadDashboard() {
   const ocupadas = mesasData.filter(m=>m.estado!=='libre').length;
@@ -3223,8 +3012,9 @@ function tiempoToMins(t) {
 }
 
 function renderMesas() {
-  const filtered = mesasData.filter(m=>m.zona===currentMesaTab);
   const el = document.getElementById('mesasGrid');
+  if (!el) return; // módulo mesas removido
+  const filtered = mesasData.filter(m=>m.zona===currentMesaTab);
   el.classList.remove('mesas-grid-mozo');
   el.style.gridTemplateColumns = '';
   if(!filtered.length){ el.innerHTML='<div class="empty-state"><div class="empty-icon">🪑</div><p>No hay mesas en esta zona</p></div>'; return; }
@@ -5365,120 +5155,6 @@ function _resetModalUsuario() {
 }
 
 // ======= MOZO STATS =======
-function renderMozoStats() {
-  const miNombre = currentUser?.nombre;
-  const hoy = new Date().toISOString().slice(0,10);
-  const mesActual = new Date().toISOString().slice(0,7);
-  const miHistorial = mozoHistorial.filter(h => !miNombre || h.mozo === miNombre);
-  const hoyRecs = miHistorial.filter(h => h.fecha.startsWith(hoy));
-  const mesRecs = miHistorial.filter(h => h.fecha.startsWith(mesActual));
-  document.getElementById('mz-hoy').textContent = hoyRecs.length;
-  document.getElementById('mz-mes').textContent = mesRecs.length;
-
-  // Set today as default in date picker if empty
-  const filtroEl = document.getElementById('mzFechaFiltro');
-  if (filtroEl && !filtroEl.value) filtroEl.value = hoy;
-
-  const fechaFiltro = filtroEl?.value || '';
-  const body = document.getElementById('mzHistorialBody');
-  const titleEl = document.getElementById('mzHistorialTitle');
-
-  if (!miHistorial.length) {
-    titleEl.textContent = '🗓️ Historial';
-    body.innerHTML = '<div style="text-align:center;padding:32px;color:#aaa;font-size:14px">Sin historial aún. Cerrá una mesa para ver el registro.</div>';
-    return;
-  }
-
-  if (fechaFiltro) {
-    // Show individual mesas for the selected day
-    const dayRecs = miHistorial.filter(h => h.fecha.startsWith(fechaFiltro));
-    const fechaLabel = new Date(fechaFiltro+'T12:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
-    titleEl.textContent = `🗓️ ${fechaLabel.charAt(0).toUpperCase()+fechaLabel.slice(1)}`;
-    if (!dayRecs.length) {
-      body.innerHTML = '<div style="text-align:center;padding:32px;color:#aaa;font-size:14px">Sin mesas ese día.</div>';
-      return;
-    }
-    window._mzCurDayRecs = dayRecs;
-    body.innerHTML = dayRecs.map((h, idx) => {
-      const hora = new Date(h.fecha).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-      const pagoIcon = {efectivo:'💵',tarjeta:'💳',transferencia:'📲'}[h.pago] || '💰';
-      return `<div onclick="verMesaHistorial(${idx})" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f3f4f6;cursor:pointer;transition:background .15s" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
-        <div style="width:40px;height:40px;background:#f0fdf4;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🪑</div>
-        <div style="flex:1">
-          <div style="font-weight:700;font-size:14px;color:#111827">Mesa #${h.mesa}</div>
-          <div style="font-size:12px;color:#9ca3af;margin-top:2px">${h.items} ítem${h.items!==1?'s':''} · ${pagoIcon} ${(h.pago||'').charAt(0).toUpperCase()+(h.pago||'').slice(1)}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="font-size:13px;font-weight:600;color:#6b7280">${hora}</div>
-          <div style="font-size:11px;color:#9ca3af">›</div>
-        </div>
-      </div>`;
-    }).join('');
-  } else {
-    // Show summary grouped by day
-    titleEl.textContent = '🗓️ Días trabajados';
-    const byDay = {};
-    miHistorial.forEach(h => {
-      const d = h.fecha.slice(0,10);
-      if (!byDay[d]) byDay[d] = 0;
-      byDay[d]++;
-    });
-    const days = Object.keys(byDay).sort((a,b) => b.localeCompare(a));
-    body.innerHTML = days.map(d => {
-      const label = new Date(d+'T12:00:00').toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
-      const count = byDay[d];
-      const esHoy = d === hoy;
-      return `<div onclick="document.getElementById('mzFechaFiltro').value='${d}';renderMozoStats()"
-        style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f3f4f6;cursor:pointer"
-        onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
-        <div style="width:40px;height:40px;background:${esHoy?'#dcfce7':'#f3f4f6'};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📅</div>
-        <div style="flex:1">
-          <div style="font-weight:700;font-size:14px;color:#111827">${label}${esHoy?' <span style="font-size:11px;background:#dcfce7;color:#16a34a;border-radius:8px;padding:2px 7px;font-weight:700;margin-left:6px">HOY</span>':''}</div>
-          <div style="font-size:12px;color:#9ca3af;margin-top:2px">${count} mesa${count!==1?'s':''} atendida${count!==1?'s':''}</div>
-        </div>
-        <div style="font-size:20px;font-weight:900;color:#1d3557">${count}</div>
-      </div>`;
-    }).join('');
-  }
-}
-
-function verMesaHistorial(idx) {
-  const h = (window._mzCurDayRecs || [])[idx];
-  if (!h) return;
-  const hora = new Date(h.fecha).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-  const pagoIcon = {efectivo:'💵',tarjeta:'💳',transferencia:'📲'}[h.pago] || '💰';
-  const pagoLabel = (h.pago||'').charAt(0).toUpperCase()+(h.pago||'').slice(1);
-
-  let detalleHtml;
-  if (h.detalle?.length) {
-    const filas = h.detalle.map(i => {
-      const size = i.size && i.size !== 'null' ? ` <span style="font-size:11px;color:#9ca3af">(${i.size})</span>` : '';
-      const nota = i.nota ? `<div style="font-size:11px;color:#9ca3af;margin-top:1px">📝 ${i.nota}</div>` : '';
-      const sub = (i.precio * i.qty).toLocaleString('es-AR');
-      return `<div style="display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-bottom:1px solid #f3f4f6">
-        <div style="width:24px;height:24px;background:#f3f4f6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#374151;flex-shrink:0">${i.qty}</div>
-        <div style="flex:1;font-size:14px;font-weight:600;color:#111827">${i.nombre}${size}${nota}</div>
-        <div style="font-size:13px;font-weight:700;color:#374151;flex-shrink:0">$${sub}</div>
-      </div>`;
-    }).join('');
-    detalleHtml = filas + `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 2px;border-top:2px solid #e5e7eb;margin-top:4px">
-      <span style="font-size:14px;font-weight:800;color:#1d3557;text-transform:uppercase;letter-spacing:.5px">Total</span>
-      <span style="font-size:20px;font-weight:900;color:#1d3557">$${(h.total||0).toLocaleString('es-AR')}</span>
-    </div>`;
-  } else {
-    detalleHtml = `<div style="text-align:center;padding:24px 16px;color:#9ca3af;font-size:13px">Sin detalle disponible<br><span style="font-size:11px">Solo mesas cerradas desde la última actualización guardan detalle</span></div>`;
-  }
-
-  document.getElementById('modalMesaDetalleTitle').textContent = `Mesa #${h.mesa}`;
-  document.getElementById('modalMesaDetalleBody').innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;padding:0 0 14px;margin-bottom:4px;border-bottom:1.5px solid #f3f4f6">
-      <div style="flex:1;font-size:13px;font-weight:700;color:#374151">🕐 ${hora}</div>
-      <div style="font-size:13px;font-weight:700;color:#374151">${pagoIcon} ${pagoLabel}</div>
-    </div>
-    ${detalleHtml}`;
-  openModal('modalMesaDetalle');
-}
-
 // ======= MEDIOS DE PAGO =======
 function getMediosPago() {
   try {
@@ -6096,43 +5772,6 @@ async function llamarMesaManual() {
   }).catch(()=>{});
   playBell('mesa');
   showToast(`🔔 Mesa #${num} llamada`, 'success');
-}
-
-// Full-screen overlay for mozo when their table is called
-let _mzPendingLlamados = [];
-
-function showMozoLlamado(llamado) {
-  _mzPendingLlamados.push(llamado);
-  if (_mzPendingLlamados.length === 1) _renderMozoLlamado();
-}
-
-function _renderMozoLlamado() {
-  const llamado = _mzPendingLlamados[0];
-  if (!llamado) return;
-  playBell('mesa');
-  const itemsHtml = llamado.items?.length
-    ? `<div class="mz-llamado-items">${llamado.items.map(i=>`<div>▸ ${i.cantidad||i.qty||1}× ${i.nombre}</div>`).join('')}</div>` : '';
-  const overlay = document.getElementById('mzLlamadoOverlay');
-  overlay.innerHTML = `
-    <div class="mz-llamado-overlay">
-      <div class="mz-llamado-card">
-        <span class="mz-llamado-bell">🔔</span>
-        <div class="mz-llamado-title">¡Pedido listo!</div>
-        <div class="mz-llamado-mesa">#${llamado.mesaNumero}</div>
-        <div class="mz-llamado-mozo">Llevar a Mesa ${llamado.mesaNumero}</div>
-        ${itemsHtml}
-        <button class="btn btn-success btn-lg" style="width:100%;font-size:16px" onclick="ackMozoLlamado('${llamado.id}')">✓ Entendido — voy</button>
-      </div>
-    </div>`;
-  overlay.style.display = 'block';
-}
-
-function ackMozoLlamado(id) {
-  if (socket?.connected) socket.emit('llamado:ack', { llamadoId: id });
-  _mzPendingLlamados = _mzPendingLlamados.filter(l => l.id !== id);
-  const overlay = document.getElementById('mzLlamadoOverlay');
-  if (_mzPendingLlamados.length > 0) _renderMozoLlamado();
-  else overlay.style.display = 'none';
 }
 
 // ======= PRINT QUEUE =======

@@ -46,6 +46,11 @@ function getPool() {
 }
 
 async function initPG() {
+  // Debug: listar variables de entorno relacionadas con DB
+  const dbEnvKeys = Object.keys(process.env).filter(k =>
+    k.includes('DATABASE') || k.includes('POSTGRES') || k.includes('PG') || k.includes('PGHOST')
+  );
+  console.log('[PG] DB env vars found:', dbEnvKeys.length ? dbEnvKeys.join(', ') : 'NONE');
   const pool = getPool();
   if (!pool) {
     console.log('[PG] DATABASE_URL not set — skipping PostgreSQL init');

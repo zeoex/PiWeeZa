@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>ResTito – Portal</title>
+<title>PiWeeZa – Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
@@ -341,12 +341,23 @@
   .tile-arrow { display: none; }
 
   /* ── Role accent overrides ── */
-  .tile.admin  { --accent: var(--c-admin);  --accent-l: var(--c-admin-l); }
-  .tile.mozo   { --accent: var(--c-mozo);   --accent-l: var(--c-mozo-l); }
-  .tile.cocina { --accent: var(--c-cocina); --accent-l: var(--c-cocina-l); }
-  .tile.rep    { --accent: var(--c-rep);    --accent-l: var(--c-rep-l); }
-  .tile.carta  { --accent: var(--c-carta);  --accent-l: var(--c-carta-l); }
-  .tile.menuqr { --accent: var(--c-menu);   --accent-l: var(--c-menu-l); }
+  .tile.admin    { --accent: var(--c-admin);  --accent-l: var(--c-admin-l); }
+  .tile.cocina   { --accent: var(--c-cocina); --accent-l: var(--c-cocina-l); }
+  .tile.rep      { --accent: var(--c-rep);    --accent-l: var(--c-rep-l); }
+  .tile.sucursal { --accent: #f97316; --accent-l: #fb923c; }
+
+  /* ── Section divider ── */
+  .portal-section { width: 100%; margin-bottom: 10px; margin-top: 28px; }
+  .portal-section:first-child { margin-top: 0; }
+  .portal-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(144,144,187,0.45);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  #sucursalesSection { display: none; }
 
   /* ───── FOOTER ───── */
   .footer {
@@ -422,59 +433,73 @@
   </header>
 
   <!-- TILES -->
-  <main class="grid">
+  <main class="wrapper-sections">
 
-    <a href="/admin" class="tile admin" onclick="['pz_token','pz_user','pizzeria_token','pizzeria_user','restito_token','restito_user'].forEach(function(k){localStorage.removeItem(k);})">
-      <div class="tile-icon"><img src="/icon-admin.svg" alt="Admin"/></div>
-      <div class="tile-body">
-        <span class="tile-label">Administración</span>
-        <span class="tile-sub">Panel completo</span>
+    <!-- Admin Central -->
+    <div class="portal-section">
+      <div class="portal-label">Administración</div>
+      <div class="grid">
+        <a href="/admin" class="tile admin" onclick="['pz_token','pz_user','pizzeria_token','pizzeria_user','restito_token','restito_user'].forEach(function(k){localStorage.removeItem(k);})">
+          <div class="tile-icon"><img src="/icon-admin.svg" alt="Admin"/></div>
+          <div class="tile-body">
+            <span class="tile-label">Admin Central</span>
+            <span class="tile-sub">Panel completo</span>
+          </div>
+        </a>
       </div>
-      <span class="tile-arrow">→</span>
-    </a>
+    </div>
 
-    <a href="/cocina.html" class="tile cocina">
-      <div class="tile-icon"><img src="/icon-cocina.svg" alt="Cocina"/></div>
-      <div class="tile-body">
-        <span class="tile-label">Cocina</span>
-        <span class="tile-sub">Display de comandas</span>
-      </div>
-      <span class="tile-arrow">→</span>
-    </a>
+    <!-- Sucursales (dinámicas) -->
+    <div class="portal-section" id="sucursalesSection">
+      <div class="portal-label">Sucursales</div>
+      <div class="grid" id="sucursalesGrid"></div>
+    </div>
 
-    <a href="/repartidor.html" class="tile rep">
-      <div class="tile-icon"><img src="/icon-repartidor.svg" alt="Repartidor"/></div>
-      <div class="tile-body">
-        <span class="tile-label">Repartidor</span>
-        <span class="tile-sub">App de delivery</span>
+    <!-- Delivery -->
+    <div class="portal-section">
+      <div class="portal-label">Operaciones</div>
+      <div class="grid">
+        <a href="/repartidor.html" class="tile rep">
+          <div class="tile-icon"><img src="/icon-repartidor.svg" alt="Repartidor"/></div>
+          <div class="tile-body">
+            <span class="tile-label">Delivery</span>
+            <span class="tile-sub">App repartidor</span>
+          </div>
+        </a>
       </div>
-      <span class="tile-arrow">→</span>
-    </a>
-
-    <a href="/carta.html" class="tile carta">
-      <div class="tile-icon"><img src="/icon-carta.svg" alt="Menú Online"/></div>
-      <div class="tile-body">
-        <span class="tile-label">Menú Online</span>
-        <span class="tile-sub">Pedidos desde casa</span>
-      </div>
-      <span class="tile-arrow">→</span>
-    </a>
-
-    <a href="/menu.html" class="tile menuqr">
-      <div class="tile-icon"><img src="/icon-menuqr.svg" alt="Carta QR"/></div>
-      <div class="tile-body">
-        <span class="tile-label">Carta QR</span>
-        <span class="tile-sub">Escaner en el local</span>
-      </div>
-      <span class="tile-arrow">→</span>
-    </a>
+    </div>
 
   </main>
 
   <!-- FOOTER -->
   <footer class="footer">
-    ResTito By <span>ZeODev</span> &reg;
+    PiWeeZa By <span>ZeODev</span> &reg;
   </footer>
+
+  <script>
+  (function loadSucursales() {
+    fetch('/api/sucursales/publicas')
+      .then(function(r) { return r.json(); })
+      .then(function(suc) {
+        if (!suc.length) return;
+        var grid  = document.getElementById('sucursalesGrid');
+        var sec   = document.getElementById('sucursalesSection');
+        var delay = 0.06;
+        grid.innerHTML = suc.map(function(s, i) {
+          return '<a href="/admin" class="tile sucursal" style="animation-delay:' + (delay + i * 0.07) + 's" ' +
+            'onclick="[\'pz_token\',\'pz_user\'].forEach(function(k){localStorage.removeItem(k);})">' +
+            '<div class="tile-icon" style="font-size:32px">🏪</div>' +
+            '<div class="tile-body">' +
+              '<span class="tile-label">' + s.nombre + '</span>' +
+              '<span class="tile-sub">Ingresar al POS</span>' +
+            '</div>' +
+            '</a>';
+        }).join('');
+        sec.style.display = 'block';
+      })
+      .catch(function() {});
+  })();
+  </script>
 
 </div>
 </body>

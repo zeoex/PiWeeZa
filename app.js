@@ -1615,6 +1615,14 @@ app.delete('/api/users/:id', authMiddleware, (req, res) => {
 // ─────────────────────────────────────────────
 //  SUCURSALES ROUTES
 // ─────────────────────────────────────────────
+// Public — usado por el portal para mostrar tiles sin auth
+app.get('/api/sucursales/publicas', (req, res) => {
+  const publicas = (db.sucursales || [])
+    .filter(s => s.activa)
+    .map(s => ({ id: s.id, nombre: s.nombre }));
+  res.json(publicas);
+});
+
 app.get('/api/sucursales', authMiddleware, (req, res) => {
   res.json(db.sucursales || []);
 });

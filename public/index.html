@@ -835,9 +835,6 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       <div class="nav-item" data-section="caja" data-tooltip="Caja" onclick="navTo('caja',this);closeSidebar()">
         <span class="nav-icon">💰</span><span class="nav-text">Caja</span>
       </div>
-      <div class="nav-item" data-section="facturacion" data-tooltip="Facturación" onclick="navTo('facturacion',this);closeSidebar()">
-        <span class="nav-icon">🧾</span><span class="nav-text">Facturación</span>
-      </div>
       <div class="nav-item" data-section="clientes" data-tooltip="Clientes" onclick="navTo('clientes',this);closeSidebar()">
         <span class="nav-icon">👥</span><span class="nav-text">Clientes</span>
       </div>
@@ -921,6 +918,10 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         <div class="home-quick">
           <div class="home-quick-label">Acceso rápido</div>
           <div class="home-actions">
+            <button class="ha-btn" onclick="navTo('ventas-dia',document.querySelector('[data-section=ventas-dia]'))">
+              <div class="ha-circle" style="background:#fef3c7;box-shadow:0 6px 18px rgba(245,158,11,0.25)">📋</div>
+              <span class="ha-label">Ventas del Día</span>
+            </button>
             <button class="ha-btn" onclick="navTo('venta',document.querySelector('[data-section=venta]'))">
               <div class="ha-circle" style="background:#ede9fe;box-shadow:0 6px 18px rgba(124,58,237,0.22)">
                 🛒
@@ -929,52 +930,41 @@ input.form-control:focus{outline:none;border-color:var(--red)}
               <span class="ha-label">Venta</span>
             </button>
             <button class="ha-btn" onclick="navTo('pedidos',document.querySelector('[data-section=pedidos]'))">
-              <div class="ha-circle" style="background:#fef3c7;box-shadow:0 6px 18px rgba(245,158,11,0.25)">
-                📱
+              <div class="ha-circle" style="background:#fff0e6;box-shadow:0 6px 18px rgba(249,115,22,0.22)">
+                🛵
                 <span class="ha-badge" id="hab-delivery" style="display:none">0</span>
               </div>
               <span class="ha-label">Pedidos</span>
             </button>
             <button class="ha-btn" onclick="navTo('productos',document.querySelector('[data-section=productos]'))">
-              <div class="ha-circle" style="background:#d1fae5;box-shadow:0 6px 18px rgba(16,185,129,0.22)">
-                🍕
-              </div>
+              <div class="ha-circle" style="background:#d1fae5;box-shadow:0 6px 18px rgba(16,185,129,0.22)">🍕</div>
               <span class="ha-label">Productos</span>
             </button>
-            <button class="ha-btn" onclick="navTo('caja',document.querySelector('[data-section=caja]'))">
-              <div class="ha-circle" style="background:#fce7f3;box-shadow:0 6px 18px rgba(236,72,153,0.22)">
-                💰
-              </div>
-              <span class="ha-label">Caja</span>
-            </button>
-            <button class="ha-btn" onclick="navTo('clientes',document.querySelector('[data-section=clientes]'))">
-              <div class="ha-circle" style="background:#dbeafe;box-shadow:0 6px 18px rgba(59,130,246,0.22)">
-                👥
-              </div>
-              <span class="ha-label">Clientes</span>
+            <button class="ha-btn" onclick="navTo('sucursales',document.querySelector('[data-section=sucursales]'))">
+              <div class="ha-circle" style="background:#dbeafe;box-shadow:0 6px 18px rgba(59,130,246,0.22)">🏢</div>
+              <span class="ha-label">Sucursales</span>
             </button>
             <button class="ha-btn" onclick="navTo('reportes',document.querySelector('[data-section=reportes]'))">
-              <div class="ha-circle" style="background:#e0f2fe;box-shadow:0 6px 18px rgba(14,165,233,0.22)">
-                📊
-              </div>
+              <div class="ha-circle" style="background:#e0f2fe;box-shadow:0 6px 18px rgba(14,165,233,0.22)">📊</div>
               <span class="ha-label">Reportes</span>
             </button>
           </div>
         </div>
-        <!-- Mesas -->
+        <!-- Stats generales hoy -->
+        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:16px">
+          <div class="stat-card green"><div class="stat-label">Ventas Hoy</div><div class="stat-value" id="dash-ventas-hoy">$0</div></div>
+          <div class="stat-card blue"><div class="stat-label">Pedidos Hoy</div><div class="stat-value" id="dash-pedidos-hoy">0</div></div>
+          <div class="stat-card teal"><div class="stat-label">Ticket Promedio</div><div class="stat-value" id="dash-ticket-prom">$0</div></div>
+          <div class="stat-card orange"><div class="stat-label">Pedidos Activos</div><div class="stat-value" id="dash-pedidos-activos">0</div></div>
+        </div>
+        <!-- Stats por sucursal -->
         <div class="card" style="margin-bottom:16px">
           <div class="card-header" style="display:flex;align-items:center;gap:10px">
-            <h3 style="flex:1">🪑 Estado de Mesas</h3>
-            <button class="btn btn-outline btn-sm" onclick="navTo('venta',document.querySelector('[data-section=venta]'))">Ver todas →</button>
+            <h3 style="flex:1">🏢 Sucursales — Hoy</h3>
+            <button class="btn btn-outline btn-sm" onclick="navTo('sucursales',document.querySelector('[data-section=sucursales]'))">Gestionar →</button>
           </div>
-          <div class="card-body">
-            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-              <span id="dash-badge-salon" style="font-size:12px;font-weight:700;color:var(--gray)"></span>
-              <span style="color:var(--border)">|</span>
-              <span id="dash-badge-vereda" style="font-size:12px;font-weight:700;color:var(--gray)"></span>
-            </div>
-            <div id="dashMesasSalon" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-bottom:8px"></div>
-            <div id="dashMesasVereda" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px"></div>
+          <div class="card-body" id="dashSucursales">
+            <div style="color:var(--gray);text-align:center;padding:12px 0;font-size:13px">Cargando...</div>
           </div>
         </div>
         <!-- Delivery activo -->
@@ -987,7 +977,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
             <div style="color:var(--gray);text-align:center;padding:12px 0;font-size:13px">No hay pedidos activos</div>
           </div>
         </div>
-        <!-- Actividades -->
+        <!-- Actividades recientes -->
         <div class="card">
           <div class="card-header"><h3>🕐 Últimas Actividades</h3></div>
           <div class="card-body" id="actividadesList"></div>
@@ -1151,27 +1141,6 @@ input.form-control:focus{outline:none;border-color:var(--red)}
               <tbody id="cajaMov"></tbody>
             </table></div>
           </div>
-        </div>
-      </div>
-
-      <!-- FACTURACIÓN -->
-      <div class="section" id="sec-facturacion">
-        <div class="section-header"><h2>🧾 Facturación</h2></div>
-        <div class="filter-bar">
-          <input type="date" class="form-control" style="width:auto" id="factFechaDesde"/>
-          <input type="date" class="form-control" style="width:auto" id="factFechaHasta"/>
-          <button class="btn btn-outline btn-sm" onclick="loadFacturacion()">Filtrar</button>
-        </div>
-        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
-          <div class="stat-card green"><div class="stat-label">Total Facturado</div><div class="stat-value" id="factTotal">$0</div></div>
-          <div class="stat-card blue"><div class="stat-label">Cantidad Facturas</div><div class="stat-value" id="factCount">0</div></div>
-          <div class="stat-card teal"><div class="stat-label">Ticket Promedio</div><div class="stat-value" id="factAvg">$0</div></div>
-        </div>
-        <div class="card">
-          <div class="table-wrap"><table>
-            <thead><tr><th>Nro.</th><th>Fecha</th><th>Mesa/Delivery</th><th>Items</th><th>Total</th><th>Pago</th><th>Estado</th><th></th></tr></thead>
-            <tbody id="factTbody"></tbody>
-          </table></div>
         </div>
       </div>
 
@@ -2639,7 +2608,7 @@ function initApp() {
       return;
     }
     const saved = (() => { try { return localStorage.getItem('pz_last_section'); } catch(e){} return null; })();
-    const validSections = ['dashboard','sucursales','ventas-dia','venta','pedidos','delivery','productos','stock','caja','facturacion','clientes','reportes','usuarios','config'];
+    const validSections = ['dashboard','sucursales','ventas-dia','venta','pedidos','delivery','productos','stock','caja','clientes','reportes','usuarios','config'];
     const target = (saved && validSections.includes(saved)) ? saved : 'dashboard';
     navTo(target, null);
     renderCaja();
@@ -2805,7 +2774,7 @@ function initApp() {
           const activeEl = document.querySelector('.section.active');
           if (activeEl) {
             const sec = activeEl.id.replace('sec-','');
-            const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,caja:renderCaja,facturacion:loadFacturacion};
+            const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,caja:renderCaja};
             if (loaders[sec]) loaders[sec]();
           }
         }
@@ -2854,9 +2823,9 @@ function navTo(section, el) {
   else document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('sec-'+section).classList.add('active');
-  const titles = {dashboard:'Vista Principal',sucursales:'🏢 Sucursales','ventas-dia':'📋 Ventas del Día',venta:'Venta Directa',pedidos:'Pedidos',delivery:'Delivery',productos:'Productos',stock:'Stock',caja:'Caja',facturacion:'Facturación',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración'};
+  const titles = {dashboard:'Vista Principal',sucursales:'🏢 Sucursales','ventas-dia':'📋 Ventas del Día',venta:'Venta Directa',pedidos:'Pedidos',delivery:'Delivery',productos:'Productos',stock:'Stock',caja:'Caja',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración'};
   document.getElementById('topbarTitle').textContent = titles[section] || section;
-  const loaders = {dashboard:loadDashboard,sucursales:()=>renderSucursales(),'ventas-dia':renderVentasDia,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,productos:renderProductos,stock:renderStock,caja:renderCaja,facturacion:loadFacturacion,clientes:renderClientes,reportes:renderReportes,usuarios:renderUsuarios,config:loadPrintConfigUI};
+  const loaders = {dashboard:loadDashboard,sucursales:()=>renderSucursales(),'ventas-dia':renderVentasDia,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,productos:renderProductos,stock:renderStock,caja:renderCaja,clientes:renderClientes,reportes:renderReportes,usuarios:renderUsuarios,config:loadPrintConfigUI};
   if(loaders[section]) loaders[section]();
   try { localStorage.setItem('pz_last_section', section); } catch(e) {}
 }
@@ -2909,42 +2878,48 @@ async function syncMesa(m) {
   } catch(e) {}
 }
 // ======= DASHBOARD =======
-function loadDashboard() {
-  const ocupadas = mesasData.filter(m=>m.estado!=='libre').length;
+async function loadDashboard() {
   const enDelivery = deliveryData.filter(d=>['nuevo','en_cocina','en_camino','listo'].includes(d.estado)).length;
-  document.getElementById('mesasBadge').textContent = ocupadas || '';
-  document.getElementById('deliveryBadge').textContent = enDelivery || '';
-  // Update circular button badges
-  const habM = document.getElementById('hab-mesas');
-  if (habM) { habM.textContent = ocupadas; habM.style.display = ocupadas > 0 ? 'flex' : 'none'; }
   const habD = document.getElementById('hab-delivery');
   if (habD) { habD.textContent = enDelivery; habD.style.display = enDelivery > 0 ? 'flex' : 'none'; }
-  renderDashMesas();
   renderDashDelivery();
   renderActividades();
+
+  // Stats generales del día
+  try {
+    const hoy = new Date().toISOString().slice(0,10);
+    const [ventasRes, sucRes] = await Promise.all([
+      apiFetch(`/ventas/diarias?fecha=${hoy}`),
+      apiFetch('/reportes/sucursales')
+    ]);
+    if (ventasRes.ok) {
+      const ventas = await ventasRes.json();
+      const total = ventas.reduce((s,v)=>s+(v.total||0),0);
+      const count = ventas.length;
+      document.getElementById('dash-ventas-hoy').textContent = '$'+total.toLocaleString('es-AR');
+      document.getElementById('dash-pedidos-hoy').textContent = count;
+      document.getElementById('dash-ticket-prom').textContent = '$'+(count?Math.round(total/count):0).toLocaleString('es-AR');
+    }
+    document.getElementById('dash-pedidos-activos').textContent = enDelivery;
+    if (sucRes.ok) {
+      const sucs = await sucRes.json();
+      const el = document.getElementById('dashSucursales');
+      if (!sucs.length) {
+        el.innerHTML = '<div style="color:var(--gray);text-align:center;padding:12px 0;font-size:13px">No hay sucursales configuradas</div>';
+      } else {
+        el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">${sucs.map(s=>`
+          <div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+            <div style="font-weight:700;font-size:14px;margin-bottom:8px">🏪 ${s.nombre||'Sucursal'}</div>
+            <div style="font-size:12px;color:var(--gray);display:flex;justify-content:space-between"><span>Ventas hoy</span><strong style="color:var(--text)">$${(s.ventas_hoy||0).toLocaleString('es-AR')}</strong></div>
+            <div style="font-size:12px;color:var(--gray);display:flex;justify-content:space-between;margin-top:4px"><span>Pedidos hoy</span><strong style="color:var(--text)">${s.pedidos_hoy||0}</strong></div>
+            <div style="font-size:12px;color:var(--gray);display:flex;justify-content:space-between;margin-top:4px"><span>Estado caja</span><strong style="color:${s.caja_abierta?'#059669':'#dc2626'}">${s.caja_abierta?'Abierta':'Cerrada'}</strong></div>
+          </div>`).join('')}</div>`;
+      }
+    }
+  } catch(e) {}
 }
 
 function updateDashboardStats(data) { if(data) loadDashboard(); }
-
-function renderDashMesas() {
-  const chip = m => {
-    const bg = m.estado==='libre'?'#d4edda':m.estado==='ocupada'?'#fff3cd':'#f8d7da';
-    const cl = m.estado==='libre'?'#155724':m.estado==='ocupada'?'#856404':'#721c24';
-    const items = (m.pedido||[]).reduce((s,i)=>s+i.qty,0);
-    return `<div onclick="navTo('venta',document.querySelector('[data-section=venta]'))" style="background:${bg};border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;min-width:64px">
-      <div style="font-size:22px;font-weight:900;color:var(--blue);line-height:1">${m.numero}</div>
-      <div style="font-size:9px;font-weight:800;color:${cl};text-transform:uppercase;margin-top:2px">${m.estado}</div>
-      ${items>0?`<div style="font-size:10px;color:${cl};margin-top:1px">${items} ítem${items!==1?'s':''}</div>`:''}
-    </div>`;
-  };
-  const salon = mesasData.filter(m=>m.zona==='salon');
-  const vereda = mesasData.filter(m=>m.zona==='vereda');
-  const oc = s => s.filter(m=>m.estado!=='libre').length;
-  document.getElementById('dash-badge-salon').textContent = `🏠 Salón — ${oc(salon)}/${salon.length} ocupadas`;
-  document.getElementById('dash-badge-vereda').textContent = `🌿 Vereda — ${oc(vereda)}/${vereda.length} ocupadas`;
-  document.getElementById('dashMesasSalon').innerHTML = salon.map(chip).join('');
-  document.getElementById('dashMesasVereda').innerHTML = vereda.length ? vereda.map(chip).join('') : '';
-}
 
 function renderDashDelivery() {
   const activos = deliveryData.filter(d=>['nuevo','en_cocina','listo','en_camino'].includes(d.estado));
@@ -4675,35 +4650,6 @@ function guardarRetiroCaja() {
 
 
 // ======= FACTURACIÓN =======
-function loadFacturacion() {
-  const desde = document.getElementById('factFechaDesde')?.value || '';
-  const hasta = document.getElementById('factFechaHasta')?.value || '';
-  const filtered = facturasData.filter(f => {
-    const fecha = (f.fecha || '').slice(0, 10);
-    if (desde && fecha < desde) return false;
-    if (hasta && fecha > hasta) return false;
-    return true;
-  });
-  const pagadas = filtered.filter(f => f.estado === 'pagada');
-  const total = pagadas.reduce((s, f) => s + f.total, 0);
-  const count = pagadas.length;
-  document.getElementById('factTotal').textContent = '$' + total.toLocaleString('es-AR');
-  document.getElementById('factCount').textContent = count;
-  document.getElementById('factAvg').textContent = '$' + (count ? Math.round(total / count) : 0).toLocaleString('es-AR');
-  const pagoIcon = {efectivo:'💵',tarjeta:'💳',transferencia:'📲'};
-  document.getElementById('factTbody').innerHTML = filtered.map(f => `
-    <tr style="cursor:pointer" onclick="verComprobanteX('${f.id}')" title="Ver comprobante">
-      <td><strong>${f.numero}</strong></td>
-      <td style="font-size:12px;white-space:nowrap">${f.fecha}</td>
-      <td>${f.origen}${f.mozo ? `<br><span style="font-size:11px;color:var(--gray)">${f.mozo}</span>` : ''}</td>
-      <td style="text-align:center">${f.items}</td>
-      <td><strong>$${f.total.toLocaleString('es-AR')}</strong></td>
-      <td><span class="tag">${pagoIcon[f.pago]||''} ${f.pago}</span></td>
-      <td><span class="badge ${f.estado==='pagada'?'badge-success':'badge-danger'}">${f.estado}</span></td>
-      <td><button class="btn btn-outline btn-sm" title="Imprimir comprobante X" onclick="event.stopPropagation();reimprimirComprobanteX('${f.id}')">🖨️</button></td>
-    </tr>`).join('');
-}
-
 // ======= CLIENTES =======
 function _cliRow(c) {
   const activo = c.activo !== false;

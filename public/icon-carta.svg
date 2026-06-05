@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="88" fill="url(#bg)"/>
+
+  <!-- Phone outline -->
+  <rect x="156" y="108" width="200" height="320" rx="28" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.90)" stroke-width="16"/>
+  <!-- Phone screen -->
+  <rect x="178" y="146" width="156" height="236" rx="10" fill="rgba(255,255,255,0.12)"/>
+  <!-- Phone notch -->
+  <rect x="228" y="118" width="56" height="10" rx="5" fill="rgba(255,255,255,0.45)"/>
+  <!-- Phone home bar -->
+  <rect x="228" y="412" width="56" height="8" rx="4" fill="rgba(255,255,255,0.45)"/>
+
+  <!-- Menu lines on screen -->
+  <!-- Line 1 with fork icon -->
+  <rect x="204" y="172" width="104" height="10" rx="5" fill="rgba(255,255,255,0.85)"/>
+  <!-- Line 2 -->
+  <rect x="204" y="196" width="80" height="8" rx="4" fill="rgba(255,255,255,0.55)"/>
+  <!-- Divider -->
+  <line x1="192" y1="218" x2="320" y2="218" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+  <!-- Line 3 -->
+  <rect x="204" y="232" width="104" height="10" rx="5" fill="rgba(255,255,255,0.85)"/>
+  <!-- Line 4 -->
+  <rect x="204" y="256" width="68" height="8" rx="4" fill="rgba(255,255,255,0.55)"/>
+  <!-- Divider -->
+  <line x1="192" y1="278" x2="320" y2="278" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+  <!-- Line 5 -->
+  <rect x="204" y="292" width="104" height="10" rx="5" fill="rgba(255,255,255,0.85)"/>
+  <!-- Line 6 -->
+  <rect x="204" y="316" width="88" height="8" rx="4" fill="rgba(255,255,255,0.55)"/>
+
+  <!-- Cart badge (bottom right) -->
+  <circle cx="364" cy="358" r="58" fill="rgba(0,0,0,0.28)"/>
+  <circle cx="364" cy="358" r="50" fill="url(#bg)" stroke="rgba(255,255,255,0.4)" stroke-width="4"/>
+  <!-- Cart icon -->
+  <path d="M 338 336 L 344 336 L 356 370 L 386 370 L 394 342 L 352 342" stroke="rgba(255,255,255,0.95)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="360" cy="382" r="5" fill="rgba(255,255,255,0.95)"/>
+  <circle cx="382" cy="382" r="5" fill="rgba(255,255,255,0.95)"/>
+</svg>

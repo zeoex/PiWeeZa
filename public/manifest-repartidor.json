@@ -1,0 +1,34 @@
+{
+  "name": "ResTito — Delivery",
+  "short_name": "RT Delivery",
+  "description": "Panel del repartidor — pedidos y estado de entregas",
+  "start_url": "/repartidor",
+  "scope": "/repartidor",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1117",
+  "theme_color": "#e63946",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/icon-repartidor.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-repartidor.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pedidos Activos",
+      "url": "/repartidor",
+      "description": "Ver pedidos para entregar"
+    }
+  ],
+  "categories": ["food", "navigation", "productivity"]
+}

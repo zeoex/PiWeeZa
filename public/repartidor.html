@@ -1,0 +1,2129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="RT Delivery"/>
+<title>Repartidor - ResTito</title>
+<!-- PWA -->
+<link rel="manifest" href="/manifest-repartidor.json"/>
+<meta name="theme-color" content="#dc2626"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="apple-touch-icon" href="/icon-repartidor.svg"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* Base — light theme */
+    --bg: #f0f2f5;
+    --bg-2: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f8f9fb;
+    --border: rgba(0,0,0,0.08);
+    --border-active: rgba(0,0,0,0.16);
+    --text: #111827;
+    --text-2: #6b7280;
+    --text-3: #9ca3af;
+
+    /* Acento rojo */
+    --accent: #dc2626;
+    --accent-2: #ef4444;
+    --accent-light: #dc2626;
+    --accent-glow: rgba(220,38,38,0.18);
+
+    /* Status — saturados para fondo claro */
+    --status-nuevo: #2563eb;
+    --status-asignado: #ea580c;
+    --status-listo: #b45309;
+    --status-en_camino: #16a34a;
+    --status-entregado: #9ca3af;
+    --status-preparando: #9ca3af;
+
+    /* Availability */
+    --disponible-color: #16a34a;
+    --no-disponible-color: #dc2626;
+
+    --nav-height: 72px;
+    --header-h: 68px;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+  }
+
+  /* ══════════════════════════════════════
+     LOGIN SCREEN
+  ══════════════════════════════════════ */
+  #login-screen {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(220,38,38,0.10) 0%, transparent 65%),
+      linear-gradient(180deg, #f8f0f0 0%, #fdf5f5 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 32px 24px;
+    padding-top: calc(32px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+  }
+
+  #login-screen.hidden { display: none; }
+
+  /* Grid lines decoration */
+  #login-screen::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(220,38,38,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(220,38,38,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .login-logo-wrap {
+    position: relative;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .login-logo-glow {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(220,38,38,0.35) 0%, transparent 70%);
+    animation: pulseGlow 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.2); opacity: 1; }
+  }
+
+  .login-logo {
+    width: 96px;
+    height: 96px;
+    position: relative;
+    z-index: 1;
+    animation: floatBike 3s ease-in-out infinite;
+    filter: drop-shadow(0 6px 18px rgba(220,38,38,0.45));
+    border-radius: 24px;
+  }
+
+  @keyframes floatBike {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-10px) rotate(2deg); }
+  }
+
+  .login-brand {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .login-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #dc2626;
+    margin-bottom: 6px;
+  }
+
+  .login-app-name {
+    font-size: 32px;
+    font-weight: 900;
+    color: #111827;
+    letter-spacing: -1.5px;
+    line-height: 1;
+  }
+
+  .login-app-name span {
+    color: var(--accent-2);
+  }
+
+  .login-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(220,38,38,0.06);
+  }
+
+  .input-group {
+    margin-bottom: 18px;
+  }
+
+  .input-group label {
+    display: block;
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-icon {
+    position: absolute;
+    left: 14px;
+    font-size: 16px;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .login-card input {
+    width: 100%;
+    background: #f9fafb;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    color: #111827;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 14px 16px 14px 44px;
+    outline: none;
+    transition: border-color .2s, background .2s, box-shadow .2s;
+  }
+
+  .login-card input:focus {
+    border-color: rgba(220,38,38,0.5);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(220,38,38,0.10);
+  }
+
+  .login-card input::placeholder { color: #9ca3af; }
+
+  .btn-login {
+    width: 100%;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 16px;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .2s;
+    min-height: 52px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 20px rgba(220,38,38,0.4), 0 0 0 1px rgba(255,255,255,0.1) inset;
+    margin-top: 8px;
+  }
+
+  .btn-login:hover {
+    box-shadow: 0 6px 28px rgba(220,38,38,0.55), 0 0 0 1px rgba(255,255,255,0.15) inset;
+    transform: translateY(-1px);
+  }
+  .btn-login:active { transform: scale(0.97); }
+
+  .login-error {
+    color: #dc2626;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    margin-top: 14px;
+    min-height: 18px;
+  }
+
+  .login-hint {
+    color: #9ca3af;
+    font-size: 11px;
+    text-align: center;
+    margin-top: 14px;
+    line-height: 1.5;
+  }
+
+  /* ══════════════════════════════════════
+     APP SHELL
+  ══════════════════════════════════════ */
+  #app {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+    background: var(--bg);
+  }
+
+  #app.visible { display: flex; }
+
+  @media (min-width: 600px) {
+    body {
+      background: #dde1e8;
+      background-image: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(220,38,38,0.06) 0%, transparent 60%);
+    }
+    #app {
+      min-height: 100vh;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 0 48px rgba(0,0,0,0.15);
+    }
+  }
+
+  /* ══════════════════════════════════════
+     TOP BAR
+  ══════════════════════════════════════ */
+  .top-bar {
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+
+  /* subtle bottom border line */
+  .top-bar::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(220,38,38,0.2), transparent);
+  }
+
+  #driver-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #dc2626, #9b1c1c);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(220,38,38,0.35);
+    letter-spacing: -0.5px;
+  }
+
+  .driver-info { flex: 1; min-width: 0; }
+
+  #driver-name {
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+
+  #driver-role {
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Status toggle button */
+  #btn-toggle-status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: #f3f4f6;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 20px;
+    padding: 7px 13px;
+    cursor: pointer;
+    min-height: 38px;
+    transition: background .2s, border-color .2s, box-shadow .2s;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  #btn-toggle-status:active { background: #e5e7eb; }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background .3s, box-shadow .3s;
+  }
+
+  .status-dot.disponible {
+    background: var(--disponible-color);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.25);
+    animation: pulseDot 2s ease-in-out infinite;
+  }
+
+  .status-dot.no-disponible {
+    background: var(--no-disponible-color);
+    box-shadow: 0 0 0 3px rgba(220,38,38,0.25);
+  }
+
+  @keyframes pulseDot {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(16,185,129,0.25); }
+    50% { box-shadow: 0 0 0 5px rgba(16,185,129,0.1); }
+  }
+
+  #status-text {
+    color: #374151;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: 360px) {
+    #status-text { display: none; }
+    #btn-toggle-status { padding: 7px 9px; }
+  }
+
+  /* Connection badge */
+  #conn-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 5px 10px;
+    flex-shrink: 0;
+    transition: background .2s;
+  }
+
+  #conn-badge.conn-online {
+    border-color: rgba(22,163,74,0.3);
+    background: rgba(22,163,74,0.06);
+  }
+
+  #conn-badge.conn-offline {
+    border-color: #e5e7eb;
+  }
+
+  .conn-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6b7280;
+    transition: background .3s;
+  }
+
+  #conn-badge.conn-online .conn-dot { background: #10b981; }
+
+  #conn-text {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-2);
+    white-space: nowrap;
+  }
+
+  .pedidos-badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    min-width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    padding: 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+
+  /* ══════════════════════════════════════
+     CONTENT AREA
+  ══════════════════════════════════════ */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 8px);
+  }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ══════════════════════════════════════
+     STATS ROW
+  ══════════════════════════════════════ */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 16px 14px 0;
+  }
+
+  .stat-pill {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 14px 12px;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    transition: border-color .2s, box-shadow .2s;
+  }
+
+  .stat-pill:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.09);
+  }
+
+  .stat-num {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1px;
+    color: var(--text);
+  }
+
+  .stat-pill:nth-child(1) .stat-num { color: #60a5fa; }
+  .stat-pill:nth-child(2) .stat-num { color: #10b981; }
+  .stat-pill:nth-child(3) .stat-num { color: #f97316; }
+
+  .stat-lbl {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-2);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ══════════════════════════════════════
+     SECTION HEADER
+  ══════════════════════════════════════ */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 14px 10px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .section-count {
+    background: #f3f4f6;
+    color: var(--text-2);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+  }
+
+  /* ══════════════════════════════════════
+     ORDER CARDS
+  ══════════════════════════════════════ */
+  .orders-list {
+    padding: 0 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .order-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-left: 3px solid transparent;
+    border-radius: 18px;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .order-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  }
+
+  /* Estado border colors + hover glow */
+  .order-card.estado-nuevo {
+    border-left-color: var(--status-nuevo);
+    opacity: 0.75;
+  }
+  .order-card.estado-nuevo:hover {
+    box-shadow: 0 8px 32px rgba(59,130,246,0.15);
+  }
+
+  .order-card.estado-asignado {
+    border-left-color: var(--status-asignado);
+  }
+  .order-card.estado-asignado:hover {
+    box-shadow: 0 8px 32px rgba(249,115,22,0.2);
+  }
+
+  .order-card.estado-listo {
+    border-left-color: var(--status-listo);
+    border-color: rgba(234,179,8,0.2);
+    background: rgba(234,179,8,0.04);
+  }
+  .order-card.estado-listo:hover {
+    box-shadow: 0 8px 32px rgba(234,179,8,0.2);
+  }
+
+  .order-card.estado-en_camino {
+    border-left-color: var(--status-en_camino);
+  }
+  .order-card.estado-en_camino:hover {
+    box-shadow: 0 8px 32px rgba(34,197,94,0.2);
+  }
+
+  .order-card.estado-preparando {
+    border-left-color: var(--status-preparando);
+    opacity: 0.7;
+  }
+
+  .order-card.estado-entregado {
+    border-left-color: var(--status-entregado);
+    opacity: 0.5;
+  }
+
+  .order-card.animate-in {
+    animation: slideIn .35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-14px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 14px 16px 10px;
+    gap: 10px;
+  }
+
+  .card-header > .card-meta { min-width: 0; }
+
+  .order-number {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .order-time {
+    font-size: 11px;
+    color: var(--text-2);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  /* Status badges */
+  .status-badge {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 5px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+  }
+
+  .badge-nuevo {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+  }
+
+  .badge-asignado {
+    background: #ffedd5;
+    color: #c2410c;
+    border-color: #fed7aa;
+  }
+
+  .badge-listo {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+    box-shadow: 0 0 8px rgba(180,83,9,0.12);
+  }
+
+  .badge-en_camino {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #bbf7d0;
+  }
+
+  .badge-entregado {
+    background: #f3f4f6;
+    color: #6b7280;
+    border-color: #e5e7eb;
+  }
+
+  .badge-en_cocina {
+    background: #f3f4f6;
+    color: #6b7280;
+    border-color: #e5e7eb;
+  }
+
+  .card-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 16px;
+  }
+
+  .card-body { padding: 12px 16px; }
+
+  .info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 5px 0;
+    font-size: 13px;
+  }
+
+  .info-row .icon {
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    opacity: 0.7;
+  }
+
+  .info-row .label {
+    color: var(--text-2);
+    font-weight: 600;
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+
+  .info-row .value {
+    color: var(--text);
+    font-weight: 500;
+    line-height: 1.4;
+    overflow-wrap: break-word;
+    min-width: 0;
+    word-break: break-word;
+  }
+
+  .info-row a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .items-list {
+    background: #f8f9fb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin: 10px 0 8px;
+  }
+
+  .item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .item-row:last-child { border-bottom: none; }
+  .item-name { color: var(--text); font-weight: 500; }
+  .item-qty {
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 700;
+    background: #f0f1f3;
+    padding: 2px 8px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  .total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0 0;
+    border-top: 1px solid var(--border);
+    margin-top: 6px;
+  }
+
+  .total-amount {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .payment-method {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+  }
+
+  .payment-efectivo {
+    background: #d1fae5;
+    color: #065f46;
+    border-color: #a7f3d0;
+  }
+
+  .payment-tarjeta {
+    background: #dbeafe;
+    color: #1e40af;
+    border-color: #bfdbfe;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    padding: 0 14px 14px;
+    flex-wrap: wrap;
+  }
+
+  .btn-action {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 12px 10px;
+    cursor: pointer;
+    min-height: 46px;
+    transition: transform .15s, box-shadow .2s, opacity .2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-action:active { transform: scale(0.96); }
+  .btn-action:disabled { opacity: 0.4; cursor: default; }
+
+  .btn-start {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(16,185,129,0.3);
+  }
+  .btn-start:hover:not(:disabled) {
+    box-shadow: 0 6px 24px rgba(16,185,129,0.45);
+    transform: translateY(-1px);
+  }
+
+  .btn-maps {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+  .btn-maps:hover:not(:disabled) { background: #bfdbfe; }
+
+  .btn-deliver {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(220,38,38,0.3);
+  }
+  .btn-deliver:hover:not(:disabled) {
+    box-shadow: 0 6px 24px rgba(220,38,38,0.5);
+    transform: translateY(-1px);
+  }
+
+  .btn-done {
+    background: #f3f4f6;
+    color: var(--text-2);
+    border: 1px solid #e5e7eb;
+  }
+
+  /* ══════════════════════════════════════
+     SECTION IDs (required by spec)
+  ══════════════════════════════════════ */
+  #section-orders { padding-top: 0; }
+  #section-history { padding-top: 0; }
+
+  /* ══════════════════════════════════════
+     STATS TAB (estadisticas)
+  ══════════════════════════════════════ */
+  .stats-big-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 16px 14px 0;
+  }
+
+  .stat-big-card {
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-big-card::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    opacity: 0.15;
+  }
+
+  .stat-big-card.card-entregas {
+    background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.05));
+    border: 1px solid rgba(16,185,129,0.2);
+  }
+  .stat-big-card.card-entregas::before { background: #10b981; }
+
+  .stat-big-card.card-km {
+    background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(96,165,250,0.05));
+    border: 1px solid rgba(96,165,250,0.2);
+  }
+  .stat-big-card.card-km::before { background: #60a5fa; }
+
+  .stat-big-card.card-propinas {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(249,115,22,0.1), rgba(249,115,22,0.05));
+    border: 1px solid rgba(249,115,22,0.2);
+  }
+  .stat-big-card.card-propinas::before { background: #f97316; }
+
+  .stat-big-icon { font-size: 26px; margin-bottom: 10px; display: block; }
+  .stat-big-value { font-size: 32px; font-weight: 900; letter-spacing: -1.5px; line-height: 1; }
+  .stat-big-card.card-entregas .stat-big-value { color: #059669; }
+  .stat-big-card.card-km .stat-big-value { color: #2563eb; }
+  .stat-big-card.card-propinas .stat-big-value { color: #ea580c; }
+  .stat-big-label { font-size: 12px; color: var(--text-2); margin-top: 5px; font-weight: 500; }
+
+  /* ══════════════════════════════════════
+     HISTORY LIST
+  ══════════════════════════════════════ */
+  .history-list {
+    padding: 0 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .history-item {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color .2s;
+  }
+
+  .history-item:hover { border-color: var(--border-active); }
+
+  .history-check {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #d1fae5;
+    border: 1px solid #a7f3d0;
+    color: #059669;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .history-info { flex: 1; min-width: 0; overflow: hidden; }
+  .history-order { font-size: 14px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-client { font-size: 12px; color: var(--text-2); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-time { font-size: 11px; color: var(--text-3); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-total { font-size: 15px; font-weight: 800; color: #059669; white-space: nowrap; flex-shrink: 0; letter-spacing: -0.5px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 56px 24px;
+    color: var(--text-2);
+  }
+
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+  .empty-state p { font-size: 14px; font-weight: 500; color: var(--text-2); }
+
+  /* ── HISTORY — day groups & comments ── */
+  .day-group { margin-bottom: 6px; }
+  .day-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px 6px;
+    font-size: 11px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--text-3);
+  }
+  .day-header-line { flex: 1; height: 1px; background: var(--border); }
+  .day-badge {
+    background: #f3f4f6; color: #6b7280;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px;
+  }
+  .history-item {
+    background: #ffffff; border: 1px solid #e5e7eb;
+    border-radius: 14px; padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 0;
+    transition: border-color .2s;
+    margin: 0 14px 8px;
+  }
+  .history-item-top { display: flex; align-items: center; gap: 12px; }
+  .history-item:hover { border-color: var(--border-active); }
+  .hist-comment-text {
+    font-size: 12px; color: var(--text-2);
+    background: #f8f9fb; border-radius: 8px;
+    padding: 6px 10px; margin-top: 8px;
+    border-left: 3px solid var(--accent-light);
+    line-height: 1.4;
+  }
+  .hist-comment-row {
+    display: none; flex-direction: column; gap: 6px;
+    margin-top: 8px;
+  }
+  .hist-comment-row.open { display: flex; }
+  .hist-comment-input {
+    width: 100%; border: 1px solid #d1d5db; border-radius: 8px;
+    padding: 8px 10px; font-size: 13px; font-family: inherit;
+    resize: none; outline: none; color: var(--text);
+    background: #fff; line-height: 1.4;
+  }
+  .hist-comment-input:focus { border-color: var(--accent-light); }
+  .hist-comment-actions { display: flex; gap: 6px; justify-content: flex-end; }
+  .hist-btn-save {
+    background: var(--accent-light); color: #fff; border: none;
+    border-radius: 8px; padding: 6px 14px;
+    font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  .hist-btn-cancel {
+    background: #f3f4f6; color: #6b7280; border: none;
+    border-radius: 8px; padding: 6px 12px;
+    font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .hist-add-comment {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 6px; font-size: 11px; font-weight: 600;
+    color: var(--text-3); background: none; border: none;
+    cursor: pointer; padding: 0; font-family: inherit;
+  }
+  .hist-add-comment:hover { color: var(--accent-light); }
+
+  /* ══════════════════════════════════════
+     PROFILE TAB
+  ══════════════════════════════════════ */
+  .profile-section {
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .profile-hero {
+    background: linear-gradient(135deg, rgba(220,38,38,0.15), rgba(185,28,28,0.08));
+    border: 1px solid rgba(220,38,38,0.2);
+    border-radius: 20px;
+    padding: 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .profile-hero::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(220,38,38,0.2) 0%, transparent 70%);
+  }
+
+  .profile-hero > div { min-width: 0; overflow: hidden; position: relative; z-index: 1; }
+
+  .profile-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: -0.5px;
+  }
+
+  .profile-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #dc2626, #7f1d1d);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px rgba(220,38,38,0.3), 0 0 24px rgba(220,38,38,0.25);
+    position: relative;
+    z-index: 1;
+    letter-spacing: -1px;
+  }
+
+  .profile-meta {
+    font-size: 13px;
+    color: var(--text-2);
+    margin-top: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .profile-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 18px;
+  }
+
+  .profile-card-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-2);
+    margin-bottom: 14px;
+  }
+
+  .profile-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+
+  .profile-row:last-child { border-bottom: none; }
+  .profile-row-label { color: var(--text-2); font-weight: 500; }
+  .profile-row-value { font-weight: 700; color: var(--text); }
+
+  .btn-logout {
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(220,38,38,0.4);
+    color: var(--accent-2);
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 15px;
+    cursor: pointer;
+    transition: background .2s, color .2s, box-shadow .2s;
+    min-height: 52px;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-logout:hover {
+    background: rgba(220,38,38,0.12);
+    box-shadow: 0 0 0 1px rgba(220,38,38,0.3);
+  }
+
+  /* ══════════════════════════════════════
+     BOTTOM NAV — floating pill island
+  ══════════════════════════════════════ */
+  .bottom-nav {
+    position: fixed;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 380px;
+    height: 58px;
+    background: rgba(255,255,255,0.95);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 30px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    z-index: 100;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.14), 0 1px 4px rgba(0,0,0,0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    overflow: hidden;
+    padding: 4px;
+    gap: 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    transition: color .2s, background .2s;
+    color: #9ca3af;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    border: none;
+    background: none;
+    font-family: inherit;
+    border-radius: 24px;
+    padding: 4px;
+  }
+
+  .nav-item.active {
+    color: #dc2626;
+    background: rgba(220,38,38,0.08);
+  }
+
+  .nav-icon { font-size: 18px; line-height: 1; }
+  .nav-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  /* ══════════════════════════════════════
+     TOAST
+  ══════════════════════════════════════ */
+  #toast-container {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9000;
+    pointer-events: none;
+    width: calc(100% - 32px);
+    max-width: 380px;
+  }
+
+  .toast {
+    background: rgba(17,24,39,0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0,0,0,0.10);
+    color: #f9fafb;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 13px 20px;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    opacity: 0;
+    transform: translateY(-12px) scale(0.97);
+    transition: opacity .25s cubic-bezier(0.16, 1, 0.3, 1), transform .25s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: center;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  /* ══════════════════════════════════════
+     LLAMADO OVERLAY
+  ══════════════════════════════════════ */
+  .rp-llamado-banner {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    animation: rpFadeIn .3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes rpFadeIn {
+    from { opacity: 0; transform: scale(.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .rp-llamado-card {
+    background: #ffffff;
+    border: 1px solid rgba(220,38,38,0.2);
+    border-radius: 28px;
+    padding: 36px 28px;
+    text-align: center;
+    max-width: 340px;
+    width: 100%;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(220,38,38,0.08) inset;
+  }
+
+  .rp-llamado-icon {
+    font-size: 64px;
+    display: block;
+    animation: rpShake .6s ease-in-out 3;
+    margin-bottom: 12px;
+  }
+
+  @keyframes rpShake {
+    0%,100%  { transform: rotate(0) scale(1); }
+    25%  { transform: rotate(-15deg) scale(1.1); }
+    75%  { transform: rotate(15deg) scale(1.1); }
+  }
+
+  .rp-llamado-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .rp-llamado-main {
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--text);
+    margin: 8px 0 4px;
+    letter-spacing: -1px;
+  }
+
+  .rp-llamado-sub {
+    font-size: 14px;
+    color: var(--text-2);
+    margin-bottom: 28px;
+    line-height: 1.5;
+  }
+
+  .rp-btn-ack {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 20px rgba(220,38,38,0.4);
+    transition: transform .15s, box-shadow .2s;
+  }
+
+  .rp-btn-ack:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 12px rgba(220,38,38,0.3);
+  }
+
+  /* ══════════════════════════════════════
+     SCROLLBAR
+  ══════════════════════════════════════ */
+  .content::-webkit-scrollbar { width: 3px; }
+  .content::-webkit-scrollbar-track { background: transparent; }
+  .content::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Llamado overlay -->
+<div id="rpLlamadoOverlay" style="display:none"></div>
+
+<!-- ════════════════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════════════ -->
+<div id="login-screen">
+
+  <div class="login-logo-wrap">
+    <div class="login-logo-glow"></div>
+    <img class="login-logo" src="/icon-repartidor.svg" alt="Repartidor"/>
+  </div>
+
+  <div class="login-brand">
+    <div class="login-title">Módulo Repartidor</div>
+    <div class="login-app-name">Res<span>Tito</span></div>
+  </div>
+
+  <div class="login-card">
+    <form id="login-form" onsubmit="return false">
+
+      <div class="input-group">
+        <label for="input-conductor">Usuario</label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input
+            type="text"
+            id="input-conductor"
+            placeholder="ej. conductor1"
+            autocomplete="username"
+          />
+        </div>
+        <!-- Hidden alias for required spec ID -->
+        <input type="hidden" id="login-email"/>
+      </div>
+
+      <div class="input-group">
+        <label for="input-pin">PIN / Contraseña</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔒</span>
+          <input
+            type="password"
+            id="input-pin"
+            placeholder="••••••"
+            autocomplete="current-password"
+          />
+        </div>
+        <!-- Hidden alias for required spec ID -->
+        <input type="hidden" id="login-password"/>
+      </div>
+
+      <button class="btn-login" id="login-btn" type="button" onclick="handleLogin()">
+        Entrar al turno
+      </button>
+
+    </form>
+
+    <div class="login-error" id="login-error"></div>
+    <div class="login-hint">Demo: conductor1 / 1234 &nbsp;•&nbsp; conductor2 / 1234</div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════
+     APP
+════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+
+    <!-- Driver avatar -->
+    <div id="driver-avatar" aria-hidden="true">C</div>
+    <!-- JS also uses top-avatar; keep as alias -->
+    <div id="top-avatar" style="display:none"></div>
+
+    <div class="driver-info">
+      <div id="driver-name">Conductor</div>
+      <!-- JS uses top-driver-name too -->
+      <div id="top-driver-name" style="display:none"></div>
+      <div id="driver-role">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        Repartidor
+      </div>
+    </div>
+
+    <!-- Status toggle -->
+    <button id="btn-toggle-status" onclick="toggleStatus()">
+      <div class="status-dot disponible" id="status-dot"></div>
+      <span id="status-text">DISPONIBLE</span>
+    </button>
+    <!-- Legacy alias used by JS -->
+    <div id="status-toggle" style="display:none" onclick="toggleStatus()"></div>
+
+    <!-- Connection badge -->
+    <div id="conn-badge" class="conn-offline">
+      <div class="conn-dot"></div>
+      <span id="conn-text">OFF</span>
+    </div>
+
+    <div class="pedidos-badge" id="pedidos-badge">0</div>
+
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="content">
+
+    <!-- ── TAB: Mis Pedidos ── -->
+    <div class="tab-pane active" id="tab-pedidos">
+
+      <div id="section-orders">
+        <div class="section-header">
+          <span class="section-title">Pedidos activos</span>
+          <span class="section-count" id="orders-count">0 activos</span>
+        </div>
+
+        <div class="orders-list" id="orders-list">
+          <!-- cards rendered by JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── TAB: Estadísticas / Historial ── -->
+    <div class="tab-pane" id="tab-estadisticas">
+
+      <div id="section-history">
+        <div class="section-header" style="padding: 16px 14px 8px">
+          <span class="section-title">Historial de repartos</span>
+          <span class="section-count" id="hist-total-count"></span>
+        </div>
+        <div class="history-list" id="history-list">
+          <!-- rendered by JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── TAB: Perfil ── -->
+    <div class="tab-pane" id="tab-perfil">
+      <div class="profile-section">
+
+        <div class="profile-hero">
+          <div class="profile-avatar" id="profile-avatar">C</div>
+          <div>
+            <div class="profile-name" id="profile-name">Conductor</div>
+            <div class="profile-meta">Repartidor activo</div>
+            <div class="profile-meta" id="profile-phone">📞 11-0000-0000</div>
+          </div>
+        </div>
+
+        <div class="profile-card">
+          <div class="profile-card-title">Cuenta</div>
+          <div class="profile-row">
+            <span class="profile-row-label">Usuario</span>
+            <span class="profile-row-value" id="p-usuario">—</span>
+          </div>
+          <div class="profile-row">
+            <span class="profile-row-label">Estado</span>
+            <span class="profile-row-value" id="p-estado" style="color:#10b981">Disponible</span>
+          </div>
+          <div class="profile-row">
+            <span class="profile-row-label">Turno iniciado</span>
+            <span class="profile-row-value">13:00</span>
+          </div>
+        </div>
+
+        <button class="btn-logout" onclick="handleLogout()">
+          Cerrar sesión
+        </button>
+
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Bottom Nav — floating pill island -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="nav-pedidos" onclick="switchTab('pedidos')">
+      <span class="nav-icon">📦</span>
+      <span class="nav-label">Pedidos</span>
+    </button>
+    <button class="nav-item" id="nav-estadisticas" onclick="switchTab('estadisticas')">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Estadísticas</span>
+    </button>
+    <button class="nav-item" id="nav-perfil" onclick="switchTab('perfil')">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Perfil</span>
+    </button>
+  </nav>
+
+  <!-- Required spec IDs as hidden navigation aliases -->
+  <button id="nav-orders" style="display:none" onclick="switchTab('pedidos')"></button>
+  <button id="nav-history" style="display:none" onclick="switchTab('estadisticas')"></button>
+
+</div><!-- /app -->
+
+<!-- Toast container -->
+<div id="toast-container">
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+'use strict';
+
+/* ── CREDENTIALS ─────────────────────────────────── */
+const DRIVERS = {
+  conductor1: { pin: '1234', nombre: 'Carlos Mendez', telefono: '11-5555-1234' },
+  conductor2: { pin: '1234', nombre: 'Ana Torres',   telefono: '11-5555-5678' }
+};
+
+/* ── DEMO DATA ───────────────────────────────────── */
+const PEDIDOS_DEMO = [
+  {
+    id: 1, numero: '005', estado: 'asignado',
+    cliente: { nombre: 'Juan García', telefono: '11-4567-8901' },
+    direccion: 'Av. Corrientes 1234, 3°B',
+    items: [
+      { nombre: 'Pizza Muzarella Grande', qty: 1, precio: 1600 },
+      { nombre: 'Coca-Cola 500ml',        qty: 2, precio: 600  }
+    ],
+    total: 2800, metodo_pago: 'efectivo', hora: '14:32'
+  },
+  {
+    id: 2, numero: '007', estado: 'en_camino',
+    cliente: { nombre: 'María López', telefono: '11-9876-5432' },
+    direccion: 'Belgrano 567, PB',
+    items: [
+      { nombre: 'Pizza Napolitana Grande', qty: 1, precio: 1800 },
+      { nombre: 'Pizza 4 Quesos Grande',   qty: 1, precio: 2000 },
+      { nombre: 'Fernet con Coca',         qty: 1, precio: 1800 }
+    ],
+    total: 5600, metodo_pago: 'tarjeta', hora: '14:45'
+  },
+  {
+    id: 3, numero: '003', estado: 'entregado',
+    cliente: { nombre: 'Carlos Rodríguez', telefono: '11-3333-4444' },
+    direccion: 'San Martín 890',
+    items: [
+      { nombre: 'Pizza Fugazzeta Grande', qty: 2, precio: 1700 }
+    ],
+    total: 3400, metodo_pago: 'efectivo', hora: '13:15'
+  }
+];
+
+/* ── STATE ───────────────────────────────────────── */
+let currentDriver = null;
+let pedidos = [];
+let disponible = true;
+let socket = null;
+
+/* ── AUTH ────────────────────────────────────────── */
+function handleLogin() {
+  const user = document.getElementById('input-conductor').value.trim().toLowerCase();
+  const pin  = document.getElementById('input-pin').value.trim();
+  const errEl = document.getElementById('login-error');
+
+  if (!user || !pin) { errEl.textContent = 'Completá todos los campos.'; return; }
+
+  const driver = DRIVERS[user];
+  if (!driver || driver.pin !== pin) {
+    errEl.textContent = 'Usuario o PIN incorrecto.';
+    document.getElementById('input-pin').value = '';
+    return;
+  }
+
+  errEl.textContent = '';
+  currentDriver = { user, ...driver };
+  try { localStorage.setItem('rep_driver', JSON.stringify(currentDriver)); } catch(e) {}
+  bootApp();
+}
+
+document.getElementById('input-pin').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleLogin();
+});
+
+document.getElementById('input-conductor').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('input-pin').focus();
+});
+
+function handleLogout() {
+  if (socket) { try { socket.disconnect(); } catch(e){} socket = null; }
+  currentDriver = null;
+  pedidos = [];
+  disponible = true;
+  try { localStorage.removeItem('rep_driver'); } catch(e) {}
+  document.getElementById('input-conductor').value = '';
+  document.getElementById('input-pin').value = '';
+  document.getElementById('login-error').textContent = '';
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').classList.remove('hidden');
+  switchTab('pedidos');
+}
+
+/* ── BOOT ────────────────────────────────────────── */
+async function bootApp() {
+  // Populate UI — 2 initials
+  const initials = currentDriver.nombre.split(' ').slice(0, 2).map(w => w[0].toUpperCase()).join('');
+  document.getElementById('top-avatar').textContent      = initials;
+  document.getElementById('top-driver-name').textContent = currentDriver.nombre;
+  document.getElementById('profile-avatar').textContent  = initials;
+  document.getElementById('profile-name').textContent    = currentDriver.nombre;
+  document.getElementById('profile-phone').textContent   = '📞 ' + currentDriver.telefono;
+  document.getElementById('p-usuario').textContent       = currentDriver.user;
+
+  // Also update visible elements
+  document.getElementById('driver-avatar').textContent   = initials;
+  document.getElementById('driver-name').textContent     = currentDriver.nombre;
+
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+
+  // Load real deliveries from API; fall back to demo data if unreachable
+  try {
+    const res = await fetch('/api/delivery/activos');
+    if (res.ok) {
+      const data = await res.json();
+      pedidos = Array.isArray(data) ? data : JSON.parse(JSON.stringify(PEDIDOS_DEMO));
+    } else {
+      pedidos = JSON.parse(JSON.stringify(PEDIDOS_DEMO));
+    }
+  } catch(e) {
+    pedidos = JSON.parse(JSON.stringify(PEDIDOS_DEMO));
+  }
+
+  renderOrders();
+  renderHistory();
+  initSocket();
+}
+
+/* ── SOCKET ──────────────────────────────────────── */
+function initSocket() {
+  try {
+    socket = io({ transports: ['polling', 'websocket'] });
+
+    socket.on('connect', async () => {
+      console.log('[socket] conectado', socket.id);
+      socket.emit('join:room', 'delivery');
+      // Update conn badge
+      const badge = document.getElementById('conn-badge');
+      const text  = document.getElementById('conn-text');
+      if (badge) { badge.className = 'conn-online'; }
+      if (text)  { text.textContent = 'ONLINE'; }
+      // Reload delivery list to sync any changes missed during disconnect
+      try {
+        const res = await fetch('/api/delivery/activos');
+        if (res.ok) {
+          const fresh = await res.json();
+          if (Array.isArray(fresh)) { pedidos = fresh; renderOrders(); }
+        }
+      } catch(e) {}
+    });
+
+    socket.on('disconnect', () => {
+      const badge = document.getElementById('conn-badge');
+      const text  = document.getElementById('conn-text');
+      if (badge) { badge.className = 'conn-offline'; }
+      if (text)  { text.textContent = 'OFF'; }
+    });
+
+    socket.on('delivery:init', (lista) => {
+      if (Array.isArray(lista) && lista.length) {
+        pedidos = lista;
+        renderOrders();
+        renderHistory();
+      }
+    });
+
+    socket.on('delivery:nuevo', (pedido) => {
+      addOrderToList(pedido);
+      showToast('🛵 Nuevo pedido #' + pedido.numero + ' asignado');
+    });
+
+    socket.on('delivery:update', (data) => {
+      updateOrder(data);
+    });
+
+    socket.on('llamado:delivery', (llamado) => {
+      if (!llamado) return;
+      // Show only if this delivery is assigned to me or unassigned
+      if (llamado.repartidorId && currentDriver && String(llamado.repartidorId) !== String(currentDriver.id)) return;
+      showRpLlamado(llamado);
+    });
+
+    socket.on('connect_error', () => {
+      // silently ignore if no server
+    });
+  } catch(e) {
+    // no socket server available in demo mode
+  }
+}
+
+let _rpLlamadoQueue = [];
+
+function playRpBell() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[784,0],[659,.2],[523,.4],[784,.65]].forEach(([freq, delay]) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine'; osc.frequency.value = freq;
+      const t = ctx.currentTime + delay;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.55, t + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+      osc.start(t); osc.stop(t + 0.55);
+    });
+  } catch(e) {}
+}
+
+function showRpLlamado(llamado) {
+  _rpLlamadoQueue.push(llamado);
+  if (_rpLlamadoQueue.length === 1) _renderRpLlamado();
+}
+
+function _renderRpLlamado() {
+  const llamado = _rpLlamadoQueue[0];
+  if (!llamado) return;
+  playRpBell();
+  const overlay = document.getElementById('rpLlamadoOverlay');
+  overlay.innerHTML = `
+    <div class="rp-llamado-banner">
+      <div class="rp-llamado-card">
+        <span class="rp-llamado-icon">📦</span>
+        <div class="rp-llamado-title">¡Pedido listo para retirar!</div>
+        <div class="rp-llamado-main">${escHtml(llamado.clienteNombre || 'Cliente')}</div>
+        <div class="rp-llamado-sub">Dirigite al local a retirar el pedido</div>
+        <button class="rp-btn-ack" onclick="ackRpLlamado('${llamado.id}')">✓ Entendido — voy</button>
+      </div>
+    </div>`;
+  overlay.style.display = 'block';
+}
+
+function ackRpLlamado(id) {
+  if (socket?.connected) socket.emit('llamado:ack', { llamadoId: id });
+  fetch('/api/delivery/' + id, { method: 'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ estado:'reconocido' }) }).catch(()=>{});
+  _rpLlamadoQueue = _rpLlamadoQueue.filter(l => l.id !== id);
+  const overlay = document.getElementById('rpLlamadoOverlay');
+  if (_rpLlamadoQueue.length > 0) _renderRpLlamado();
+  else overlay.style.display = 'none';
+}
+
+function addOrderToList(pedido) {
+  const exists = pedidos.find(p => String(p.id) === String(pedido.id));
+  if (!exists) {
+    pedidos.unshift(pedido);
+    renderOrders();
+  }
+}
+
+function updateOrder(data) {
+  const idx = pedidos.findIndex(p => String(p.id) === String(data.id));
+  if (idx !== -1) {
+    pedidos[idx] = { ...pedidos[idx], ...data };
+    renderOrders();
+  } else if (!['entregado', 'cancelado'].includes(data.estado)) {
+    // New order received via socket — add it to the list
+    pedidos.unshift(data);
+    renderOrders();
+  }
+}
+
+/* ── RENDER ORDERS ───────────────────────────────── */
+function renderOrders() {
+  const list = document.getElementById('orders-list');
+  const active = pedidos.filter(p => p.estado !== 'entregado').length;
+  document.getElementById('orders-count').textContent = active + ' activo' + (active !== 1 ? 's' : '');
+  document.getElementById('pedidos-badge').textContent = active;
+
+  list.innerHTML = '';
+
+  // Sort: listo/asignado → en_camino → entregado → preparando
+  const sorted = [...pedidos].sort((a, b) => {
+    const order = { listo: 0, asignado: 0, en_camino: 1, entregado: 2, nuevo: 3, en_cocina: 3 };
+    return (order[a.estado] ?? 4) - (order[b.estado] ?? 4);
+  });
+
+  sorted.forEach((p, i) => {
+    const card = buildOrderCard(p);
+    card.style.animationDelay = (i * 0.06) + 's';
+    card.classList.add('animate-in');
+    list.appendChild(card);
+  });
+}
+
+function buildOrderCard(p) {
+  const card = document.createElement('div');
+  card.className = 'order-card estado-' + p.estado;
+  card.id = 'card-' + p.id;
+
+  const badgeLabel = {
+    listo:     '🟡 LISTO P/ RETIRAR',
+    asignado:  '● ASIGNADO',
+    en_camino: '▶ EN CAMINO',
+    entregado: '✓ ENTREGADO',
+    nuevo:     '⏳ PREPARANDO',
+    en_cocina: '👨‍🍳 EN COCINA',
+  };
+  const payLabel = { efectivo: '💵 Efectivo', tarjeta: '💳 Tarjeta', transferencia: '📱 Transferencia' };
+
+  const itemsHtml = (p.items || []).map(item =>
+    `<div class="item-row">
+      <span class="item-name">🍕 ${escHtml(item.nombre)}</span>
+      <span class="item-qty">x${item.qty}</span>
+    </div>`
+  ).join('');
+
+  let actionsHtml = '';
+  if (p.estado === 'listo' || p.estado === 'asignado') {
+    actionsHtml = `<button class="btn-action btn-start" onclick="iniciarViaje('${p.id}')">▶ Iniciar viaje</button>`;
+  } else if (p.estado === 'en_camino') {
+    actionsHtml = `
+      <button class="btn-action btn-maps" onclick="verEnMaps('${p.id}')">📍 Ver en Maps</button>
+      <button class="btn-action btn-deliver" onclick="marcarEntregado('${p.id}')">✅ Marcar Entregado</button>`;
+  } else if (p.estado === 'entregado') {
+    actionsHtml = `<button class="btn-action btn-done" disabled>✓ Entregado</button>`;
+  } else {
+    actionsHtml = `<button class="btn-action btn-done" disabled style="opacity:.5">⏳ En preparación</button>`;
+  }
+
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="card-meta">
+        <div class="order-number">Pedido #${escHtml(p.numero)}</div>
+        <div class="order-time">🕐 ${escHtml(p.hora)}</div>
+      </div>
+      <span class="status-badge badge-${p.estado}">${badgeLabel[p.estado] || p.estado}</span>
+    </div>
+    <div class="card-divider"></div>
+    <div class="card-body">
+      <div class="info-row">
+        <span class="icon">👤</span>
+        <span class="value">${escHtml(p.cliente.nombre)}</span>
+      </div>
+      <div class="info-row">
+        <span class="icon">📍</span>
+        <span class="value">${escHtml(p.direccion)}</span>
+      </div>
+      <div class="info-row">
+        <span class="icon">📞</span>
+        <span class="value"><a href="tel:${escHtml(p.cliente.telefono)}">${escHtml(p.cliente.telefono)}</a></span>
+      </div>
+      <div class="items-list">${itemsHtml}</div>
+      <div class="total-row">
+        <span class="total-amount">💰 $${Number(p.total).toLocaleString('es-AR')}</span>
+        <span class="payment-method payment-${p.metodo_pago}">${payLabel[p.metodo_pago] || p.metodo_pago}</span>
+      </div>
+    </div>
+    <div class="card-actions">${actionsHtml}</div>`;
+
+  return card;
+}
+
+/* ── ORDER ACTIONS ───────────────────────────────── */
+function iniciarViaje(id) {
+  const p = pedidos.find(p => String(p.id) === String(id));
+  if (!p || !['asignado','listo'].includes(p.estado)) return;
+  p.estado = 'en_camino';
+  renderOrders();
+  showToast('🛵 Viaje iniciado hacia ' + p.cliente.nombre);
+  fetch('/api/delivery/' + id + '/estado', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ estado: 'en_camino' }) })
+    .catch(() => { if (socket) socket.emit('delivery:status', { id, estado: 'en_camino' }); });
+}
+
+function verEnMaps(id) {
+  const p = pedidos.find(p => p.id === id);
+  if (!p) return;
+  const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.direccion);
+  window.open(url, '_blank');
+}
+
+function marcarEntregado(id) {
+  const p = pedidos.find(p => String(p.id) === String(id));
+  if (!p || p.estado !== 'en_camino') return;
+  p.estado = 'entregado';
+  p.hora_entrega = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+  // Save to history
+  saveToHistory(p);
+
+  renderOrders();
+  renderHistory();
+  showToast('✅ Pedido #' + p.numero + ' entregado!');
+  fetch('/api/delivery/' + id + '/estado', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ estado: 'entregado' }) })
+    .catch(() => { if (socket) socket.emit('delivery:status', { id, estado: 'entregado' }); });
+}
+
+/* ── HISTORY ─────────────────────────────────────── */
+let repComments = (() => { try { return JSON.parse(localStorage.getItem('restito_rep_comments') || '{}'); } catch(e) { return {}; } })();
+let repHistory  = (() => { try { return JSON.parse(localStorage.getItem('restito_rep_history')  || '[]'); } catch(e) { return [];  } })();
+
+function saveToHistory(p) {
+  const today = new Date().toLocaleDateString('es-AR');
+  const exists = repHistory.find(h => String(h.id) === String(p.id));
+  if (exists) return;
+  repHistory.unshift({
+    id: p.id, numero: p.numero,
+    cliente: p.cliente?.nombre || '—',
+    direccion: p.direccion || '—',
+    total: p.total || 0,
+    metodo_pago: p.metodo_pago || '',
+    hora: p.hora_entrega || p.hora || new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}),
+    fecha: today
+  });
+  if (repHistory.length > 300) repHistory = repHistory.slice(0, 300);
+  localStorage.setItem('restito_rep_history', JSON.stringify(repHistory));
+}
+
+function toggleCommentInput(id) {
+  const row = document.getElementById('comment-row-' + id);
+  if (!row) return;
+  row.classList.toggle('open');
+  if (row.classList.contains('open')) {
+    const ta = document.getElementById('comment-ta-' + id);
+    ta.value = repComments[id] || '';
+    ta.focus();
+  }
+}
+
+function saveComment(id) {
+  const ta = document.getElementById('comment-ta-' + id);
+  const text = (ta?.value || '').trim();
+  if (text) repComments[id] = text; else delete repComments[id];
+  localStorage.setItem('restito_rep_comments', JSON.stringify(repComments));
+  document.getElementById('comment-row-' + id)?.classList.remove('open');
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+
+  // Merge session delivered orders into history store
+  pedidos.filter(p => p.estado === 'entregado').forEach(p => saveToHistory(p));
+
+  const all = repHistory;
+  const cntEl = document.getElementById('hist-total-count');
+  if (cntEl) cntEl.textContent = all.length ? all.length + ' entregas' : '';
+
+  if (all.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Aún no hay entregas registradas.</p></div>`;
+    return;
+  }
+
+  // Group by date
+  const byDate = {};
+  all.forEach(e => {
+    if (!byDate[e.fecha]) byDate[e.fecha] = [];
+    byDate[e.fecha].push(e);
+  });
+
+  list.innerHTML = '';
+  const today = new Date().toLocaleDateString('es-AR');
+  const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('es-AR');
+
+  Object.keys(byDate).forEach(fecha => {
+    const group = document.createElement('div');
+    group.className = 'day-group';
+
+    const label = fecha === today ? 'Hoy' : fecha === yesterday ? 'Ayer' : fecha;
+    const n = byDate[fecha].length;
+    group.innerHTML = `<div class="day-header"><span>${label}</span><span class="day-badge">${n} entrega${n!==1?'s':''}</span><span class="day-header-line"></span></div>`;
+
+    byDate[fecha].forEach(e => {
+      const comment = repComments[String(e.id)] || '';
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.innerHTML = `
+        <div class="history-item-top">
+          <div class="history-check">✓</div>
+          <div class="history-info">
+            <div class="history-order">Pedido #${escHtml(e.numero)}</div>
+            <div class="history-client">👤 ${escHtml(e.cliente)}</div>
+            <div class="history-time">📍 ${escHtml(e.direccion)}</div>
+            <div class="history-time">🕐 ${escHtml(e.hora)}${e.metodo_pago ? '  ·  💳 ' + escHtml(e.metodo_pago) : ''}</div>
+          </div>
+          <div class="history-total">$${Number(e.total).toLocaleString('es-AR')}</div>
+        </div>
+        ${comment ? `<div class="hist-comment-text">💬 ${escHtml(comment)}</div>` : ''}
+        <button class="hist-add-comment" onclick="toggleCommentInput('${escHtml(String(e.id))}')">
+          ✏️ ${comment ? 'Editar comentario' : 'Agregar comentario'}
+        </button>
+        <div class="hist-comment-row" id="comment-row-${escHtml(String(e.id))}">
+          <textarea class="hist-comment-input" id="comment-ta-${escHtml(String(e.id))}" rows="2" placeholder="Ej: Cliente no estaba, dejé con portero..."></textarea>
+          <div class="hist-comment-actions">
+            <button class="hist-btn-cancel" onclick="toggleCommentInput('${escHtml(String(e.id))}')">Cancelar</button>
+            <button class="hist-btn-save" onclick="saveComment('${escHtml(String(e.id))}')">Guardar</button>
+          </div>
+        </div>`;
+      group.appendChild(item);
+    });
+
+    list.appendChild(group);
+  });
+}
+
+/* ── STATUS TOGGLE ───────────────────────────────── */
+function toggleStatus() {
+  disponible = !disponible;
+  const dot  = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  const pEstado = document.getElementById('p-estado');
+
+  if (disponible) {
+    dot.className  = 'status-dot disponible';
+    text.textContent = 'DISPONIBLE';
+    pEstado.textContent = 'Disponible';
+    pEstado.style.color = 'var(--accent)';
+    showToast('✅ Ahora estás disponible');
+  } else {
+    dot.className  = 'status-dot no-disponible';
+    text.textContent = 'NO DISPONIBLE';
+    pEstado.textContent = 'No disponible';
+    pEstado.style.color = 'var(--primary)';
+    showToast('⛔ Ahora no estás disponible');
+  }
+
+  if (socket) socket.emit('driver:status', { disponible });
+}
+
+/* ── TABS ────────────────────────────────────────── */
+function switchTab(name) {
+  ['pedidos', 'estadisticas', 'perfil'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+    document.getElementById('nav-' + t).classList.toggle('active', t === name);
+  });
+  document.getElementById('content').scrollTop = 0;
+
+  if (name === 'estadisticas') renderHistory();
+}
+
+/* ── TOAST ───────────────────────────────────────── */
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+/* ── UTILS ───────────────────────────────────────── */
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ── AUTO-RESTORE SESSION ON RELOAD ─────────────── */
+(function restoreSession() {
+  try {
+    const saved = localStorage.getItem('rep_driver');
+    if (saved) {
+      currentDriver = JSON.parse(saved);
+      bootApp();
+    }
+  } catch(e) {}
+})();
+
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

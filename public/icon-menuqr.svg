@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="100%" stop-color="#0f766e"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="88" fill="url(#bg)"/>
+
+  <!-- QR code white bg card -->
+  <rect x="118" y="118" width="276" height="276" rx="18" fill="rgba(255,255,255,0.94)"/>
+
+  <!-- Top-left finder square (outer) -->
+  <rect x="142" y="142" width="80" height="80" rx="8" fill="#0f766e"/>
+  <!-- Top-left finder (inner white) -->
+  <rect x="158" y="158" width="48" height="48" rx="4" fill="rgba(255,255,255,0.94)"/>
+  <!-- Top-left finder (center dot) -->
+  <rect x="170" y="170" width="24" height="24" rx="2" fill="#0f766e"/>
+
+  <!-- Top-right finder square (outer) -->
+  <rect x="290" y="142" width="80" height="80" rx="8" fill="#0f766e"/>
+  <!-- Top-right finder (inner white) -->
+  <rect x="306" y="158" width="48" height="48" rx="4" fill="rgba(255,255,255,0.94)"/>
+  <!-- Top-right finder (center dot) -->
+  <rect x="318" y="170" width="24" height="24" rx="2" fill="#0f766e"/>
+
+  <!-- Bottom-left finder square (outer) -->
+  <rect x="142" y="290" width="80" height="80" rx="8" fill="#0f766e"/>
+  <!-- Bottom-left finder (inner white) -->
+  <rect x="158" y="306" width="48" height="48" rx="4" fill="rgba(255,255,255,0.94)"/>
+  <!-- Bottom-left finder (center dot) -->
+  <rect x="170" y="318" width="24" height="24" rx="2" fill="#0f766e"/>
+
+  <!-- Data dots grid (bottom-right area + middle) -->
+  <rect x="248" y="248" width="14" height="14" rx="2" fill="#0f766e"/>
+  <rect x="270" y="248" width="14" height="14" rx="2" fill="#0f766e"/>
+  <rect x="292" y="248" width="14" height="14" rx="2" fill="#0f766e"/>
+  <rect x="314" y="248" width="14" height="14" rx="2" fill="#0f766e"/>
+  <rect x="248" y="270" width="14" height="14" rx="2" fill="#0f766e"/>
+  <rect x="292" y="270" width="14" height="14" rx="2" fill="#0f766e"/>
+  <rect x="248" y="292" width="14" height="14" rx="2" fill="#0f766e"/>
+  <rect x="270" y="292" width="14" height="14" rx="2" fill="#0f766e"/>
+  <rect x="314" y="292" width="14" height="14" rx="2" fill="#0f766e"/>
+  <rect x="248" y="314" width="14" height="14" rx="2" fill="#0f766e"/>
+  <rect x="292" y="314" width="14" height="14" rx="2" fill="#0f766e"/>
+  <rect x="314" y="314" width="14" height="14" rx="2" fill="#0f766e"/>
+
+  <!-- Scan line (animated look) -->
+  <rect x="118" y="248" width="276" height="3" rx="1.5" fill="rgba(45,212,191,0.7)"/>
+  <!-- Scan glow -->
+  <rect x="118" y="244" width="276" height="11" rx="5" fill="rgba(45,212,191,0.12)"/>
+
+  <!-- Phone scan hint (bottom) -->
+  <rect x="216" y="420" width="80" height="52" rx="10" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="8"/>
+  <!-- Phone screen dot -->
+  <circle cx="256" cy="455" r="4" fill="rgba(255,255,255,0.75)"/>
+  <!-- Scan brackets -->
+  <path d="M 168 420 L 148 420 L 148 400" stroke="rgba(255,255,255,0.75)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 344 420 L 364 420 L 364 400" stroke="rgba(255,255,255,0.75)" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

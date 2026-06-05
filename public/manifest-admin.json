@@ -1,0 +1,39 @@
+{
+  "name": "ResTito — Admin",
+  "short_name": "ResTito",
+  "description": "Panel de administración — mesas, delivery, caja y configuración",
+  "start_url": "/admin",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#3b0764",
+  "theme_color": "#7c3aed",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/icon-admin.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-admin.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mesas",
+      "url": "/admin",
+      "description": "Ver estado de mesas"
+    },
+    {
+      "name": "Delivery",
+      "url": "/admin",
+      "description": "Pedidos delivery"
+    }
+  ],
+  "categories": ["food", "business", "productivity"]
+}

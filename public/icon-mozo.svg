@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a3a5c"/>
+      <stop offset="100%" stop-color="#0a1628"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="88" fill="url(#bgGrad)"/>
+
+  <!-- Bow tie: left wing -->
+  <polygon points="88,100 238,138 88,176" fill="white"/>
+
+  <!-- Bow tie: right wing -->
+  <polygon points="424,100 274,138 424,176" fill="white"/>
+
+  <!-- Bow tie: center knot -->
+  <ellipse cx="256" cy="138" rx="25" ry="22" fill="white"/>
+
+  <!-- Bow tie: inner shadow -->
+  <circle cx="256" cy="138" r="14" fill="rgba(10,22,40,0.5)"/>
+
+  <!-- Cloche dome -->
+  <path d="M 96 332 Q 96 218 256 212 Q 416 218 416 332 Z" fill="white" opacity="0.95"/>
+
+  <!-- Cloche dome reflection -->
+  <path d="M 128 295 Q 156 255 200 248" stroke="white" stroke-opacity="0.28" stroke-width="10" stroke-linecap="round" fill="none"/>
+
+  <!-- Cloche knob base -->
+  <rect x="241" y="196" width="30" height="20" rx="10" fill="white"/>
+
+  <!-- Cloche knob cap -->
+  <rect x="249" y="188" width="14" height="12" rx="6" fill="white" opacity="0.8"/>
+
+  <!-- Plate dark interior -->
+  <ellipse cx="256" cy="332" rx="156" ry="20" fill="#0a1628"/>
+
+  <!-- Plate rim -->
+  <ellipse cx="256" cy="332" rx="156" ry="20" stroke="white" stroke-width="16" fill="none"/>
+
+  <!-- Tray -->
+  <rect x="78" y="353" width="356" height="26" rx="13" fill="white" opacity="0.88"/>
+
+  <!-- Tray stand: left leg -->
+  <line x1="135" y1="377" x2="135" y2="418" stroke="white" stroke-opacity="0.72" stroke-width="15" stroke-linecap="round"/>
+
+  <!-- Tray stand: right leg -->
+  <line x1="377" y1="377" x2="377" y2="418" stroke="white" stroke-opacity="0.72" stroke-width="15" stroke-linecap="round"/>
+
+  <!-- Tray stand: base bar -->
+  <line x1="108" y1="416" x2="404" y2="416" stroke="white" stroke-opacity="0.72" stroke-width="15" stroke-linecap="round"/>
+
+  <!-- Label -->
+  <text x="256" y="474" font-size="36" font-weight="700" text-anchor="middle" fill="rgba(255,255,255,0.58)" font-family="Arial, sans-serif" letter-spacing="9">MOZO</text>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#9a3412"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="88" fill="url(#bg)"/>
+
+  <!-- Chef hat dome -->
+  <ellipse cx="256" cy="195" rx="115" ry="98" fill="rgba(255,255,255,0.95)"/>
+  <!-- Dome fill extension -->
+  <rect x="141" y="195" width="230" height="55" fill="rgba(255,255,255,0.95)"/>
+  <!-- Hat band -->
+  <rect x="128" y="245" width="256" height="38" rx="10" fill="rgba(255,255,255,0.78)"/>
+
+  <!-- Pot body -->
+  <path d="M 168 330 L 344 330 L 328 418 Q 325 434 256 434 Q 187 434 184 418 Z" fill="rgba(255,255,255,0.92)"/>
+  <!-- Pot rim -->
+  <rect x="155" y="318" width="202" height="22" rx="11" fill="rgba(255,255,255,0.80)"/>
+  <!-- Pot handles -->
+  <path d="M 153 330 C 128 330 120 352 120 358 C 120 374 135 382 155 378" stroke="rgba(255,255,255,0.82)" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <path d="M 359 330 C 384 330 392 352 392 358 C 392 374 377 382 357 378" stroke="rgba(255,255,255,0.82)" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <!-- Steam puffs -->
+  <path d="M 210 308 Q 222 288 210 268" stroke="rgba(255,255,255,0.55)" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M 256 304 Q 268 282 256 262" stroke="rgba(255,255,255,0.55)" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M 302 308 Q 314 288 302 268" stroke="rgba(255,255,255,0.55)" stroke-width="8" fill="none" stroke-linecap="round"/>
+</svg>

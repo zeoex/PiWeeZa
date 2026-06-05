@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#3b0764"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="88" fill="url(#bgGrad)"/>
+
+  <!-- Shield outer shape -->
+  <path d="M 96 108 L 416 108 L 416 298 Q 416 400 256 444 Q 96 400 96 298 Z"
+        fill="rgba(255,255,255,0.12)" stroke="white" stroke-width="14" stroke-opacity="0.95"/>
+
+  <!-- Shield inner decorative border -->
+  <path d="M 124 136 L 388 136 L 388 292 Q 388 376 256 416 Q 124 376 124 292 Z"
+        fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="3"/>
+
+  <!-- 5-pointed star -->
+  <path d="M 256 176 L 281 243 L 353 246 L 297 291 L 316 361 L 256 321 L 196 361 L 215 291 L 159 246 L 231 243 Z"
+        fill="white" opacity="0.95"/>
+
+  <!-- Star center: purple punch-through -->
+  <circle cx="256" cy="278" r="28" fill="#5b21b6"/>
+
+  <!-- Star center: bright dot -->
+  <circle cx="256" cy="278" r="18" fill="white" opacity="0.9"/>
+
+  <!-- Label -->
+  <text x="256" y="490" font-size="34" font-weight="700" text-anchor="middle" fill="rgba(255,255,255,0.58)" font-family="Arial, sans-serif" letter-spacing="8">ADMIN</text>
+</svg>

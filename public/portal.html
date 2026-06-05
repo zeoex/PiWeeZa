@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ResTito – Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:           #06060f;
+    --bg-2:         #0c0c1a;
+    --surface:      rgba(255,255,255,0.05);
+    --surface-h:    rgba(255,255,255,0.09);
+    --border:       rgba(255,255,255,0.08);
+    --border-a:     rgba(255,255,255,0.18);
+    --text:         #f0f0ff;
+    --text-2:       #9090bb;
+
+    --c-admin:      #7c3aed;
+    --c-admin-l:    #a78bfa;
+    --c-mozo:       #059669;
+    --c-mozo-l:     #34d399;
+    --c-cocina:     #ea580c;
+    --c-cocina-l:   #fb923c;
+    --c-rep:        #dc2626;
+    --c-rep-l:      #f87171;
+    --c-carta:      #0284c7;
+    --c-carta-l:    #38bdf8;
+    --c-menu:       #0d9488;
+    --c-menu-l:     #2dd4bf;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    font-size: 16px;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(26,5,51,0.85) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 20%, rgba(0,20,58,0.75) 0%, transparent 55%),
+      radial-gradient(ellipse at 60% 85%, rgba(5,30,20,0.5) 0%, transparent 45%),
+      var(--bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* Animated mesh layer */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 60px,
+        rgba(255,255,255,0.012) 60px,
+        rgba(255,255,255,0.012) 61px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 60px,
+        rgba(255,255,255,0.012) 60px,
+        rgba(255,255,255,0.012) 61px
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -40%;
+    left: -20%;
+    width: 70vw;
+    height: 70vw;
+    background: radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 65%);
+    border-radius: 50%;
+    animation: drift 18s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(12vw, 8vh) scale(1.08); }
+  }
+
+  /* ───── WRAPPER ───── */
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  /* ───── HEADER ───── */
+  .brand {
+    text-align: center;
+    margin-bottom: 52px;
+    animation: fadeUp 0.5s ease-out both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-bottom: 12px;
+  }
+
+  .brand-icon-svg {
+    width: 58px;
+    height: 58px;
+    flex-shrink: 0;
+    filter:
+      drop-shadow(0 0 16px rgba(167,139,250,0.55))
+      drop-shadow(0 0 40px rgba(124,58,237,0.35));
+    animation: logoPulse 4s ease-in-out infinite;
+  }
+
+  @keyframes logoPulse {
+    0%, 100% { filter: drop-shadow(0 0 16px rgba(167,139,250,0.55)) drop-shadow(0 0 40px rgba(124,58,237,0.35)); }
+    50%       { filter: drop-shadow(0 0 26px rgba(167,139,250,0.8))  drop-shadow(0 0 56px rgba(124,58,237,0.5)); }
+  }
+
+  .brand-name {
+    font-size: 52px;
+    font-weight: 900;
+    letter-spacing: -2px;
+    line-height: 1;
+    background: linear-gradient(130deg, #a78bfa 0%, #818cf8 40%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0;
+  }
+
+  .brand-sub {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-2);
+    letter-spacing: 0.5px;
+  }
+
+  .brand-divider {
+    width: 220px;
+    height: 1px;
+    margin: 22px auto 0;
+    background: linear-gradient(90deg, transparent, rgba(167,139,250,0.35) 30%, rgba(56,189,248,0.35) 70%, transparent);
+  }
+
+  /* ───── GRID ───── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    width: 100%;
+  }
+
+  /* ───── TILE ───── */
+  @keyframes tileIn {
+    from { opacity: 0; transform: translateY(28px) scale(0.86); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+  }
+
+  @keyframes iconFloat {
+    0%,100% { transform: translateY(0)    rotate(0deg); }
+    35%     { transform: translateY(-9px) rotate(-4deg); }
+    70%     { transform: translateY(-6px) rotate(3deg); }
+  }
+
+  @keyframes glowPulse {
+    0%,100% { box-shadow: 0 8px 26px color-mix(in srgb, var(--accent) 45%, transparent), 0 0 0 3px color-mix(in srgb, var(--accent-l) 18%, transparent); }
+    50%     { box-shadow: 0 8px 36px color-mix(in srgb, var(--accent) 65%, transparent), 0 0 0 5px color-mix(in srgb, var(--accent-l) 30%, transparent); }
+  }
+
+  .tile {
+    --accent:   #7c3aed;
+    --accent-l: #a78bfa;
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0;
+    padding: 34px 22px 28px;
+    border-radius: 24px;
+    background: var(--surface);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    cursor: pointer;
+    overflow: hidden;
+    transition:
+      transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 300ms ease,
+      background 200ms ease,
+      border-color 200ms ease;
+    animation: tileIn 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* staggered entrance */
+  .tile:nth-child(1) { animation-delay: 0.06s; }
+  .tile:nth-child(2) { animation-delay: 0.13s; }
+  .tile:nth-child(3) { animation-delay: 0.20s; }
+  .tile:nth-child(4) { animation-delay: 0.27s; }
+  .tile:nth-child(5) { animation-delay: 0.34s; }
+  .tile:nth-child(6) { animation-delay: 0.41s; }
+
+  /* top shimmer line */
+  .tile::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 1.5px;
+    background: linear-gradient(90deg, transparent, var(--accent-l) 40%, var(--accent-l) 60%, transparent);
+    border-radius: 0 0 4px 4px;
+    opacity: 0.5;
+    transition: opacity 200ms, left 200ms, right 200ms;
+  }
+
+  /* inner glow blob */
+  .tile::before {
+    content: '';
+    position: absolute;
+    bottom: -50px; right: -50px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 70%);
+    transition: opacity 300ms, transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    opacity: 0.4;
+  }
+
+  .tile:hover {
+    transform: translateY(-10px) scale(1.03);
+    background: var(--surface-h);
+    border-color: color-mix(in srgb, var(--accent-l) 40%, var(--border));
+    box-shadow:
+      0 22px 52px rgba(0,0,0,0.55),
+      0 0 0 1px color-mix(in srgb, var(--accent-l) 28%, transparent),
+      0 0 48px color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+
+  .tile:hover::after  { opacity: 1; left: 5%; right: 5%; }
+  .tile:hover::before { opacity: 1; transform: scale(1.5); }
+
+  .tile:active {
+    transform: translateY(-3px) scale(0.97);
+    transition-duration: 100ms;
+  }
+
+  /* ─── ICON ─── */
+  .tile-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 22px;
+    background: linear-gradient(145deg, var(--accent-l), var(--accent));
+    box-shadow:
+      0 8px 26px color-mix(in srgb, var(--accent) 45%, transparent),
+      0 0 0 3px color-mix(in srgb, var(--accent-l) 18%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    flex-shrink: 0;
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition:
+      transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 300ms ease;
+  }
+
+  .tile-icon img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    display: block;
+    border-radius: 22px;
+  }
+
+  .tile:hover .tile-icon {
+    animation: iconFloat 1.7s ease-in-out infinite;
+    box-shadow:
+      0 16px 40px color-mix(in srgb, var(--accent) 65%, transparent),
+      0 0 0 5px color-mix(in srgb, var(--accent-l) 32%, transparent);
+  }
+
+  .tile:active .tile-icon {
+    animation: none;
+    transform: scale(0.88);
+  }
+
+  .tile-body {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .tile-label {
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.1px;
+    line-height: 1.2;
+  }
+
+  .tile-sub {
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .tile-arrow { display: none; }
+
+  /* ── Role accent overrides ── */
+  .tile.admin  { --accent: var(--c-admin);  --accent-l: var(--c-admin-l); }
+  .tile.mozo   { --accent: var(--c-mozo);   --accent-l: var(--c-mozo-l); }
+  .tile.cocina { --accent: var(--c-cocina); --accent-l: var(--c-cocina-l); }
+  .tile.rep    { --accent: var(--c-rep);    --accent-l: var(--c-rep-l); }
+  .tile.carta  { --accent: var(--c-carta);  --accent-l: var(--c-carta-l); }
+  .tile.menuqr { --accent: var(--c-menu);   --accent-l: var(--c-menu-l); }
+
+  /* ───── FOOTER ───── */
+  .footer {
+    margin-top: 48px;
+    color: rgba(144,144,187,0.45);
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    letter-spacing: 0.3px;
+    animation: fadeUp 0.5s ease-out 0.5s both;
+  }
+
+  .footer span {
+    color: rgba(167,139,250,0.4);
+  }
+
+  /* ───── RESPONSIVE ───── */
+  @media (max-width: 700px) {
+    .brand-name { font-size: 38px; letter-spacing: -1.5px; }
+    .brand-icon-svg { width: 46px; height: 46px; }
+    .brand-row { gap: 12px; }
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .tile { padding: 28px 16px 22px; }
+    .tile-icon { width: 68px; height: 68px; font-size: 30px; margin-bottom: 16px; border-radius: 18px; }
+    .tile-icon img { width: 68px; height: 68px; }
+  }
+
+  @media (max-width: 420px) {
+    .brand-name { font-size: 30px; letter-spacing: -1px; }
+    .brand-icon-svg { width: 38px; height: 38px; }
+    .brand-row { gap: 10px; }
+    .tile { padding: 22px 12px 18px; }
+    .tile-icon { width: 60px; height: 60px; font-size: 26px; margin-bottom: 14px; border-radius: 16px; }
+    .tile-icon img { width: 60px; height: 60px; }
+    .tile-label { font-size: 13px; }
+    .tile-sub   { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- BRAND -->
+  <header class="brand">
+    <div class="brand-row">
+      <svg class="brand-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" aria-hidden="true">
+        <defs>
+          <linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="#a78bfa"/>
+            <stop offset="55%"  stop-color="#818cf8"/>
+            <stop offset="100%" stop-color="#38bdf8"/>
+          </linearGradient>
+        </defs>
+        <!-- Tenedor: 3 dientes -->
+        <rect x="6"    y="3" width="2.8" height="13" rx="1.4" fill="url(#fg)"/>
+        <rect x="11.5" y="3" width="2.8" height="13" rx="1.4" fill="url(#fg)"/>
+        <rect x="17"   y="3" width="2.8" height="13" rx="1.4" fill="url(#fg)"/>
+        <!-- Tenedor: puente -->
+        <rect x="6" y="15" width="13.8" height="2.8" rx="1.4" fill="url(#fg)"/>
+        <!-- Tenedor: mango -->
+        <rect x="11.5" y="17" width="2.8" height="24" rx="1.4" fill="url(#fg)"/>
+        <!-- Cuchillo: hoja -->
+        <path d="M27 3 C27 3 37 4 37 17 L27 20 Z" fill="url(#fg)"/>
+        <!-- Cuchillo: mango -->
+        <rect x="27" y="18" width="2.8" height="23" rx="1.4" fill="url(#fg)"/>
+      </svg>
+      <h1 class="brand-name">ResTito</h1>
+    </div>
+    <p class="brand-sub">Sistema Gastronómico</p>
+    <div class="brand-divider"></div>
+  </header>
+
+  <!-- TILES -->
+  <main class="grid">
+
+    <a href="/admin" class="tile admin" onclick="['restito_token','restito_user','pizzeria_token','pizzeria_user'].forEach(function(k){localStorage.removeItem(k);})">
+      <div class="tile-icon"><img src="/icon-admin.svg" alt="Admin"/></div>
+      <div class="tile-body">
+        <span class="tile-label">Administración</span>
+        <span class="tile-sub">Panel completo</span>
+      </div>
+      <span class="tile-arrow">→</span>
+    </a>
+
+    <a href="/mozo" class="tile mozo" onclick="['restito_mozo_token','restito_mozo_user'].forEach(function(k){localStorage.removeItem(k);})">
+      <div class="tile-icon"><img src="/icon-mozo.svg" alt="Mozo"/></div>
+      <div class="tile-body">
+        <span class="tile-label">Panel Mozo</span>
+        <span class="tile-sub">Mesas y pedidos</span>
+      </div>
+      <span class="tile-arrow">→</span>
+    </a>
+
+    <a href="/cocina.html" class="tile cocina">
+      <div class="tile-icon"><img src="/icon-cocina.svg" alt="Cocina"/></div>
+      <div class="tile-body">
+        <span class="tile-label">Cocina</span>
+        <span class="tile-sub">Display de comandas</span>
+      </div>
+      <span class="tile-arrow">→</span>
+    </a>
+
+    <a href="/repartidor.html" class="tile rep">
+      <div class="tile-icon"><img src="/icon-repartidor.svg" alt="Repartidor"/></div>
+      <div class="tile-body">
+        <span class="tile-label">Repartidor</span>
+        <span class="tile-sub">App de delivery</span>
+      </div>
+      <span class="tile-arrow">→</span>
+    </a>
+
+    <a href="/carta.html" class="tile carta">
+      <div class="tile-icon"><img src="/icon-carta.svg" alt="Menú Online"/></div>
+      <div class="tile-body">
+        <span class="tile-label">Menú Online</span>
+        <span class="tile-sub">Pedidos desde casa</span>
+      </div>
+      <span class="tile-arrow">→</span>
+    </a>
+
+    <a href="/menu.html" class="tile menuqr">
+      <div class="tile-icon"><img src="/icon-menuqr.svg" alt="Carta QR"/></div>
+      <div class="tile-body">
+        <span class="tile-label">Carta QR</span>
+        <span class="tile-sub">Escaner en el local</span>
+      </div>
+      <span class="tile-arrow">→</span>
+    </a>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    ResTito By <span>ZeODev</span> &reg;
+  </footer>
+
+</div>
+</body>
+</html>

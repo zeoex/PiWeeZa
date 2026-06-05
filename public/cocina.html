@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>COCINA - ResTito</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1a1a2e;
+  --bg2:#16213e;
+  --bg3:#0f3460;
+  --card:#1e2a45;
+  --card2:#243050;
+  --red:#e63946;
+  --yellow:#f4a261;
+  --green:#2a9d8f;
+  --text:#e0e0f0;
+  --text2:#a0aec0;
+  --border:#2d3a5c;
+  --shadow:0 4px 20px rgba(0,0,0,0.4);
+}
+body{
+  font-family:'Barlow',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--bg2);
+  border-bottom:2px solid var(--bg3);
+  padding:0 24px;
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+  z-index:100;
+}
+.topbar-brand{display:flex;align-items:center;gap:12px}
+.topbar-brand .icon{font-size:28px;line-height:1}
+.topbar-brand h1{font-size:20px;font-weight:800;color:#fff;letter-spacing:1px;text-transform:uppercase}
+.topbar-brand span{font-size:11px;font-weight:500;color:var(--text2);display:block;letter-spacing:2px;text-transform:uppercase}
+.topbar-center{display:flex;align-items:center;gap:24px}
+.clock{
+  font-size:32px;font-weight:900;color:#fff;
+  letter-spacing:2px;font-variant-numeric:tabular-nums;
+}
+.badge-pendientes{
+  background:var(--red);color:#fff;
+  font-size:13px;font-weight:700;
+  padding:6px 14px;border-radius:20px;
+  letter-spacing:.5px;
+  display:flex;align-items:center;gap:6px;
+  animation:pulse-badge 2s infinite;
+}
+@keyframes pulse-badge{
+  0%,100%{box-shadow:0 0 0 0 rgba(230,57,70,0.5)}
+  50%{box-shadow:0 0 0 8px rgba(230,57,70,0)}
+}
+.topbar-actions{display:flex;align-items:center;gap:12px}
+.btn-nueva{
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  color:#fff;border:none;border-radius:8px;
+  padding:10px 18px;
+  font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;letter-spacing:.5px;transition:all .2s;text-transform:uppercase;
+}
+.btn-nueva:hover{background:linear-gradient(135deg,#5a6fd6,#6a43a0);transform:translateY(-1px)}
+.btn-volver{
+  background:transparent;color:var(--text2);
+  border:1px solid var(--border);border-radius:8px;
+  padding:10px 16px;
+  font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .2s;
+  text-decoration:none;display:flex;align-items:center;gap:6px;
+}
+.btn-volver:hover{background:var(--card);color:#fff;border-color:var(--text2)}
+
+/* ── BOARD ── */
+.board{
+  flex:1;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  padding:14px;
+  overflow:hidden;
+  min-height:0;
+}
+
+/* ── COLUMN ── */
+.column{
+  display:flex;flex-direction:column;
+  background:var(--card);
+  border-radius:12px;overflow:hidden;
+  border:1px solid var(--border);
+  min-height:0;
+}
+.col-header{
+  padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.col-header h2{font-size:15px;font-weight:800;letter-spacing:2px;text-transform:uppercase}
+.col-count{
+  font-size:20px;font-weight:900;
+  min-width:34px;height:34px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.3);
+}
+.col-pendiente .col-header{background:rgba(230,57,70,0.12);border-bottom:3px solid var(--red)}
+.col-pendiente .col-header h2{color:var(--red)}
+.col-preparacion .col-header{background:rgba(244,162,97,0.12);border-bottom:3px solid var(--yellow)}
+.col-preparacion .col-header h2{color:var(--yellow)}
+.col-listo .col-header{background:rgba(42,157,143,0.12);border-bottom:3px solid var(--green)}
+.col-listo .col-header h2{color:var(--green)}
+
+.col-body{
+  flex:1;overflow-y:auto;
+  padding:12px;
+  display:flex;flex-direction:column;gap:12px;
+  min-height:0;
+}
+.col-body::-webkit-scrollbar{width:4px}
+.col-body::-webkit-scrollbar-track{background:transparent}
+.col-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* drop highlight */
+.column.drag-over{outline:2px dashed var(--yellow);outline-offset:-4px}
+
+/* ── COMANDA CARD ── */
+.comanda{
+  background:var(--card2);
+  border-radius:10px;border:1px solid var(--border);
+  overflow:hidden;transition:transform .15s,box-shadow .15s;
+  cursor:grab;user-select:none;
+}
+.comanda:active{cursor:grabbing}
+.comanda:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.comanda.new-arrival{animation:slide-in .4s ease-out}
+@keyframes slide-in{
+  from{opacity:0;transform:translateY(-16px) scale(.95)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+.comanda-header{
+  padding:12px 14px 10px;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+}
+.comanda-num{font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1}
+.comanda-num span{font-size:14px;font-weight:500;color:var(--text2)}
+.badge-tipo{
+  font-size:11px;font-weight:700;
+  padding:4px 10px;border-radius:12px;
+  letter-spacing:.8px;text-transform:uppercase;flex-shrink:0;
+}
+.badge-mesa{background:rgba(102,126,234,0.2);color:#a5b4fc;border:1px solid rgba(102,126,234,0.35)}
+.badge-delivery{background:rgba(244,162,97,0.2);color:#fbbf24;border:1px solid rgba(244,162,97,0.35)}
+
+.comanda-info{
+  padding:8px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;
+}
+.comanda-mozo{color:var(--text2);font-weight:500}
+.comanda-mozo strong{color:var(--text);font-weight:700}
+
+/* ── TIMER ── */
+.comanda-timer{
+  display:flex;align-items:center;gap:6px;
+  font-size:13px;font-weight:700;
+  padding:4px 10px;border-radius:8px;
+  font-variant-numeric:tabular-nums;
+}
+.timer-ok{background:rgba(42,157,143,0.18);color:#4ade80}
+.timer-warn{background:rgba(244,162,97,0.18);color:var(--yellow)}
+.timer-danger{background:rgba(230,57,70,0.18);color:var(--red);animation:blink .8s step-end infinite}
+@keyframes blink{50%{opacity:.4}}
+.timer-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* ── ITEMS ── */
+.comanda-items{padding:6px 14px 10px;display:flex;flex-direction:column;gap:5px}
+.item-row{display:flex;align-items:baseline;gap:8px;font-size:13.5px}
+.item-qty{font-size:18px;font-weight:900;color:#fff;min-width:22px;line-height:1}
+.item-name{font-weight:600;color:#e2e8f0;flex:1}
+.item-variante{
+  font-size:11px;font-weight:500;color:var(--text2);
+  background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:4px;
+}
+.item-obs{font-size:11px;color:#f4a261;font-style:italic;margin-left:30px;margin-top:2px}
+
+/* ── ACTION BUTTON ── */
+.comanda-footer{padding:10px 14px;border-top:1px solid var(--border)}
+.btn-accion{
+  width:100%;padding:12px;border:none;border-radius:8px;
+  font-family:'Barlow',sans-serif;font-size:14px;font-weight:800;
+  letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+  transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  touch-action:manipulation;
+}
+.btn-iniciar{background:linear-gradient(135deg,var(--yellow),#e76f51);color:#1a1a2e}
+.btn-iniciar:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.btn-listo{background:linear-gradient(135deg,var(--green),#52b788);color:#fff}
+.btn-listo:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.btn-entregar{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+.btn-entregar:hover{filter:brightness(1.12);transform:translateY(-1px)}
+
+/* ── STATUS BAR ── */
+.statusbar{
+  background:var(--bg2);border-top:1px solid var(--border);
+  padding:10px 24px;
+  display:flex;align-items:center;justify-content:center;gap:32px;
+  flex-shrink:0;
+}
+.stat-item{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text2)}
+.stat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.stat-num{font-size:20px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+.stat-sep{color:var(--border);font-size:20px}
+
+/* ── TOAST ── */
+.toast-container{
+  position:fixed;top:76px;right:20px;z-index:999;
+  display:flex;flex-direction:column;gap:8px;pointer-events:none;
+}
+.toast{
+  background:var(--card2);border:1px solid var(--green);
+  border-left:4px solid var(--green);color:#fff;
+  padding:12px 18px;border-radius:8px;font-size:14px;font-weight:600;
+  box-shadow:var(--shadow);max-width:300px;
+  animation:toast-in .3s ease-out,toast-out .3s ease-in 2.7s forwards;
+  pointer-events:auto;
+}
+@keyframes toast-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toast-out{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(20px)}}
+
+/* ── CONN BADGE ── */
+.conn-badge{
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;
+  padding:4px 10px;border-radius:12px;letter-spacing:.5px;
+}
+.conn-online{background:rgba(42,157,143,0.18);color:#4ade80;border:1px solid rgba(42,157,143,0.35)}
+.conn-offline{background:rgba(244,162,97,0.15);color:#fbbf24;border:1px solid rgba(244,162,97,0.3)}
+.conn-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.conn-online .conn-dot{animation:pulse-dot 1.5s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── EMPTY STATE ── */
+.col-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;padding:32px 16px;color:var(--text2);font-size:13px;text-align:center;
+  opacity:.5;
+}
+.col-empty .icon{font-size:32px;opacity:.5}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px){
+  .board{gap:10px;padding:10px}
+  .comanda-num{font-size:22px}
+  .topbar-brand h1{font-size:16px}
+  .clock{font-size:26px}
+}
+
+/* ── TABLET (hasta 1023px) ── */
+@media(max-width:1023px){
+  .board{
+    display:flex;
+    flex-direction:row;
+    overflow-x:auto;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    gap:12px;
+    padding:12px;
+    padding-bottom:16px;
+    scroll-snap-type:x mandatory;
+  }
+  .column{
+    min-width:300px;
+    flex:0 0 300px;
+    scroll-snap-align:start;
+  }
+  .clock{font-size:24px}
+}
+
+/* ── MOBILE (hasta 767px) ── */
+@media(max-width:767px){
+  .topbar{padding:8px 12px;height:auto;flex-wrap:wrap;gap:8px}
+  .topbar-brand h1{font-size:15px}
+  .topbar-brand span{font-size:10px}
+  .topbar-brand .icon{font-size:22px}
+  .topbar-center{gap:12px}
+  .clock{font-size:20px}
+  .badge-pendientes{font-size:12px;padding:5px 10px}
+  .topbar-actions{gap:8px}
+  .btn-nueva{padding:8px 12px;font-size:12px}
+  .btn-volver{padding:8px 12px;font-size:12px}
+  .board{gap:8px;padding:8px;padding-bottom:12px}
+  .column{min-width:260px;flex:0 0 260px}
+  .btn-accion{min-height:48px;font-size:14px;padding:14px}
+  .statusbar{padding:8px 12px;gap:16px;flex-wrap:wrap}
+  .stat-sep{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="icon">🍕</div>
+    <div>
+      <h1>Cocina</h1>
+      <span>Pizzería Pro — KDS</span>
+    </div>
+  </div>
+
+  <div class="topbar-center">
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="badge-pendientes" id="badge-pendientes">
+      <span>&#9889;</span>
+      <span id="badge-num">0</span>
+      <span>PENDIENTES</span>
+    </div>
+  </div>
+
+  <div class="topbar-actions">
+    <div class="conn-badge conn-offline" id="conn-badge">
+      <div class="conn-dot"></div>
+      <span id="conn-text">DEMO</span>
+    </div>
+    <button class="btn-nueva" onclick="simularNuevaComanda()">+ NUEVA COMANDA &nbsp;<kbd style="font-size:10px;opacity:.7;background:rgba(0,0,0,.3);padding:1px 4px;border-radius:3px">F1</kbd></button>
+    <a href="index.html" class="btn-volver">&#8592; Panel</a>
+  </div>
+</header>
+
+<!-- BOARD -->
+<main class="board" id="board">
+  <div class="column col-pendiente" id="col-pendiente"
+       ondragover="onDragOver(event,'pendiente')"
+       ondrop="onDrop(event,'pendiente')"
+       ondragleave="onDragLeave(event)">
+    <div class="col-header">
+      <h2>Pendiente</h2>
+      <div class="col-count" id="count-pendiente">0</div>
+    </div>
+    <div class="col-body" id="body-pendiente"></div>
+  </div>
+
+  <div class="column col-preparacion" id="col-preparacion"
+       ondragover="onDragOver(event,'preparacion')"
+       ondrop="onDrop(event,'preparacion')"
+       ondragleave="onDragLeave(event)">
+    <div class="col-header">
+      <h2>En Preparación</h2>
+      <div class="col-count" id="count-preparacion">0</div>
+    </div>
+    <div class="col-body" id="body-preparacion"></div>
+  </div>
+
+  <div class="column col-listo" id="col-listo"
+       ondragover="onDragOver(event,'listo')"
+       ondrop="onDrop(event,'listo')"
+       ondragleave="onDragLeave(event)">
+    <div class="col-header">
+      <h2>Listo</h2>
+      <div class="col-count" id="count-listo">0</div>
+    </div>
+    <div class="col-body" id="body-listo"></div>
+  </div>
+</main>
+
+<!-- STATUS BAR -->
+<footer class="statusbar">
+  <div class="stat-item">
+    <div class="stat-dot" style="background:var(--red)"></div>
+    <span class="stat-num" id="st-pendiente">0</span>
+    <span>pendientes</span>
+  </div>
+  <div class="stat-sep">|</div>
+  <div class="stat-item">
+    <div class="stat-dot" style="background:var(--yellow)"></div>
+    <span class="stat-num" id="st-preparacion">0</span>
+    <span>en preparación</span>
+  </div>
+  <div class="stat-sep">|</div>
+  <div class="stat-item">
+    <div class="stat-dot" style="background:var(--green)"></div>
+    <span class="stat-num" id="st-listo">0</span>
+    <span>listos</span>
+  </div>
+  <div class="stat-sep">|</div>
+  <div class="stat-item" style="font-size:12px">
+    Refresh:
+    <span id="last-refresh" style="color:#fff;margin-left:4px;font-variant-numeric:tabular-nums">--:--:--</span>
+  </div>
+</footer>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toasts"></div>
+
+<script>
+/* ── STATE ──────────────────────────────────────────────────────────────────── */
+let comandas = [];
+let dragId = null;
+let nextId = 10;
+let nextNumero = 5;
+let socket = null;
+
+/* ── AUDIO ──────────────────────────────────────────────────────────────────── */
+function beep(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    if (type === 'new') {
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.setValueAtTime(1200, ctx.currentTime + 0.12);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.24);
+      gain.gain.setValueAtTime(0.35, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.5);
+    } else {
+      osc.frequency.setValueAtTime(660, ctx.currentTime);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    }
+  } catch(e) { /* Silently ignore */ }
+}
+
+/* ── CLOCK ──────────────────────────────────────────────────────────────────── */
+function updateClock() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ── TIMER UTILS ────────────────────────────────────────────────────────────── */
+function tiempoTranscurrido(createdAt) {
+  const mins = Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000);
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  let texto = h > 0 ? `${h}h ${m}m` : `${mins}m`;
+  let clase = 'timer-ok';
+  if (mins > 20) clase = 'timer-danger';
+  else if (mins > 10) clase = 'timer-warn';
+  return { texto, clase };
+}
+
+/* ── RENDER ─────────────────────────────────────────────────────────────────── */
+function renderComanda(c) {
+  const { texto, clase } = tiempoTranscurrido(c.createdAt);
+
+  const tipoBadge = c.tipo === 'delivery'
+    ? `<span class="badge-tipo badge-delivery">&#x1F6F5; DELIVERY</span>`
+    : `<span class="badge-tipo badge-mesa">&#x1F37D;&#xFE0F; MESA ${c.mesa}</span>`;
+
+  const mozoLabel = c.tipo === 'mesa'
+    ? `<span class="comanda-mozo">Mozo: <strong>${c.mozo}</strong></span>`
+    : `<span class="comanda-mozo">Cliente: <strong>${c.cliente}</strong></span>`;
+
+  const itemsHtml = c.items.map(item => {
+    const qty = item.qty ?? item.cantidad ?? 1;
+    const variante = item.variante && item.variante !== 'unica' ? item.variante : null;
+    const nota = item.nota || item.obs || item.observacion || '';
+    return `
+    <div class="item-row">
+      <span class="item-qty">${qty}&times;</span>
+      <span class="item-name">${item.nombre}</span>
+      ${variante ? `<span class="item-variante">${variante}</span>` : ''}
+    </div>
+    ${nota ? `<div class="item-obs">&#9733; ${nota}</div>` : ''}
+  `;}).join('');
+
+  let btnHtml = '';
+  if (c.estado === 'pendiente') {
+    btnHtml = `<button class="btn-accion btn-iniciar" onclick="cambiarEstado('${c.id}','preparacion')">&#9654; INICIAR PREPARACIÓN</button>`;
+  } else if (c.estado === 'preparacion') {
+    btnHtml = `<button class="btn-accion btn-listo" onclick="cambiarEstado('${c.id}','listo')">&#10003; MARCAR COMO LISTO</button>`;
+  } else {
+    btnHtml = `<button class="btn-accion btn-entregar" onclick="cambiarEstado('${c.id}','entregado')">&#8593; MARCAR ENTREGADO</button>`;
+  }
+
+  return `
+    <div class="comanda" id="comanda-${c.id}" draggable="true"
+         ondragstart="onDragStart(event,'${c.id}')"
+         ondragend="onDragEnd(event)">
+      <div class="comanda-header">
+        <div class="comanda-num"><span>#</span>${c.numero}</div>
+        ${tipoBadge}
+      </div>
+      <div class="comanda-info">
+        ${mozoLabel}
+        <div class="comanda-timer ${clase}">
+          <div class="timer-dot"></div>
+          ${texto}
+        </div>
+      </div>
+      <div class="comanda-items">${itemsHtml}</div>
+      <div class="comanda-footer">${btnHtml}</div>
+    </div>
+  `;
+}
+
+function renderAll(newId) {
+  const cols = { pendiente: [], preparacion: [], listo: [] };
+  comandas.forEach(c => { if (cols[c.estado]) cols[c.estado].push(c); });
+
+  ['pendiente', 'preparacion', 'listo'].forEach(estado => {
+    const body = document.getElementById(`body-${estado}`);
+    if (cols[estado].length === 0) {
+      body.innerHTML = `<div class="col-empty"><div class="icon">&#x2713;</div><span>Sin comandas</span></div>`;
+    } else {
+      body.innerHTML = cols[estado].map(c => renderComanda(c)).join('');
+    }
+    document.getElementById(`count-${estado}`).textContent = cols[estado].length;
+    document.getElementById(`st-${estado}`).textContent = cols[estado].length;
+  });
+
+  document.getElementById('badge-num').textContent = cols.pendiente.length;
+
+  if (newId != null) {
+    const el = document.getElementById(`comanda-${newId}`);
+    if (el) { el.classList.add('new-arrival'); }
+  }
+
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('last-refresh').textContent =
+    `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+}
+
+/* ── ESTADO ─────────────────────────────────────────────────────────────────── */
+function cambiarEstado(id, nuevoEstado) {
+  const c = comandas.find(x => String(x.id) === String(id));
+  if (!c) return;
+
+  if (nuevoEstado === 'entregado') {
+    comandas = comandas.filter(x => x.id !== id);
+    showToast(`Comanda #${c.numero} entregada ✓`, 'green');
+    beep('done');
+  } else {
+    c.estado = nuevoEstado;
+    const labels = { preparacion: 'en preparación', listo: 'lista' };
+    showToast(`Comanda #${c.numero} — ${labels[nuevoEstado] || nuevoEstado}`, '');
+  }
+
+  renderAll(null);
+
+  if (socket && socket.connected) {
+    socket.emit('comanda:update', { id, estado: nuevoEstado });
+  }
+}
+
+/* ── DRAG & DROP ────────────────────────────────────────────────────────────── */
+function onDragStart(e, id) {
+  dragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => {
+    const el = document.getElementById(`comanda-${id}`);
+    if (el) el.style.opacity = '0.4';
+  }, 0);
+}
+
+function onDragEnd(e) {
+  if (dragId) {
+    const el = document.getElementById(`comanda-${dragId}`);
+    if (el) el.style.opacity = '1';
+  }
+  dragId = null;
+  document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+}
+
+function onDragOver(e, estado) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.getElementById(`col-${estado}`).classList.add('drag-over');
+}
+
+function onDragLeave(e) {
+  if (e.currentTarget && e.currentTarget.classList) {
+    e.currentTarget.classList.remove('drag-over');
+  }
+}
+
+function onDrop(e, estado) {
+  e.preventDefault();
+  document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+  if (dragId === null) return;
+  const c = comandas.find(x => x.id === dragId);
+  if (c && c.estado !== estado) {
+    c.estado = estado;
+    renderAll(null);
+    showToast(`Comanda #${c.numero} movida a ${estado}`, '');
+  }
+  dragId = null;
+}
+
+/* ── NUEVA COMANDA SIMULADA ─────────────────────────────────────────────────── */
+const NOMBRES_PIZZA = ['Pizza Mozzarella','Pizza Napolitana','Pizza Fugazzeta','Pizza 4 Quesos','Pizza Calabresa','Pizza Pollo y Morrones'];
+const EXTRAS = ['Empanadas x6','Cerveza 1L','Coca-Cola 1.5L','Agua Mineral x2','Tiramisu'];
+const VARIANTES = ['Grande','Mediana','Chica'];
+const MOZOS = ['Carlos','Ana','Luis','Sofía','Diego'];
+const CLIENTES = ['Juan García','María López','Pedro Sánchez','Laura Martínez','Roberto Silva'];
+
+function simularNuevaComanda() {
+  const tipo = Math.random() > 0.5 ? 'mesa' : 'delivery';
+  const numItems = Math.floor(Math.random() * 3) + 1;
+  const items = Array.from({ length: numItems }, (_, i) => {
+    if (i === 0) {
+      return {
+        nombre: NOMBRES_PIZZA[Math.floor(Math.random() * NOMBRES_PIZZA.length)],
+        variante: VARIANTES[Math.floor(Math.random() * VARIANTES.length)],
+        qty: Math.floor(Math.random() * 2) + 1
+      };
+    }
+    return {
+      nombre: EXTRAS[Math.floor(Math.random() * EXTRAS.length)],
+      qty: Math.floor(Math.random() * 3) + 1
+    };
+  });
+
+  const id = nextId++;
+  const numero = String(nextNumero++).padStart(3, '0');
+  const nueva = {
+    id, numero, tipo, items,
+    estado: 'pendiente',
+    createdAt: new Date(),
+    ...(tipo === 'mesa'
+      ? { mesa: Math.floor(Math.random() * 12) + 1, mozo: MOZOS[Math.floor(Math.random() * MOZOS.length)] }
+      : { cliente: CLIENTES[Math.floor(Math.random() * CLIENTES.length)] })
+  };
+
+  comandas.unshift(nueva);
+  renderAll(id);
+  showToast(`Nueva comanda #${numero} recibida!`, 'red');
+  beep('new');
+}
+
+/* F1 shortcut */
+document.addEventListener('keydown', e => {
+  if (e.key === 'F1') { e.preventDefault(); simularNuevaComanda(); }
+});
+
+/* ── TOAST ──────────────────────────────────────────────────────────────────── */
+function showToast(msg, color) {
+  const container = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  if (color === 'red') el.style.borderColor = 'var(--red)';
+  if (color === 'green') el.style.borderColor = 'var(--green)';
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 3000);
+}
+
+/* ── POLLING FALLBACK (every 45s) — catches missed socket events ────────────── */
+setInterval(() => {
+  if (!socket || !socket.connected) return;
+  fetch('/api/cocina/comandas')
+    .then(r => r.json())
+    .then(data => {
+      if (!Array.isArray(data)) return;
+      // Merge: keep local pendiente/preparacion comandas not yet in server response
+      const serverIds = new Set(data.map(c => String(c.id)));
+      const localOnly = comandas.filter(c => !serverIds.has(String(c.id)));
+      comandas = [
+        ...data.map(c => ({...c, createdAt: new Date(c.createdAt)})),
+        ...localOnly
+      ];
+      renderAll(null);
+    }).catch(() => {});
+}, 45000);
+
+/* ── AUTO-REFRESH TIMERS (30s) ──────────────────────────────────────────────── */
+setInterval(() => {
+  comandas.forEach(c => {
+    const timerEl = document.querySelector(`#comanda-${c.id} .comanda-timer`);
+    if (!timerEl) return;
+    const { texto, clase } = tiempoTranscurrido(c.createdAt);
+    timerEl.className = `comanda-timer ${clase}`;
+    timerEl.innerHTML = `<div class="timer-dot"></div>${texto}`;
+  });
+  // Update counts
+  const counts = { pendiente: 0, preparacion: 0, listo: 0 };
+  comandas.forEach(c => { if (counts[c.estado] !== undefined) counts[c.estado]++; });
+  Object.entries(counts).forEach(([e, n]) => {
+    document.getElementById(`st-${e}`).textContent = n;
+    document.getElementById(`count-${e}`).textContent = n;
+  });
+  document.getElementById('badge-num').textContent = counts.pendiente;
+}, 30000);
+
+/* ── SOCKET.IO ──────────────────────────────────────────────────────────────── */
+function initSocket() {
+  try {
+    if (typeof io === 'undefined') return;
+    socket = io({ transports: ['polling', 'websocket'] });
+
+    socket.on('connect', () => {
+      const badge = document.getElementById('conn-badge');
+      badge.className = 'conn-badge conn-online';
+      document.getElementById('conn-text').textContent = 'EN VIVO';
+      showToast('Conectado al servidor en vivo', 'green');
+      // Re-fetch on (re)connect to catch any missed events
+      fetch('/api/cocina/comandas')
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            comandas = data.map(c => ({...c, createdAt: new Date(c.createdAt)}));
+            renderAll(null);
+          }
+        }).catch(() => {});
+    });
+
+    socket.on('disconnect', () => {
+      const badge = document.getElementById('conn-badge');
+      badge.className = 'conn-badge conn-offline';
+      document.getElementById('conn-text').textContent = 'DEMO';
+    });
+
+    socket.on('comanda:nueva', (comanda) => {
+      if (comandas.find(c => c.id === comanda.id)) return;
+      comanda.createdAt = new Date(comanda.createdAt);
+      comandas.unshift(comanda);
+      renderAll(comanda.id);
+      showToast(`Nueva comanda #${comanda.numero} recibida!`, 'red');
+      beep('new');
+    });
+
+    socket.on('comanda:update', ({ id, estado }) => {
+      const c = comandas.find(x => String(x.id) === String(id));
+      if (!c) return;
+      if (estado === 'entregado') {
+        comandas = comandas.filter(x => String(x.id) !== String(id));
+      } else {
+        c.estado = estado;
+      }
+      renderAll(null);
+    });
+
+    // Kitchen comanda was updated in-place (item qty changed or item added to same table)
+    socket.on('comanda:replace', (comanda) => {
+      const idx = comandas.findIndex(c => String(c.id) === String(comanda.id));
+      if (idx >= 0) {
+        comandas[idx] = {...comanda, createdAt: new Date(comanda.createdAt)};
+        renderAll(null);
+      }
+    });
+
+  } catch(e) {
+    console.warn('Socket.io no disponible — modo demo activo');
+  }
+}
+
+/* ── INIT ───────────────────────────────────────────────────────────────────── */
+// Fetch from API immediately (no socket needed)
+fetch('/api/cocina/comandas')
+  .then(r => r.json())
+  .then(data => {
+    if (Array.isArray(data)) {
+      comandas = data.map(c => ({...c, createdAt: new Date(c.createdAt)}));
+    }
+    renderAll(null);
+  }).catch(() => renderAll(null));
+
+const script = document.createElement('script');
+script.src = '/socket.io/socket.io.js';
+script.onload = () => initSocket();
+script.onerror = () => console.info('Socket.io no disponible — modo demo');
+document.head.appendChild(script);
+</script>
+</body>
+</html>

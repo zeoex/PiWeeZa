@@ -922,13 +922,6 @@ input.form-control:focus{outline:none;border-color:var(--red)}
               <div class="ha-circle" style="background:#fef3c7;box-shadow:0 6px 18px rgba(245,158,11,0.25)">📋</div>
               <span class="ha-label">Ventas del Día</span>
             </button>
-            <button class="ha-btn" onclick="navTo('venta',document.querySelector('[data-section=venta]'))">
-              <div class="ha-circle" style="background:#ede9fe;box-shadow:0 6px 18px rgba(124,58,237,0.22)">
-                🛒
-                <span class="ha-badge" id="hab-venta" style="display:none">0</span>
-              </div>
-              <span class="ha-label">Venta</span>
-            </button>
             <button class="ha-btn" onclick="navTo('pedidos',document.querySelector('[data-section=pedidos]'))">
               <div class="ha-circle" style="background:#fff0e6;box-shadow:0 6px 18px rgba(249,115,22,0.22)">
                 🛵
@@ -2596,6 +2589,11 @@ function initApp() {
   // Multi-sucursal: detectar modo sucursal desde el JWT
   const _suc = _decodeJWT(token).sucursal_id || null;
   _currentSucursalId = _suc;
+  // Venta Directa solo para sucursales — ocultar en modo admin central
+  if (!_suc) {
+    const navVenta = document.querySelector('[data-section="venta"]');
+    if (navVenta) navVenta.style.display = 'none';
+  }
   // Mesa management (create/edit/delete) only for admin and supervisor
   // Restore persisted state
   loadState();
@@ -2608,7 +2606,7 @@ function initApp() {
       return;
     }
     const saved = (() => { try { return localStorage.getItem('pz_last_section'); } catch(e){} return null; })();
-    const validSections = ['dashboard','sucursales','ventas-dia','venta','pedidos','delivery','productos','stock','caja','clientes','reportes','usuarios','config'];
+    const validSections = ['dashboard','sucursales','ventas-dia','pedidos','delivery','productos','stock','caja','clientes','reportes','usuarios','config'];
     const target = (saved && validSections.includes(saved)) ? saved : 'dashboard';
     navTo(target, null);
     renderCaja();

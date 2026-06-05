@@ -112,7 +112,8 @@ const db = {
   facturas:   [],
   stock:      [],
   printJobs:  [],
-  llamados:   []
+  llamados:   [],
+  sucursales: []
 };
 
 // ─────────────────────────────────────────────
@@ -238,14 +239,14 @@ const db = {
   // ---------- USUARIOS ----------
   const hash = pwd => bcrypt.hashSync(pwd, 10);
   db.users = [
-    { id: uuidv4(), nombre: 'Administrador',  email: 'admin@pizzaya.com',      password: hash('admin123'),    rol: 'admin',      activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Supervisor',     email: 'supervisor@pizzaya.com', password: hash('super123'),    rol: 'supervisor', activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Cajero 01',      email: 'cajero01@pizzaya.com',   password: hash('cajero123'),   rol: 'cajero',     activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Vendedor 01',    email: 'vendedor@pizzaya.com',   password: hash('mozo123'),     rol: 'mozo',       activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Vendedor 02',    email: 'vendedor2@pizzaya.com',  password: hash('mozo123'),     rol: 'mozo',       activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Vendedor 03',    email: 'vendedor3@pizzaya.com',  password: hash('mozo456'),     rol: 'mozo',       activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Cocinero Pedro', email: 'cocinero@pizzaya.com',   password: hash('cocina123'),   rol: 'cocinero',   activo: true, createdAt: new Date().toISOString() },
-    { id: uuidv4(), nombre: 'Repartidor 01',  email: 'repartidor@pizzaya.com', password: hash('delivery123'), rol: 'repartidor', activo: true, createdAt: new Date().toISOString() }
+    { id: uuidv4(), nombre: 'Administrador',  email: 'admin@pizzaya.com',      password: hash('admin123'),    rol: 'admin',      sucursal_id: null, activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Supervisor',     email: 'supervisor@pizzaya.com', password: hash('super123'),    rol: 'supervisor', sucursal_id: null, activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Cajero 01',      email: 'cajero01@pizzaya.com',   password: hash('cajero123'),   rol: 'cajero',     sucursal_id: null, activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Vendedor 01',    email: 'vendedor@pizzaya.com',   password: hash('mozo123'),     rol: 'mozo',       sucursal_id: null, activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Vendedor 02',    email: 'vendedor2@pizzaya.com',  password: hash('mozo123'),     rol: 'mozo',       sucursal_id: null, activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Vendedor 03',    email: 'vendedor3@pizzaya.com',  password: hash('mozo456'),     rol: 'mozo',       sucursal_id: null, activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Cocinero Pedro', email: 'cocinero@pizzaya.com',   password: hash('cocina123'),   rol: 'cocinero',   sucursal_id: null, activo: true, createdAt: new Date().toISOString() },
+    { id: uuidv4(), nombre: 'Repartidor 01',  email: 'repartidor@pizzaya.com', password: hash('delivery123'), rol: 'repartidor', sucursal_id: null, activo: true, createdAt: new Date().toISOString() }
   ];
 
   // ---------- MESAS ----------
@@ -448,12 +449,12 @@ app.post('/api/auth/login', async (req, res) => {
   const ok = await bcrypt.compare(password, user.password);
   if (!ok) return res.status(401).json({ error: 'Credenciales inválidas' });
 
-  const payload = { id: user.id, email: user.email, nombre: user.nombre, rol: user.rol };
+  const payload = { id: user.id, email: user.email, nombre: user.nombre, rol: user.rol, sucursal_id: user.sucursal_id || null };
   const token   = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
 
   res.json({
     token,
-    usuario: { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol }
+    usuario: { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol, sucursal_id: user.sucursal_id || null }
   });
 });
 
@@ -880,6 +881,7 @@ app.post('/api/pedidos/:id/pagar', (req, res) => {
     subtotal,
     iva,
     metodoPago:  pedido.metodoPago,
+    sucursal_id: req.user?.sucursal_id || null,
     createdAt:   new Date().toISOString()
   };
   db.facturas.push(factura);
@@ -927,6 +929,7 @@ app.post('/api/delivery', (req, res) => {
     distancia:       null,
     estimacion:      estimacion || 30,
     origen:          req.body.origen || 'whatsapp',
+    sucursal_id:     req.user?.sucursal_id || null,
     createdAt:       new Date().toISOString()
   };
 
@@ -1122,11 +1125,12 @@ app.post('/api/caja/movimiento', (req, res) => {
   if (!tipo || !monto) return res.status(400).json({ error: 'Faltan campos requeridos' });
 
   const movimiento = {
-    id:       uuidv4(),
-    tipo:     tipo,         // 'ingreso' | 'egreso'
-    concepto: concepto || '',
-    monto:    parseFloat(monto),
-    fecha:    new Date().toISOString()
+    id:          uuidv4(),
+    tipo:        tipo,         // 'ingreso' | 'egreso'
+    concepto:    concepto || '',
+    monto:       parseFloat(monto),
+    sucursal_id: req.user?.sucursal_id || null,
+    fecha:       new Date().toISOString()
   };
 
   caja.movimientos.push(movimiento);
@@ -1264,15 +1268,16 @@ app.post('/api/facturas', (req, res) => {
   const iva      = parseFloat((total - subtotal).toFixed(2));
 
   const factura = {
-    id:         uuidv4(),
-    numero:     `F-${String(db.facturas.length + 1).padStart(6, '0')}`,
-    tipo:       tipo      || 'B',
-    pedidoId:   pedidoId  || null,
+    id:          uuidv4(),
+    numero:      `F-${String(db.facturas.length + 1).padStart(6, '0')}`,
+    tipo:        tipo      || 'B',
+    pedidoId:    pedidoId  || null,
     total,
     subtotal,
     iva,
-    metodoPago: metodoPago || (pedido ? pedido.metodoPago : 'efectivo'),
-    createdAt:  new Date().toISOString()
+    metodoPago:  metodoPago || (pedido ? pedido.metodoPago : 'efectivo'),
+    sucursal_id: req.user?.sucursal_id || null,
+    createdAt:   new Date().toISOString()
   };
 
   db.facturas.push(factura);
@@ -1560,6 +1565,165 @@ setInterval(() => {
   const cutoff = Date.now() - 2 * 60 * 60 * 1000;
   db.llamados = db.llamados.filter(l => new Date(l.creadoAt).getTime() > cutoff);
 }, 30 * 60 * 1000);
+
+// ─────────────────────────────────────────────
+//  USERS ROUTES
+// ─────────────────────────────────────────────
+app.get('/api/users', authMiddleware, (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  res.json(db.users.map(u => ({ id: u.id, nombre: u.nombre, email: u.email, rol: u.rol, sucursal_id: u.sucursal_id || null, activo: u.activo, createdAt: u.createdAt })));
+});
+
+app.post('/api/users', authMiddleware, async (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const { nombre, email, password, rol, sucursal_id } = req.body;
+  if (!nombre || !email || !password) return res.status(400).json({ error: 'nombre, email y password son requeridos' });
+  if (db.users.find(u => u.email === email)) return res.status(400).json({ error: 'Email ya registrado' });
+  const nuevoUsuario = {
+    id:          uuidv4(),
+    nombre:      nombre.trim(),
+    email:       email.trim().toLowerCase(),
+    password:    bcrypt.hashSync(password, 10),
+    rol:         rol || 'mozo',
+    sucursal_id: sucursal_id || null,
+    activo:      true,
+    createdAt:   new Date().toISOString()
+  };
+  db.users.push(nuevoUsuario);
+  const { password: _p, ...safe } = nuevoUsuario;
+  res.status(201).json(safe);
+});
+
+app.put('/api/users/:id', authMiddleware, async (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const idx = db.users.findIndex(u => u.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
+  const { nombre, email, password, rol, sucursal_id, activo } = req.body;
+  if (nombre    !== undefined) db.users[idx].nombre    = nombre.trim();
+  if (email     !== undefined) db.users[idx].email     = email.trim().toLowerCase();
+  if (rol       !== undefined) db.users[idx].rol       = rol;
+  if (activo    !== undefined) db.users[idx].activo    = Boolean(activo);
+  if (sucursal_id !== undefined) db.users[idx].sucursal_id = sucursal_id || null;
+  if (password) db.users[idx].password = bcrypt.hashSync(password, 10);
+  const { password: _p, ...safe } = db.users[idx];
+  res.json(safe);
+});
+
+app.delete('/api/users/:id', authMiddleware, (req, res) => {
+  if (req.user.rol !== 'admin') return res.status(403).json({ error: 'Solo admin' });
+  if (req.params.id === req.user.id) return res.status(400).json({ error: 'No podés eliminarte a vos mismo' });
+  const idx = db.users.findIndex(u => u.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Usuario no encontrado' });
+  db.users.splice(idx, 1);
+  res.json({ ok: true });
+});
+
+// ─────────────────────────────────────────────
+//  SUCURSALES ROUTES
+// ─────────────────────────────────────────────
+app.get('/api/sucursales', authMiddleware, (req, res) => {
+  res.json(db.sucursales || []);
+});
+
+app.post('/api/sucursales', authMiddleware, (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const { nombre, direccion, telefono } = req.body;
+  if (!nombre?.trim()) return res.status(400).json({ error: 'Nombre requerido' });
+  const nueva = {
+    id:        uuidv4(),
+    nombre:    nombre.trim(),
+    direccion: direccion?.trim() || '',
+    telefono:  telefono?.trim()  || '',
+    activa:    true,
+    createdAt: new Date().toISOString()
+  };
+  if (!db.sucursales) db.sucursales = [];
+  db.sucursales.push(nueva);
+  io.emit('sucursal:update', nueva);
+  res.json(nueva);
+});
+
+app.put('/api/sucursales/:id', authMiddleware, (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const idx = (db.sucursales || []).findIndex(s => s.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Sucursal no encontrada' });
+  const { nombre, direccion, telefono, activa } = req.body;
+  if (nombre    !== undefined) db.sucursales[idx].nombre    = nombre.trim();
+  if (direccion !== undefined) db.sucursales[idx].direccion = direccion.trim();
+  if (telefono  !== undefined) db.sucursales[idx].telefono  = telefono.trim();
+  if (activa    !== undefined) db.sucursales[idx].activa    = Boolean(activa);
+  io.emit('sucursal:update', db.sucursales[idx]);
+  res.json(db.sucursales[idx]);
+});
+
+app.delete('/api/sucursales/:id', authMiddleware, (req, res) => {
+  if (req.user.rol !== 'admin') return res.status(403).json({ error: 'Solo admin' });
+  const idx = (db.sucursales || []).findIndex(s => s.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'No encontrada' });
+  const usersEnSucursal = db.users.filter(u => u.sucursal_id === req.params.id);
+  if (usersEnSucursal.length > 0) return res.status(400).json({ error: `Tiene ${usersEnSucursal.length} usuario(s) asignado(s). Reasignálos antes.` });
+  const [deleted] = db.sucursales.splice(idx, 1);
+  io.emit('sucursal:deleted', { id: deleted.id });
+  res.json({ ok: true });
+});
+
+app.get('/api/sucursales/:id/stats', authMiddleware, (req, res) => {
+  const sid = req.params.id;
+  const facturas = db.facturas.filter(f => f.sucursal_id === sid);
+  const hoy = new Date().toISOString().slice(0, 10);
+  const facturasHoy = facturas.filter(f => (f.fecha || f.createdAt || '').startsWith(hoy));
+  const ventas7d = facturas.filter(f => {
+    const d = new Date(f.fecha || f.createdAt);
+    return d >= new Date(Date.now() - 7 * 86400000);
+  });
+  const totalHoy  = facturasHoy.reduce((s, f) => s + (f.total || 0), 0);
+  const total7d   = ventas7d.reduce((s, f) => s + (f.total || 0), 0);
+  const ticketProm = ventas7d.length ? Math.round(total7d / ventas7d.length) : 0;
+  const deliveryActivos = db.delivery.filter(d => d.sucursal_id === sid && !['entregado', 'cancelado'].includes(d.estado));
+  res.json({
+    sucursal_id:    sid,
+    ventasHoy:      facturasHoy.length,
+    totalHoy,
+    ventas7d:       ventas7d.length,
+    total7d,
+    ticketProm,
+    pedidosActivos: deliveryActivos.length
+  });
+});
+
+app.get('/api/sucursales/:id/caja', authMiddleware, (req, res) => {
+  const sid = req.params.id;
+  // Collect all movimientos from caja entries that match the sucursal
+  const movs = [];
+  db.caja.forEach(c => {
+    (c.movimientos || []).forEach(m => {
+      if (m.sucursal_id === sid) movs.push(m);
+    });
+  });
+  const totalIngresos = movs.filter(m => m.tipo === 'ingreso').reduce((s, m) => s + (m.monto || 0), 0);
+  const totalEgresos  = movs.filter(m => m.tipo === 'egreso').reduce((s, m) => s + (m.monto || 0), 0);
+  res.json({ movimientos: movs.slice(-50), totalIngresos, totalEgresos, saldo: totalIngresos - totalEgresos });
+});
+
+app.get('/api/reportes/sucursales', authMiddleware, (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const hoy = new Date().toISOString().slice(0, 10);
+  const resultado = (db.sucursales || []).map(suc => {
+    const facturas    = db.facturas.filter(f => f.sucursal_id === suc.id);
+    const hoyFacturas = facturas.filter(f => (f.fecha || f.createdAt || '').startsWith(hoy));
+    const totalHoy    = hoyFacturas.reduce((s, f) => s + (f.total || 0), 0);
+    const total       = facturas.reduce((s, f) => s + (f.total || 0), 0);
+    const usuarios    = db.users.filter(u => u.sucursal_id === suc.id && u.activo);
+    return {
+      ...suc,
+      ventasHoy:       hoyFacturas.length,
+      totalHoy,
+      totalHistorico:  total,
+      vendedores:      usuarios.length
+    };
+  });
+  res.json(resultado);
+});
 
 // ─────────────────────────────────────────────
 //  CATCH-ALL – SPA fallback

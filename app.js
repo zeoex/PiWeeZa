@@ -112,10 +112,13 @@ const db = {
   clientes:   [],
   caja:       [],
   facturas:   [],
-  stock:      [],
-  printJobs:  [],
-  llamados:   [],
-  sucursales: []
+  stock:             [],
+  stockMovimientos:  [],
+  traslados:         [],
+  compras:           [],
+  printJobs:         [],
+  llamados:          [],
+  sucursales:        []
 };
 
 // ─────────────────────────────────────────────
@@ -229,14 +232,17 @@ const db = {
     }
   ];
 
-  // ---------- STOCK ----------
+  // ---------- STOCK (por ubicacion: 'central' | sucursal_id) ----------
   db.stock = db.productos.map(p => ({
+    id:          uuidv4(),
     productoId:  p.id,
+    ubicacion:   'central',
     cantidad:    p.stock,
-    movimientos: [
-      { tipo: 'inicial', cantidad: p.stock, motivo: 'Stock inicial', fecha: new Date().toISOString() }
-    ]
+    stockMinimo: p.stockMinimo || 5
   }));
+  db.stockMovimientos = [];
+  db.traslados        = [];
+  db.compras          = [];
 
   // ---------- USUARIOS ----------
   const hash = pwd => bcrypt.hashSync(pwd, 10);
@@ -357,6 +363,41 @@ async function saveSucursalesToPG() {
 }
 
 // ─────────────────────────────────────────────
+//  STOCK HELPERS
+// ─────────────────────────────────────────────
+function getStockCantidad(productoId, ubicacion) {
+  return db.stock.find(s => s.productoId === productoId && s.ubicacion === ubicacion)?.cantidad || 0;
+}
+
+function _adjustStock(productoId, ubicacion, delta, motivo, tipo, refId, creadoPor) {
+  let entry = db.stock.find(s => s.productoId === productoId && s.ubicacion === ubicacion);
+  if (!entry) {
+    const prod = db.productos.find(p => p.id === productoId);
+    entry = { id: uuidv4(), productoId, ubicacion, cantidad: 0, stockMinimo: prod?.stockMinimo || 5 };
+    db.stock.push(entry);
+  }
+  entry.cantidad = Math.max(0, entry.cantidad + delta);
+  db.stockMovimientos.unshift({
+    id: uuidv4(), tipo, productoId, ubicacion, delta,
+    cantidadResultante: entry.cantidad,
+    motivo: motivo || '',
+    refId: refId || null,
+    creadoPor: creadoPor || null,
+    fecha: new Date().toISOString()
+  });
+  if (db.stockMovimientos.length > 1000) db.stockMovimientos.length = 1000;
+}
+
+async function saveStockToFile() {
+  saveStateToFile({
+    stock:            db.stock,
+    stockMovimientos: db.stockMovimientos,
+    traslados:        db.traslados,
+    compras:          db.compras
+  });
+}
+
+// ─────────────────────────────────────────────
 //  FILE-BASED PERSISTENCE (Railway Volume at /data)
 // ─────────────────────────────────────────────
 const FILE_STATE_PATH = process.env.FILE_STATE_PATH || '/data/piweedb.json';
@@ -387,14 +428,18 @@ function restoreStateFromFile() {
     console.log('[FILE] No saved file state');
     return;
   }
-  if (Array.isArray(state.users_accounts)  && state.users_accounts.length  > 0) db.users      = state.users_accounts;
-  if (Array.isArray(state.sucursales_data) && state.sucursales_data.length > 0) db.sucursales = state.sucursales_data;
-  if (Array.isArray(state.mesas)           && state.mesas.length           > 0) db.mesas      = state.mesas;
-  if (Array.isArray(state.delivery)        && state.delivery.length        > 0) db.delivery   = state.delivery;
-  if (Array.isArray(state.productos)       && state.productos.length       > 0) db.productos  = state.productos;
-  if (Array.isArray(state.clientes)        && state.clientes.length        > 0) db.clientes   = state.clientes;
-  if (Array.isArray(state.categorias)      && state.categorias.length      > 0) db.categorias = state.categorias;
-  console.log(`[FILE] State restored — users:${db.users.length} sucursales:${db.sucursales.length} productos:${db.productos.length}`);
+  if (Array.isArray(state.users_accounts)  && state.users_accounts.length  > 0) db.users             = state.users_accounts;
+  if (Array.isArray(state.sucursales_data) && state.sucursales_data.length > 0) db.sucursales        = state.sucursales_data;
+  if (Array.isArray(state.mesas)           && state.mesas.length           > 0) db.mesas             = state.mesas;
+  if (Array.isArray(state.delivery)        && state.delivery.length        > 0) db.delivery          = state.delivery;
+  if (Array.isArray(state.productos)       && state.productos.length       > 0) db.productos         = state.productos;
+  if (Array.isArray(state.clientes)        && state.clientes.length        > 0) db.clientes          = state.clientes;
+  if (Array.isArray(state.categorias)      && state.categorias.length      > 0) db.categorias        = state.categorias;
+  if (Array.isArray(state.stock)           && state.stock.length           > 0) db.stock             = state.stock;
+  if (Array.isArray(state.stockMovimientos))                                     db.stockMovimientos  = state.stockMovimientos;
+  if (Array.isArray(state.traslados))                                            db.traslados         = state.traslados;
+  if (Array.isArray(state.compras))                                              db.compras           = state.compras;
+  console.log(`[FILE] State restored — users:${db.users.length} sucursales:${db.sucursales.length} productos:${db.productos.length} traslados:${db.traslados.length}`);
 }
 
 // ─────────────────────────────────────────────
@@ -798,9 +843,8 @@ app.post('/api/productos', (req, res) => {
 
   db.productos.push(producto);
   db.stock.push({
-    productoId: producto.id,
-    cantidad:   producto.stock,
-    movimientos: [{ tipo: 'inicial', cantidad: producto.stock, motivo: 'Stock inicial', fecha: new Date().toISOString() }]
+    id: uuidv4(), productoId: producto.id,
+    ubicacion: 'central', cantidad: producto.stock || 0, stockMinimo: producto.stockMinimo || 5
   });
 
   res.status(201).json(producto);
@@ -1824,6 +1868,223 @@ app.get('/api/reportes/sucursales', authMiddleware, (req, res) => {
     };
   });
   res.json(resultado);
+});
+
+// ─────────────────────────────────────────────
+//  STOCK ENDPOINTS
+// ─────────────────────────────────────────────
+
+// GET /api/stock — inventario completo por producto, con cantidades por ubicacion
+app.get('/api/stock', authMiddleware, (_req, res) => {
+  const sucursales = db.sucursales.filter(s => s.activa);
+  const resultado = db.productos.filter(p => p.activo !== false).map(p => {
+    const central = getStockCantidad(p.id, 'central');
+    const porSucursal = sucursales.map(s => ({
+      sucursal_id: s.id,
+      nombre: s.nombre,
+      cantidad: getStockCantidad(p.id, s.id)
+    }));
+    const total = central + porSucursal.reduce((sum, s) => sum + s.cantidad, 0);
+    const stockMinimo = db.stock.find(s => s.productoId === p.id && s.ubicacion === 'central')?.stockMinimo || p.stockMinimo || 5;
+    const cat = db.categorias.find(c => c.id === p.categoria);
+    return {
+      productoId: p.id,
+      nombre: p.nombre,
+      codigo: p.codigo,
+      categoria: cat?.nombre || '',
+      stockMinimo,
+      central,
+      porSucursal,
+      total,
+      estado: total === 0 ? 'sin_stock' : total < stockMinimo ? 'bajo' : 'ok'
+    };
+  });
+  res.json(resultado);
+});
+
+// GET /api/stock/movimientos — log de movimientos recientes
+app.get('/api/stock/movimientos', authMiddleware, (_req, res) => {
+  const enriched = (db.stockMovimientos || []).slice(0, 200).map(m => {
+    const prod = db.productos.find(p => p.id === m.productoId);
+    const ubicNombre = m.ubicacion === 'central' ? 'Depósito Central'
+      : (db.sucursales.find(s => s.id === m.ubicacion)?.nombre || m.ubicacion);
+    return { ...m, productoNombre: prod?.nombre || '?', ubicacionNombre: ubicNombre };
+  });
+  res.json(enriched);
+});
+
+// POST /api/stock/ajuste — ajuste manual de stock en una ubicacion
+app.post('/api/stock/ajuste', authMiddleware, async (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const { productoId, ubicacion, cantidad, motivo } = req.body;
+  if (!productoId || !ubicacion || cantidad === undefined) return res.status(400).json({ error: 'Faltan datos' });
+  const cantAnterior = getStockCantidad(productoId, ubicacion);
+  const nuevaCant = Math.max(0, parseInt(cantidad) || 0);
+  const delta = nuevaCant - cantAnterior;
+  _adjustStock(productoId, ubicacion, delta, motivo || 'Ajuste manual', 'ajuste', null, req.user.id);
+  await saveStockToFile();
+  io.emit('stock:update', { productoId, ubicacion });
+  res.json({ ok: true, cantidad: nuevaCant });
+});
+
+// ─────────────────────────────────────────────
+//  TRASLADOS ENDPOINTS
+// ─────────────────────────────────────────────
+
+function _enrichTraslado(t) {
+  const desdeNombre = t.desde === 'central' ? 'Depósito Central'
+    : (db.sucursales.find(s => s.id === t.desde)?.nombre || t.desde);
+  const hastaNombre = t.hasta === 'central' ? 'Depósito Central'
+    : (db.sucursales.find(s => s.id === t.hasta)?.nombre || t.hasta);
+  const items = (t.items || []).map(i => ({
+    ...i,
+    productoNombre: db.productos.find(p => p.id === i.productoId)?.nombre || '?'
+  }));
+  return { ...t, desdeNombre, hastaNombre, items };
+}
+
+app.get('/api/traslados', authMiddleware, (_req, res) => {
+  res.json(db.traslados.map(_enrichTraslado));
+});
+
+app.post('/api/traslados', authMiddleware, async (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const { desde, hasta, items, nota } = req.body;
+  if (!desde || !hasta || !Array.isArray(items) || !items.length)
+    return res.status(400).json({ error: 'Datos incompletos' });
+  if (desde === hasta) return res.status(400).json({ error: 'Origen y destino deben ser distintos' });
+
+  for (const item of items) {
+    const disp = getStockCantidad(item.productoId, desde);
+    if (disp < parseInt(item.cantidad)) {
+      const prod = db.productos.find(p => p.id === item.productoId);
+      return res.status(400).json({
+        error: `Stock insuficiente de "${prod?.nombre || '?'}" en origen (disponible: ${disp}, solicitado: ${item.cantidad})`
+      });
+    }
+  }
+
+  const traslado = {
+    id: uuidv4(),
+    fecha: new Date().toISOString(),
+    desde, hasta,
+    items: items.map(i => ({ productoId: i.productoId, cantidad: parseInt(i.cantidad) })),
+    estado: 'pendiente',
+    nota: nota?.trim() || '',
+    creadoPor: req.user.id,
+    creadoPorNombre: req.user.nombre,
+    updatedAt: new Date().toISOString()
+  };
+
+  const desdeNombre = desde === 'central' ? 'Depósito Central' : (db.sucursales.find(s => s.id === desde)?.nombre || desde);
+  const hastaNombre = hasta === 'central' ? 'Depósito Central' : (db.sucursales.find(s => s.id === hasta)?.nombre || hasta);
+
+  for (const item of traslado.items) {
+    _adjustStock(item.productoId, desde, -item.cantidad,
+      `Traslado → ${hastaNombre} (pendiente #${traslado.id.slice(0,8)})`, 'traslado_salida', traslado.id, req.user.id);
+  }
+
+  db.traslados.unshift(traslado);
+  await saveStockToFile();
+  io.emit('stock:traslado', _enrichTraslado(traslado));
+  res.status(201).json(_enrichTraslado(traslado));
+});
+
+app.put('/api/traslados/:id/confirmar', authMiddleware, async (req, res) => {
+  const t = db.traslados.find(x => x.id === req.params.id);
+  if (!t) return res.status(404).json({ error: 'Traslado no encontrado' });
+  if (t.estado !== 'pendiente') return res.status(400).json({ error: `Ya está ${t.estado}` });
+
+  const desdeNombre = t.desde === 'central' ? 'Depósito Central' : (db.sucursales.find(s => s.id === t.desde)?.nombre || t.desde);
+  for (const item of t.items) {
+    _adjustStock(item.productoId, t.hasta, item.cantidad,
+      `Traslado recibido desde ${desdeNombre} (#${t.id.slice(0,8)})`, 'traslado_entrada', t.id, req.user.id);
+  }
+  t.estado = 'confirmado';
+  t.confirmedAt = new Date().toISOString();
+  t.confirmadoPor = req.user.id;
+  t.updatedAt = new Date().toISOString();
+  await saveStockToFile();
+  io.emit('stock:traslado', _enrichTraslado(t));
+  res.json(_enrichTraslado(t));
+});
+
+app.put('/api/traslados/:id/cancelar', authMiddleware, async (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const t = db.traslados.find(x => x.id === req.params.id);
+  if (!t) return res.status(404).json({ error: 'No encontrado' });
+  if (t.estado !== 'pendiente') return res.status(400).json({ error: `No se puede cancelar, estado: ${t.estado}` });
+
+  const hastaNombre = t.hasta === 'central' ? 'Depósito Central' : (db.sucursales.find(s => s.id === t.hasta)?.nombre || t.hasta);
+  for (const item of t.items) {
+    _adjustStock(item.productoId, t.desde, item.cantidad,
+      `Traslado cancelado (devuelto desde ${hastaNombre})`, 'traslado_cancelado', t.id, req.user.id);
+  }
+  t.estado = 'cancelado';
+  t.updatedAt = new Date().toISOString();
+  await saveStockToFile();
+  res.json(_enrichTraslado(t));
+});
+
+// ─────────────────────────────────────────────
+//  COMPRAS ENDPOINTS
+// ─────────────────────────────────────────────
+
+function _enrichCompra(c) {
+  const destinoNombre = c.destino === 'central' ? 'Depósito Central'
+    : (db.sucursales.find(s => s.id === c.destino)?.nombre || c.destino);
+  const items = (c.items || []).map(i => ({
+    ...i,
+    productoNombre: db.productos.find(p => p.id === i.productoId)?.nombre || '?'
+  }));
+  return { ...c, destinoNombre, items };
+}
+
+app.get('/api/compras', authMiddleware, (_req, res) => {
+  res.json(db.compras.map(_enrichCompra));
+});
+
+app.post('/api/compras', authMiddleware, async (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const { proveedor, destino, items, nroFactura, nota } = req.body;
+  if (!destino || !Array.isArray(items) || !items.length) return res.status(400).json({ error: 'Datos incompletos' });
+
+  const totalCompra = items.reduce((sum, i) => sum + (parseInt(i.cantidad) * (parseFloat(i.precioUnitario) || 0)), 0);
+  const compra = {
+    id: uuidv4(),
+    fecha: new Date().toISOString(),
+    proveedor: proveedor?.trim() || 'Sin especificar',
+    destino,
+    items: items.map(i => ({
+      productoId: i.productoId,
+      cantidad: parseInt(i.cantidad),
+      precioUnitario: parseFloat(i.precioUnitario) || 0
+    })),
+    totalCompra,
+    nroFactura: nroFactura?.trim() || '',
+    nota: nota?.trim() || '',
+    estado: 'registrada',
+    creadoPor: req.user.id,
+    creadoPorNombre: req.user.nombre
+  };
+
+  const destNombre = destino === 'central' ? 'Depósito Central' : (db.sucursales.find(s => s.id === destino)?.nombre || destino);
+  for (const item of compra.items) {
+    _adjustStock(item.productoId, destino, item.cantidad,
+      `Compra a ${compra.proveedor}${nroFactura ? ' (FC:'+nroFactura+')' : ''} → ${destNombre}`,
+      'compra', compra.id, req.user.id);
+  }
+
+  db.compras.unshift(compra);
+  await saveStockToFile();
+  io.emit('stock:compra', _enrichCompra(compra));
+  res.status(201).json(_enrichCompra(compra));
+});
+
+app.get('/api/compras/:id', authMiddleware, (req, res) => {
+  const c = db.compras.find(x => x.id === req.params.id);
+  if (!c) return res.status(404).json({ error: 'No encontrada' });
+  res.json(_enrichCompra(c));
 });
 
 // ─────────────────────────────────────────────

@@ -465,6 +465,7 @@ function restoreStateFromFile() {
   if (Array.isArray(state.stockMovimientos))                                     db.stockMovimientos  = state.stockMovimientos;
   if (Array.isArray(state.traslados))                                            db.traslados         = state.traslados;
   if (Array.isArray(state.compras))                                              db.compras           = state.compras;
+  if (Array.isArray(state.caja_sessions) && state.caja_sessions.length > 0)    db.caja              = state.caja_sessions;
   console.log(`[FILE] State restored — users:${db.users.length} sucursales:${db.sucursales.length} productos:${db.productos.length} traslados:${db.traslados.length}`);
 }
 
@@ -478,8 +479,9 @@ function calcularTotal(items) {
   }, 0);
 }
 
-function cajaActual() {
-  return db.caja.find(c => c.estado === 'abierta') || null;
+function cajaActual(sucursal_id = null) {
+  const sid = sucursal_id || null;
+  return db.caja.find(c => c.estado === 'abierta' && (c.sucursal_id || null) === sid) || null;
 }
 
 function emitDashboardStats() {
@@ -972,8 +974,8 @@ app.post('/api/pedidos/:id/pagar', (req, res) => {
   pedido.estado     = 'pagado';
   pedido.updatedAt  = new Date().toISOString();
 
-  // Actualizar caja
-  const caja = cajaActual();
+  // Actualizar caja (buscar por sucursal del usuario)
+  const caja = cajaActual(req.user?.sucursal_id || null);
   if (caja) {
     caja.movimientos.push({
       id:       uuidv4(),
@@ -1198,56 +1200,52 @@ app.put('/api/cocina/comandas/:id/estado', (req, res) => {
 // ─────────────────────────────────────────────
 //  CAJA ROUTES
 // ─────────────────────────────────────────────
-app.get('/api/caja/actual', (_req, res) => {
-  const caja = cajaActual();
+app.get('/api/caja/actual', (req, res) => {
+  const sid  = req.user?.sucursal_id || null;
+  const caja = cajaActual(sid);
   if (!caja) return res.status(404).json({ error: 'No hay caja abierta' });
-
   const saldo = caja.movimientos.reduce((s, m) => m.tipo === 'ingreso' ? s + m.monto : s - m.monto, 0);
   res.json({ ...caja, saldoActual: saldo });
 });
 
-app.post('/api/caja/abrir', (req, res) => {
-  if (cajaActual()) return res.status(400).json({ error: 'Ya hay una caja abierta' });
-
+app.post('/api/caja/abrir', authMiddleware, (req, res) => {
+  const sid = req.user?.sucursal_id || null;
+  if (cajaActual(sid)) return res.status(400).json({ error: 'Ya hay una caja abierta' });
   const { saldoInicial } = req.body;
   const caja = {
-    id:           uuidv4(),
-    fecha:        new Date().toISOString().split('T')[0],
-    apertura:     new Date().toISOString(),
-    cierre:       null,
-    saldoInicial: parseFloat(saldoInicial || 0),
-    saldoFinal:   null,
-    cajeroId:     req.user.id,
-    movimientos:  [{
-      id:       uuidv4(),
-      tipo:     'ingreso',
-      concepto: 'Apertura de caja',
-      monto:    parseFloat(saldoInicial || 0),
-      fecha:    new Date().toISOString()
-    }],
+    id: uuidv4(), fecha: new Date().toISOString().split('T')[0],
+    apertura: new Date().toISOString(), cierre: null,
+    saldoInicial: parseFloat(saldoInicial || 0), saldoFinal: null,
+    efectivoContado: null, diferencia: null, nota: '',
+    sucursal_id: sid, abiertoPor: req.user.id,
+    movimientos: [{ id: uuidv4(), tipo: 'ingreso', concepto: 'Apertura de caja', monto: parseFloat(saldoInicial || 0), fecha: new Date().toISOString() }],
     estado: 'abierta'
   };
-
   db.caja.push(caja);
   io.emit('caja:update', caja);
   res.status(201).json(caja);
 });
 
-app.post('/api/caja/cerrar', (req, res) => {
-  const caja = cajaActual();
+app.post('/api/caja/cerrar', authMiddleware, (req, res) => {
+  const sid  = req.user?.sucursal_id || null;
+  const caja = cajaActual(sid);
   if (!caja) return res.status(404).json({ error: 'No hay caja abierta' });
-
   const saldoFinal = caja.movimientos.reduce((s, m) => m.tipo === 'ingreso' ? s + m.monto : s - m.monto, 0);
-  caja.cierre     = new Date().toISOString();
-  caja.saldoFinal = saldoFinal;
-  caja.estado     = 'cerrada';
-
+  caja.cierre          = new Date().toISOString();
+  caja.saldoFinal      = saldoFinal;
+  caja.efectivoContado = req.body.efectivoContado != null ? parseFloat(req.body.efectivoContado) : null;
+  caja.diferencia      = caja.efectivoContado != null ? caja.efectivoContado - saldoFinal : null;
+  caja.nota            = req.body.nota || '';
+  caja.cerradoPor      = req.user.id;
+  caja.estado          = 'cerrada';
+  saveStateToFile({ caja_sessions: db.caja });
   io.emit('caja:update', caja);
   res.json(caja);
 });
 
-app.post('/api/caja/movimiento', (req, res) => {
-  const caja = cajaActual();
+app.post('/api/caja/movimiento', authMiddleware, (req, res) => {
+  const sid  = req.user?.sucursal_id || null;
+  const caja = cajaActual(sid);
   if (!caja) return res.status(404).json({ error: 'No hay caja abierta' });
 
   const { tipo, concepto, monto } = req.body;
@@ -2173,11 +2171,65 @@ app.get('/api/cajas/overview', authMiddleware, (req, res) => {
       const m = f.metodoPago || 'otros';
       byMethod[m] = (byMethod[m] || 0) + (f.total || 0);
     });
-    return { id: s.id, nombre: s.nombre, cantVentas: facturas.length, total, byMethod };
+    const cajaAbierta = db.caja.find(c => c.estado === 'abierta' && c.sucursal_id === s.id) || null;
+    const saldoCaja   = cajaAbierta
+      ? cajaAbierta.movimientos.reduce((acc, m) => m.tipo === 'ingreso' ? acc + m.monto : acc - m.monto, 0)
+      : null;
+    const ultimaCierre = db.caja
+      .filter(c => c.estado === 'cerrada' && c.sucursal_id === s.id)
+      .sort((a, b) => new Date(b.cierre) - new Date(a.cierre))[0] || null;
+    return {
+      id: s.id, nombre: s.nombre, cantVentas: facturas.length, total, byMethod,
+      caja: cajaAbierta
+        ? { estado: 'abierta', id: cajaAbierta.id, apertura: cajaAbierta.apertura, saldoInicial: cajaAbierta.saldoInicial, saldo: saldoCaja }
+        : { estado: 'cerrada', ultimoCierre: ultimaCierre?.cierre || null }
+    };
   });
   const totalGlobal  = resultado.reduce((s, r) => s + r.total, 0);
   const ventasGlobal = resultado.reduce((s, r) => s + r.cantVentas, 0);
   res.json({ sucursales: resultado, totalGlobal, ventasGlobal, fecha: hoy });
+});
+
+// Admin: abrir/cerrar caja de una sucursal específica
+app.post('/api/cajas/sucursal/:sucursalId/abrir', authMiddleware, (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const { sucursalId } = req.params;
+  const sucursal = db.sucursales.find(s => s.id === sucursalId);
+  if (!sucursal) return res.status(404).json({ error: 'Sucursal no encontrada' });
+  if (cajaActual(sucursalId)) return res.status(400).json({ error: `${sucursal.nombre} ya tiene una caja abierta` });
+  const { saldoInicial = 0, nota = '' } = req.body;
+  const caja = {
+    id: uuidv4(), fecha: new Date().toISOString().split('T')[0],
+    apertura: new Date().toISOString(), cierre: null,
+    saldoInicial: parseFloat(saldoInicial), saldoFinal: null,
+    efectivoContado: null, diferencia: null,
+    nota, sucursal_id: sucursalId, abiertoPor: req.user.id,
+    movimientos: [{ id: uuidv4(), tipo: 'ingreso', concepto: 'Apertura de caja', monto: parseFloat(saldoInicial), fecha: new Date().toISOString() }],
+    estado: 'abierta'
+  };
+  db.caja.push(caja);
+  saveStateToFile({ caja_sessions: db.caja });
+  io.emit('caja:update', caja);
+  res.status(201).json(caja);
+});
+
+app.post('/api/cajas/sucursal/:sucursalId/cerrar', authMiddleware, (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const { sucursalId } = req.params;
+  const caja = cajaActual(sucursalId);
+  if (!caja) return res.status(404).json({ error: 'No hay caja abierta para esta sucursal' });
+  const saldoSistema = caja.movimientos.reduce((s, m) => m.tipo === 'ingreso' ? s + m.monto : s - m.monto, 0);
+  const efectivoContado = req.body.efectivoContado != null ? parseFloat(req.body.efectivoContado) : null;
+  caja.cierre          = new Date().toISOString();
+  caja.saldoFinal      = saldoSistema;
+  caja.efectivoContado = efectivoContado;
+  caja.diferencia      = efectivoContado != null ? efectivoContado - saldoSistema : null;
+  caja.nota            = req.body.nota || '';
+  caja.cerradoPor      = req.user.id;
+  caja.estado          = 'cerrada';
+  saveStateToFile({ caja_sessions: db.caja });
+  io.emit('caja:update', caja);
+  res.json(caja);
 });
 
 // ─────────────────────────────────────────────

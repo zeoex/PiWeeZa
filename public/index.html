@@ -1231,7 +1231,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       <div id="modalAjuste" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center">
         <div style="background:#fff;border-radius:14px;padding:28px;width:min(420px,96vw);box-shadow:0 8px 40px rgba(0,0,0,0.2)">
           <h3 style="margin:0 0 16px">⚖️ Ajustar Stock</h3>
-          <input type="hidden" id="ajProducId"><input type="hidden" id="ajUbicacion">
+          <input type="hidden" id="ajInsumoId"><input type="hidden" id="ajUbicacion">
           <p id="ajDesc" style="color:var(--gray);font-size:13px;margin-bottom:12px"></p>
           <div class="form-group"><label style="font-weight:600">Nueva cantidad</label>
             <input type="number" class="form-control" id="ajCantidad" min="0" style="font-size:18px;font-weight:700"></div>
@@ -4443,7 +4443,7 @@ function _renderInventario() {
   const sucCols = _stockSucursales;
   // Build thead
   let thead = `<tr style="background:#f8fafc">
-    <th style="text-align:left;padding:10px 12px;font-size:12px;color:var(--gray);white-space:nowrap">Producto</th>
+    <th style="text-align:left;padding:10px 12px;font-size:12px;color:var(--gray);white-space:nowrap">Insumo / Materia Prima</th>
     <th style="padding:10px 12px;font-size:12px;color:var(--gray);text-align:center">Mín.</th>
     <th style="padding:10px 12px;font-size:12px;color:var(--gray);text-align:center">🏭 Central</th>`;
   sucCols.forEach(s => {
@@ -4464,7 +4464,7 @@ function _renderInventario() {
       const c = cant === 0 ? '#dc2626' : cant < s.stockMinimo ? '#d97706' : '#059669';
       const b = cant === 0 ? '#fee2e2' : cant < s.stockMinimo ? '#fef3c7' : '#d1fae5';
       return `<span style="background:${b};color:${c};padding:3px 10px;border-radius:20px;font-weight:700;font-size:13px;cursor:pointer"
-        onclick="abrirAjuste('${s.productoId}','${ubicId}','${s.nombre}',${cant})">${cant}</span>`;
+        onclick="abrirAjuste('${s.insumoId}','${ubicId}','${s.nombre}',${cant})">${cant}</span>`;
     };
 
     let cols = `<td style="text-align:center">${chip(s.central, 'central')}</td>`;
@@ -4476,7 +4476,7 @@ function _renderInventario() {
     return `<tr style="border-bottom:1px solid var(--border)">
       <td style="padding:10px 12px">
         <div><strong style="font-size:14px">${s.nombre}</strong></div>
-        <div style="font-size:11px;color:var(--gray)">${s.categoria}${s.codigo ? ' · '+s.codigo : ''}</div>
+        <div style="font-size:11px;color:var(--gray)">${s.unidad || ''}</div>
       </td>
       <td style="text-align:center;padding:10px 12px;color:var(--gray);font-size:13px">${s.stockMinimo}</td>
       ${cols}
@@ -4485,10 +4485,10 @@ function _renderInventario() {
         <span style="background:${bg};color:${clr};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">${lbl}</span>
       </td>
       <td style="padding:10px 12px">
-        <button class="btn btn-outline btn-sm" onclick="abrirModalTrasladoDesde('${s.productoId}')" title="Transferir">🔄</button>
+        <button class="btn btn-outline btn-sm" onclick="abrirModalTrasladoDesde('${s.insumoId}')" title="Transferir">🔄</button>
       </td>
     </tr>`;
-  }).join('') || `<tr><td colspan="${4 + sucCols.length}" style="text-align:center;padding:32px;color:var(--gray)">Sin productos</td></tr>`;
+  }).join('') || `<tr><td colspan="${4 + sucCols.length}" style="text-align:center;padding:32px;color:var(--gray)">Sin insumos cargados</td></tr>`;
   document.getElementById('stockTbody').innerHTML = tbody;
 }
 
@@ -4564,8 +4564,8 @@ async function renderHistorial() {
 }
 
 // ─── Ajuste de stock ───
-function abrirAjuste(productoId, ubicacion, nombre, cantActual) {
-  document.getElementById('ajProducId').value = productoId;
+function abrirAjuste(insumoId, ubicacion, nombre, cantActual) {
+  document.getElementById('ajInsumoId').value = insumoId;
   document.getElementById('ajUbicacion').value = ubicacion;
   const ubicNombre = ubicacion === 'central' ? 'Depósito Central' : ubicacion;
   document.getElementById('ajDesc').textContent = `${nombre} — ${ubicNombre} (actual: ${cantActual})`;
@@ -4576,13 +4576,13 @@ function abrirAjuste(productoId, ubicacion, nombre, cantActual) {
 }
 
 async function guardarAjuste() {
-  const productoId = document.getElementById('ajProducId').value;
-  const ubicacion  = document.getElementById('ajUbicacion').value;
-  const cantidad   = parseInt(document.getElementById('ajCantidad').value);
-  const motivo     = document.getElementById('ajMotivo').value.trim() || 'Ajuste manual';
+  const insumoId = document.getElementById('ajInsumoId').value;
+  const ubicacion = document.getElementById('ajUbicacion').value;
+  const cantidad  = parseInt(document.getElementById('ajCantidad').value);
+  const motivo    = document.getElementById('ajMotivo').value.trim() || 'Ajuste manual';
   if (isNaN(cantidad) || cantidad < 0) { showToast('Cantidad inválida','error'); return; }
   try {
-    const r = await apiFetch('/api/stock/ajuste', { method:'POST', body: JSON.stringify({ productoId, ubicacion, cantidad, motivo }) });
+    const r = await apiFetch('/api/stock/ajuste', { method:'POST', body: JSON.stringify({ insumoId, ubicacion, cantidad, motivo }) });
     if (!r.ok) { const e = await r.json(); showToast(e.error||'Error','error'); return; }
     document.getElementById('modalAjuste').style.display = 'none';
     showToast('Stock ajustado ✓','success');
@@ -4613,10 +4613,10 @@ function abrirModalTraslado() {
   document.getElementById('modalTraslado').style.display = 'flex';
 }
 
-function abrirModalTrasladoDesde(productoId) {
+function abrirModalTrasladoDesde(insumoId) {
   abrirModalTraslado();
   setTimeout(() => {
-    if (_tslItems.length) _tslItems[0].productoId = productoId;
+    if (_tslItems.length) _tslItems[0].insumoId = insumoId;
     _renderTslItems();
   }, 50);
 }
@@ -4624,23 +4624,23 @@ function abrirModalTrasladoDesde(productoId) {
 function cerrarModalTraslado() { document.getElementById('modalTraslado').style.display = 'none'; }
 
 function addTslItem() {
-  _tslItems.push({ productoId: '', cantidad: 1 });
+  _tslItems.push({ insumoId: '', cantidad: 1 });
   _renderTslItems();
 }
 
 function _renderTslItems() {
   const prodOpts = _stockData.map(s =>
-    `<option value="${s.productoId}">${s.nombre} (Central: ${s.central})</option>`).join('');
+    `<option value="${s.insumoId}">${s.nombre} (Central: ${s.central} ${s.unidad})</option>`).join('');
   document.getElementById('tslItems').innerHTML = _tslItems.map((item, i) => `
     <div style="display:grid;grid-template-columns:1fr 90px 36px;gap:6px;margin-bottom:6px">
-      <select class="form-control" onchange="_tslItems[${i}].productoId=this.value">
-        <option value="">— Seleccionar producto —</option>
-        ${prodOpts.replace(`value="${item.productoId}"`, `value="${item.productoId}" selected`)}
+      <select class="form-control" onchange="_tslItems[${i}].insumoId=this.value">
+        <option value="">— Seleccionar insumo —</option>
+        ${prodOpts.replace(`value="${item.insumoId}"`, `value="${item.insumoId}" selected`)}
       </select>
       <input type="number" class="form-control" value="${item.cantidad}" min="1"
         style="text-align:center" onchange="_tslItems[${i}].cantidad=parseInt(this.value)||1">
       <button class="btn btn-secondary btn-sm" onclick="_tslItems.splice(${i},1);_renderTslItems()" style="padding:0">✕</button>
-    </div>`).join('') || '<div style="color:var(--gray);font-size:13px;padding:8px">Agregá al menos un producto.</div>';
+    </div>`).join('') || '<div style="color:var(--gray);font-size:13px;padding:8px">Agregá al menos un insumo.</div>';
 }
 
 function checkTslLocations() {
@@ -4653,8 +4653,8 @@ async function guardarTraslado() {
   const desde = document.getElementById('tslDesde').value;
   const hasta = document.getElementById('tslHasta').value;
   if (!desde || !hasta || desde === hasta) { showToast('Origen y destino deben ser distintos','error'); return; }
-  const items = _tslItems.filter(i => i.productoId && i.cantidad > 0);
-  if (!items.length) { showToast('Agregá al menos un producto','error'); return; }
+  const items = _tslItems.filter(i => i.insumoId && i.cantidad > 0);
+  if (!items.length) { showToast('Agregá al menos un insumo','error'); return; }
   const nota = document.getElementById('tslNota').value;
   try {
     const r = await apiFetch('/api/traslados', { method:'POST', body: JSON.stringify({ desde, hasta, items, nota }) });
@@ -4770,25 +4770,24 @@ function abrirModalCompra() {
 function cerrarModalCompra() { document.getElementById('modalCompra').style.display = 'none'; }
 
 function addCmpItem() {
-  _cmpItems.push({ productoId:'', cantidad:1, precioUnitario:0 });
+  _cmpItems.push({ insumoId:'', cantidad:1, precioUnitario:0 });
   _renderCmpItems();
 }
 
 function _renderCmpItems() {
-  const prodOpts = (_stockData.length ? _stockData : productosData.map(p => ({ productoId: String(p.id), nombre: p.nombre })))
-    .map(s => `<option value="${s.productoId||s.id}">${s.nombre}</option>`).join('');
+  const prodOpts = _stockData.map(s => `<option value="${s.insumoId}">${s.nombre} (${s.unidad})</option>`).join('');
   document.getElementById('cmpItems').innerHTML = _cmpItems.map((item, i) => `
     <div style="display:grid;grid-template-columns:1fr 80px 110px 36px;gap:4px;margin-bottom:4px">
-      <select class="form-control" onchange="_cmpItems[${i}].productoId=this.value">
-        <option value="">— Producto —</option>
-        ${prodOpts.replace(`value="${item.productoId}"`, `value="${item.productoId}" selected`)}
+      <select class="form-control" onchange="_cmpItems[${i}].insumoId=this.value">
+        <option value="">— Insumo —</option>
+        ${prodOpts.replace(`value="${item.insumoId}"`, `value="${item.insumoId}" selected`)}
       </select>
       <input type="number" class="form-control" value="${item.cantidad}" min="1" style="text-align:center"
         oninput="_cmpItems[${i}].cantidad=parseInt(this.value)||1;_recalcCmpTotal()">
       <input type="number" class="form-control" value="${item.precioUnitario||''}" min="0" placeholder="$0.00"
         oninput="_cmpItems[${i}].precioUnitario=parseFloat(this.value)||0;_recalcCmpTotal()">
       <button class="btn btn-secondary btn-sm" onclick="_cmpItems.splice(${i},1);_renderCmpItems()" style="padding:0">✕</button>
-    </div>`).join('') || '<div style="color:var(--gray);font-size:13px;padding:8px">Agregá productos a la compra.</div>';
+    </div>`).join('') || '<div style="color:var(--gray);font-size:13px;padding:8px">Agregá insumos a la compra.</div>';
   _recalcCmpTotal();
 }
 
@@ -4803,8 +4802,8 @@ async function guardarCompra() {
   const destino     = document.getElementById('cmpDestino').value;
   const nroFactura  = document.getElementById('cmpNroFactura').value.trim();
   const nota        = document.getElementById('cmpNota').value.trim();
-  const items = _cmpItems.filter(i => i.productoId && i.cantidad > 0);
-  if (!destino || !items.length) { showToast('Seleccioná destino y al menos un producto','error'); return; }
+  const items = _cmpItems.filter(i => i.insumoId && i.cantidad > 0);
+  if (!destino || !items.length) { showToast('Seleccioná destino y al menos un insumo','error'); return; }
   try {
     const r = await apiFetch('/api/compras', { method:'POST', body: JSON.stringify({ proveedor, destino, items, nroFactura, nota }) });
     if (!r.ok) { const e = await r.json(); showToast(e.error||'Error al registrar compra','error'); return; }

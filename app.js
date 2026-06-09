@@ -112,6 +112,7 @@ const db = {
   clientes:   [],
   caja:       [],
   facturas:   [],
+  materiasPrimas:    [],
   stock:             [],
   stockMovimientos:  [],
   traslados:         [],
@@ -233,12 +234,35 @@ const db = {
   ];
 
   // ---------- STOCK (por ubicacion: 'central' | sucursal_id) ----------
-  db.stock = db.productos.map(p => ({
+  // ---------- MATERIAS PRIMAS ----------
+  db.materiasPrimas = [
+    { id: uuidv4(), nombre: 'Harina de trigo',    unidad: 'kg',      stockMinimo: 20, activo: true },
+    { id: uuidv4(), nombre: 'Queso Mozzarella',   unidad: 'kg',      stockMinimo: 10, activo: true },
+    { id: uuidv4(), nombre: 'Salsa de tomate',    unidad: 'kg',      stockMinimo: 8,  activo: true },
+    { id: uuidv4(), nombre: 'Masa para pizza',    unidad: 'kg',      stockMinimo: 15, activo: true },
+    { id: uuidv4(), nombre: 'Aceite de oliva',    unidad: 'litros',  stockMinimo: 5,  activo: true },
+    { id: uuidv4(), nombre: 'Jamón cocido',       unidad: 'kg',      stockMinimo: 5,  activo: true },
+    { id: uuidv4(), nombre: 'Provolone',          unidad: 'kg',      stockMinimo: 3,  activo: true },
+    { id: uuidv4(), nombre: 'Gorgonzola',         unidad: 'kg',      stockMinimo: 2,  activo: true },
+    { id: uuidv4(), nombre: 'Levadura',           unidad: 'kg',      stockMinimo: 2,  activo: true },
+    { id: uuidv4(), nombre: 'Morrones en lata',   unidad: 'unidades',stockMinimo: 10, activo: true },
+    { id: uuidv4(), nombre: 'Cebolla',            unidad: 'kg',      stockMinimo: 5,  activo: true },
+    { id: uuidv4(), nombre: 'Aceitunas',          unidad: 'kg',      stockMinimo: 3,  activo: true },
+  ];
+
+  // ---------- STOCK inicial en Depósito Central ----------
+  const _stockInicial = {
+    'Harina de trigo':  50, 'Queso Mozzarella': 25, 'Salsa de tomate':  15,
+    'Masa para pizza':  30, 'Aceite de oliva':  10, 'Jamón cocido':     12,
+    'Provolone':         8, 'Gorgonzola':        4, 'Levadura':          5,
+    'Morrones en lata': 20, 'Cebolla':          18, 'Aceitunas':         7,
+  };
+  db.stock = db.materiasPrimas.map(mp => ({
     id:          uuidv4(),
-    productoId:  p.id,
+    insumoId:    mp.id,
     ubicacion:   'central',
-    cantidad:    p.stock,
-    stockMinimo: p.stockMinimo || 5
+    cantidad:    _stockInicial[mp.nombre] || 0,
+    stockMinimo: mp.stockMinimo
   }));
   db.stockMovimientos = [];
   db.traslados        = [];
@@ -365,20 +389,20 @@ async function saveSucursalesToPG() {
 // ─────────────────────────────────────────────
 //  STOCK HELPERS
 // ─────────────────────────────────────────────
-function getStockCantidad(productoId, ubicacion) {
-  return db.stock.find(s => s.productoId === productoId && s.ubicacion === ubicacion)?.cantidad || 0;
+function getStockCantidad(insumoId, ubicacion) {
+  return db.stock.find(s => s.insumoId === insumoId && s.ubicacion === ubicacion)?.cantidad || 0;
 }
 
-function _adjustStock(productoId, ubicacion, delta, motivo, tipo, refId, creadoPor) {
-  let entry = db.stock.find(s => s.productoId === productoId && s.ubicacion === ubicacion);
+function _adjustStock(insumoId, ubicacion, delta, motivo, tipo, refId, creadoPor) {
+  let entry = db.stock.find(s => s.insumoId === insumoId && s.ubicacion === ubicacion);
   if (!entry) {
-    const prod = db.productos.find(p => p.id === productoId);
-    entry = { id: uuidv4(), productoId, ubicacion, cantidad: 0, stockMinimo: prod?.stockMinimo || 5 };
+    const mp = db.materiasPrimas.find(m => m.id === insumoId);
+    entry = { id: uuidv4(), insumoId, ubicacion, cantidad: 0, stockMinimo: mp?.stockMinimo || 5 };
     db.stock.push(entry);
   }
   entry.cantidad = Math.max(0, entry.cantidad + delta);
   db.stockMovimientos.unshift({
-    id: uuidv4(), tipo, productoId, ubicacion, delta,
+    id: uuidv4(), tipo, insumoId, ubicacion, delta,
     cantidadResultante: entry.cantidad,
     motivo: motivo || '',
     refId: refId || null,
@@ -390,6 +414,7 @@ function _adjustStock(productoId, ubicacion, delta, motivo, tipo, refId, creadoP
 
 async function saveStockToFile() {
   saveStateToFile({
+    materiasPrimas:   db.materiasPrimas,
     stock:            db.stock,
     stockMovimientos: db.stockMovimientos,
     traslados:        db.traslados,
@@ -435,6 +460,7 @@ function restoreStateFromFile() {
   if (Array.isArray(state.productos)       && state.productos.length       > 0) db.productos         = state.productos;
   if (Array.isArray(state.clientes)        && state.clientes.length        > 0) db.clientes          = state.clientes;
   if (Array.isArray(state.categorias)      && state.categorias.length      > 0) db.categorias        = state.categorias;
+  if (Array.isArray(state.materiasPrimas)  && state.materiasPrimas.length  > 0) db.materiasPrimas    = state.materiasPrimas;
   if (Array.isArray(state.stock)           && state.stock.length           > 0) db.stock             = state.stock;
   if (Array.isArray(state.stockMovimientos))                                     db.stockMovimientos  = state.stockMovimientos;
   if (Array.isArray(state.traslados))                                            db.traslados         = state.traslados;
@@ -1874,24 +1900,67 @@ app.get('/api/reportes/sucursales', authMiddleware, (req, res) => {
 //  STOCK ENDPOINTS
 // ─────────────────────────────────────────────
 
-// GET /api/stock — inventario completo por producto, con cantidades por ubicacion
+// ── Materias Primas CRUD ──────────────────────
+app.get('/api/materias-primas', authMiddleware, (_req, res) => {
+  res.json(db.materiasPrimas);
+});
+
+app.post('/api/materias-primas', authMiddleware, async (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const { nombre, unidad, stockMinimo } = req.body;
+  if (!nombre?.trim() || !unidad?.trim()) return res.status(400).json({ error: 'Nombre y unidad requeridos' });
+  if (db.materiasPrimas.find(m => m.nombre.toLowerCase() === nombre.trim().toLowerCase()))
+    return res.status(400).json({ error: 'Ya existe un insumo con ese nombre' });
+  const mp = { id: uuidv4(), nombre: nombre.trim(), unidad: unidad.trim(), stockMinimo: parseInt(stockMinimo)||0, activo: true };
+  db.materiasPrimas.push(mp);
+  await saveStockToFile();
+  res.status(201).json(mp);
+});
+
+app.put('/api/materias-primas/:id', authMiddleware, async (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const mp = db.materiasPrimas.find(m => m.id === req.params.id);
+  if (!mp) return res.status(404).json({ error: 'No encontrado' });
+  const { nombre, unidad, stockMinimo, activo } = req.body;
+  if (nombre !== undefined) mp.nombre = nombre.trim();
+  if (unidad !== undefined) mp.unidad = unidad.trim();
+  if (stockMinimo !== undefined) mp.stockMinimo = parseInt(stockMinimo)||0;
+  if (activo !== undefined) mp.activo = Boolean(activo);
+  // Sync stockMinimo in stock entries
+  db.stock.filter(s => s.insumoId === mp.id).forEach(s => { s.stockMinimo = mp.stockMinimo; });
+  await saveStockToFile();
+  res.json(mp);
+});
+
+app.delete('/api/materias-primas/:id', authMiddleware, async (req, res) => {
+  if (req.user.rol !== 'admin') return res.status(403).json({ error: 'Solo admin' });
+  const idx = db.materiasPrimas.findIndex(m => m.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'No encontrado' });
+  const hasStock = db.stock.some(s => s.insumoId === req.params.id && s.cantidad > 0);
+  if (hasStock) return res.status(400).json({ error: 'Tiene stock activo — ajustalo a 0 primero' });
+  db.materiasPrimas.splice(idx, 1);
+  db.stock = db.stock.filter(s => s.insumoId !== req.params.id);
+  await saveStockToFile();
+  res.json({ ok: true });
+});
+
+// ── Stock ──────────────────────────────────────
+// GET /api/stock — inventario por materia prima con cantidades por ubicacion
 app.get('/api/stock', authMiddleware, (_req, res) => {
   const sucursales = db.sucursales.filter(s => s.activa);
-  const resultado = db.productos.filter(p => p.activo !== false).map(p => {
-    const central = getStockCantidad(p.id, 'central');
+  const resultado = db.materiasPrimas.filter(mp => mp.activo !== false).map(mp => {
+    const central = getStockCantidad(mp.id, 'central');
     const porSucursal = sucursales.map(s => ({
       sucursal_id: s.id,
       nombre: s.nombre,
-      cantidad: getStockCantidad(p.id, s.id)
+      cantidad: getStockCantidad(mp.id, s.id)
     }));
     const total = central + porSucursal.reduce((sum, s) => sum + s.cantidad, 0);
-    const stockMinimo = db.stock.find(s => s.productoId === p.id && s.ubicacion === 'central')?.stockMinimo || p.stockMinimo || 5;
-    const cat = db.categorias.find(c => c.id === p.categoria);
+    const stockMinimo = db.stock.find(s => s.insumoId === mp.id && s.ubicacion === 'central')?.stockMinimo || mp.stockMinimo || 0;
     return {
-      productoId: p.id,
-      nombre: p.nombre,
-      codigo: p.codigo,
-      categoria: cat?.nombre || '',
+      insumoId: mp.id,
+      nombre: mp.nombre,
+      unidad: mp.unidad,
       stockMinimo,
       central,
       porSucursal,
@@ -1905,10 +1974,10 @@ app.get('/api/stock', authMiddleware, (_req, res) => {
 // GET /api/stock/movimientos — log de movimientos recientes
 app.get('/api/stock/movimientos', authMiddleware, (_req, res) => {
   const enriched = (db.stockMovimientos || []).slice(0, 200).map(m => {
-    const prod = db.productos.find(p => p.id === m.productoId);
+    const mp = db.materiasPrimas.find(x => x.id === m.insumoId);
     const ubicNombre = m.ubicacion === 'central' ? 'Depósito Central'
       : (db.sucursales.find(s => s.id === m.ubicacion)?.nombre || m.ubicacion);
-    return { ...m, productoNombre: prod?.nombre || '?', ubicacionNombre: ubicNombre };
+    return { ...m, insumoNombre: mp?.nombre || '?', unidad: mp?.unidad || '', ubicacionNombre: ubicNombre };
   });
   res.json(enriched);
 });
@@ -1916,14 +1985,14 @@ app.get('/api/stock/movimientos', authMiddleware, (_req, res) => {
 // POST /api/stock/ajuste — ajuste manual de stock en una ubicacion
 app.post('/api/stock/ajuste', authMiddleware, async (req, res) => {
   if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
-  const { productoId, ubicacion, cantidad, motivo } = req.body;
-  if (!productoId || !ubicacion || cantidad === undefined) return res.status(400).json({ error: 'Faltan datos' });
-  const cantAnterior = getStockCantidad(productoId, ubicacion);
+  const { insumoId, ubicacion, cantidad, motivo } = req.body;
+  if (!insumoId || !ubicacion || cantidad === undefined) return res.status(400).json({ error: 'Faltan datos' });
+  const cantAnterior = getStockCantidad(insumoId, ubicacion);
   const nuevaCant = Math.max(0, parseInt(cantidad) || 0);
   const delta = nuevaCant - cantAnterior;
-  _adjustStock(productoId, ubicacion, delta, motivo || 'Ajuste manual', 'ajuste', null, req.user.id);
+  _adjustStock(insumoId, ubicacion, delta, motivo || 'Ajuste manual', 'ajuste', null, req.user.id);
   await saveStockToFile();
-  io.emit('stock:update', { productoId, ubicacion });
+  io.emit('stock:update', { insumoId, ubicacion });
   res.json({ ok: true, cantidad: nuevaCant });
 });
 
@@ -1936,10 +2005,10 @@ function _enrichTraslado(t) {
     : (db.sucursales.find(s => s.id === t.desde)?.nombre || t.desde);
   const hastaNombre = t.hasta === 'central' ? 'Depósito Central'
     : (db.sucursales.find(s => s.id === t.hasta)?.nombre || t.hasta);
-  const items = (t.items || []).map(i => ({
-    ...i,
-    productoNombre: db.productos.find(p => p.id === i.productoId)?.nombre || '?'
-  }));
+  const items = (t.items || []).map(i => {
+    const mp = db.materiasPrimas.find(m => m.id === i.insumoId);
+    return { ...i, insumoNombre: mp?.nombre || '?', unidad: mp?.unidad || '' };
+  });
   return { ...t, desdeNombre, hastaNombre, items };
 }
 
@@ -1955,11 +2024,11 @@ app.post('/api/traslados', authMiddleware, async (req, res) => {
   if (desde === hasta) return res.status(400).json({ error: 'Origen y destino deben ser distintos' });
 
   for (const item of items) {
-    const disp = getStockCantidad(item.productoId, desde);
+    const disp = getStockCantidad(item.insumoId, desde);
     if (disp < parseInt(item.cantidad)) {
-      const prod = db.productos.find(p => p.id === item.productoId);
+      const mp = db.materiasPrimas.find(m => m.id === item.insumoId);
       return res.status(400).json({
-        error: `Stock insuficiente de "${prod?.nombre || '?'}" en origen (disponible: ${disp}, solicitado: ${item.cantidad})`
+        error: `Stock insuficiente de "${mp?.nombre || '?'}" en origen (disponible: ${disp}, solicitado: ${item.cantidad})`
       });
     }
   }
@@ -1968,7 +2037,7 @@ app.post('/api/traslados', authMiddleware, async (req, res) => {
     id: uuidv4(),
     fecha: new Date().toISOString(),
     desde, hasta,
-    items: items.map(i => ({ productoId: i.productoId, cantidad: parseInt(i.cantidad) })),
+    items: items.map(i => ({ insumoId: i.insumoId, cantidad: parseInt(i.cantidad) })),
     estado: 'pendiente',
     nota: nota?.trim() || '',
     creadoPor: req.user.id,
@@ -1980,7 +2049,7 @@ app.post('/api/traslados', authMiddleware, async (req, res) => {
   const hastaNombre = hasta === 'central' ? 'Depósito Central' : (db.sucursales.find(s => s.id === hasta)?.nombre || hasta);
 
   for (const item of traslado.items) {
-    _adjustStock(item.productoId, desde, -item.cantidad,
+    _adjustStock(item.insumoId, desde, -item.cantidad,
       `Traslado → ${hastaNombre} (pendiente #${traslado.id.slice(0,8)})`, 'traslado_salida', traslado.id, req.user.id);
   }
 
@@ -1997,7 +2066,7 @@ app.put('/api/traslados/:id/confirmar', authMiddleware, async (req, res) => {
 
   const desdeNombre = t.desde === 'central' ? 'Depósito Central' : (db.sucursales.find(s => s.id === t.desde)?.nombre || t.desde);
   for (const item of t.items) {
-    _adjustStock(item.productoId, t.hasta, item.cantidad,
+    _adjustStock(item.insumoId, t.hasta, item.cantidad,
       `Traslado recibido desde ${desdeNombre} (#${t.id.slice(0,8)})`, 'traslado_entrada', t.id, req.user.id);
   }
   t.estado = 'confirmado';
@@ -2017,7 +2086,7 @@ app.put('/api/traslados/:id/cancelar', authMiddleware, async (req, res) => {
 
   const hastaNombre = t.hasta === 'central' ? 'Depósito Central' : (db.sucursales.find(s => s.id === t.hasta)?.nombre || t.hasta);
   for (const item of t.items) {
-    _adjustStock(item.productoId, t.desde, item.cantidad,
+    _adjustStock(item.insumoId, t.desde, item.cantidad,
       `Traslado cancelado (devuelto desde ${hastaNombre})`, 'traslado_cancelado', t.id, req.user.id);
   }
   t.estado = 'cancelado';
@@ -2033,10 +2102,10 @@ app.put('/api/traslados/:id/cancelar', authMiddleware, async (req, res) => {
 function _enrichCompra(c) {
   const destinoNombre = c.destino === 'central' ? 'Depósito Central'
     : (db.sucursales.find(s => s.id === c.destino)?.nombre || c.destino);
-  const items = (c.items || []).map(i => ({
-    ...i,
-    productoNombre: db.productos.find(p => p.id === i.productoId)?.nombre || '?'
-  }));
+  const items = (c.items || []).map(i => {
+    const mp = db.materiasPrimas.find(m => m.id === i.insumoId);
+    return { ...i, insumoNombre: mp?.nombre || '?', unidad: mp?.unidad || '' };
+  });
   return { ...c, destinoNombre, items };
 }
 
@@ -2056,7 +2125,7 @@ app.post('/api/compras', authMiddleware, async (req, res) => {
     proveedor: proveedor?.trim() || 'Sin especificar',
     destino,
     items: items.map(i => ({
-      productoId: i.productoId,
+      insumoId: i.insumoId,
       cantidad: parseInt(i.cantidad),
       precioUnitario: parseFloat(i.precioUnitario) || 0
     })),
@@ -2070,7 +2139,7 @@ app.post('/api/compras', authMiddleware, async (req, res) => {
 
   const destNombre = destino === 'central' ? 'Depósito Central' : (db.sucursales.find(s => s.id === destino)?.nombre || destino);
   for (const item of compra.items) {
-    _adjustStock(item.productoId, destino, item.cantidad,
+    _adjustStock(item.insumoId, destino, item.cantidad,
       `Compra a ${compra.proveedor}${nroFactura ? ' (FC:'+nroFactura+')' : ''} → ${destNombre}`,
       'compra', compra.id, req.user.id);
   }

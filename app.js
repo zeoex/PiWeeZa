@@ -2157,6 +2157,30 @@ app.get('/api/compras/:id', authMiddleware, (req, res) => {
 });
 
 // ─────────────────────────────────────────────
+//  CAJAS OVERVIEW (admin central)
+// ─────────────────────────────────────────────
+app.get('/api/cajas/overview', authMiddleware, (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const hoy = new Date().toISOString().slice(0, 10);
+  const sucursales = (db.sucursales || []).filter(s => s.activa);
+  const resultado = sucursales.map(s => {
+    const facturas = (db.facturas || []).filter(f =>
+      f.sucursal_id === s.id && (f.createdAt || '').slice(0, 10) === hoy
+    );
+    const total = facturas.reduce((sum, f) => sum + (f.total || 0), 0);
+    const byMethod = {};
+    facturas.forEach(f => {
+      const m = f.metodoPago || 'otros';
+      byMethod[m] = (byMethod[m] || 0) + (f.total || 0);
+    });
+    return { id: s.id, nombre: s.nombre, cantVentas: facturas.length, total, byMethod };
+  });
+  const totalGlobal  = resultado.reduce((s, r) => s + r.total, 0);
+  const ventasGlobal = resultado.reduce((s, r) => s + r.cantVentas, 0);
+  res.json({ sucursales: resultado, totalGlobal, ventasGlobal, fecha: hoy });
+});
+
+// ─────────────────────────────────────────────
 //  CATCH-ALL – SPA fallback
 // ─────────────────────────────────────────────
 // Catch-all: index.html for unmatched routes (SPA fallback)

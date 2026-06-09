@@ -815,6 +815,9 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       <div class="nav-item" data-section="sucursales" data-tooltip="Sucursales" onclick="navTo('sucursales',this);closeSidebar()" id="navSucursales">
         <span class="nav-icon">🏢</span><span class="nav-text">Sucursales</span>
       </div>
+      <div class="nav-item" data-section="cajas-ventas" data-tooltip="Cajas &amp; Ventas" onclick="navTo('cajas-ventas',this);closeSidebar()" id="navCajasVentas" style="display:none">
+        <span class="nav-icon">💰</span><span class="nav-text">Cajas & Ventas</span>
+      </div>
       <div class="nav-item" data-section="ventas-dia" data-tooltip="Ventas del Día" onclick="navTo('ventas-dia',this);closeSidebar()" id="navVentasDia">
         <span class="nav-icon">📋</span><span class="nav-text">Ventas del Día</span>
       </div>
@@ -833,7 +836,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       <div class="nav-item" data-section="compras" data-tooltip="Compras" onclick="navTo('compras',this);closeSidebar()">
         <span class="nav-icon">🛒</span><span class="nav-text">Compras</span>
       </div>
-      <div class="nav-item" data-section="caja" data-tooltip="Caja" onclick="navTo('caja',this);closeSidebar()">
+      <div class="nav-item" data-section="caja" data-tooltip="Caja" onclick="navTo('caja',this);closeSidebar()" id="navCaja">
         <span class="nav-icon">💰</span><span class="nav-text">Caja</span>
       </div>
       <div class="nav-item" data-section="clientes" data-tooltip="Clientes" onclick="navTo('clientes',this);closeSidebar()">
@@ -919,9 +922,9 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         <div class="home-quick">
           <div class="home-quick-label">Acceso rápido</div>
           <div class="home-actions">
-            <button class="ha-btn" onclick="navTo('ventas-dia',document.querySelector('[data-section=ventas-dia]'))">
-              <div class="ha-circle" style="background:#fef3c7;box-shadow:0 6px 18px rgba(245,158,11,0.25)">📋</div>
-              <span class="ha-label">Ventas del Día</span>
+            <button class="ha-btn" onclick="navTo('cajas-ventas',document.querySelector('[data-section=cajas-ventas]'))">
+              <div class="ha-circle" style="background:#fef3c7;box-shadow:0 6px 18px rgba(245,158,11,0.25)">💰</div>
+              <span class="ha-label">Cajas & Ventas</span>
             </button>
             <button class="ha-btn" onclick="navTo('pedidos',document.querySelector('[data-section=pedidos]'))">
               <div class="ha-circle" style="background:#fff0e6;box-shadow:0 6px 18px rgba(249,115,22,0.22)">
@@ -1422,39 +1425,74 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         <div id="sucursalesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:16px"></div>
       </div>
 
-      <!-- VENTAS DEL DÍA -->
+      <!-- VENTAS DEL DÍA (para sucursales/cajeros) -->
       <div class="section" id="sec-ventas-dia">
-        <div class="section-header">
-          <h2>📋 Ventas del Día</h2>
-        </div>
+        <div class="section-header"><h2>📋 Ventas del Día</h2></div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end">
-          <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:var(--gray);margin-bottom:4px">Fecha</label>
-            <input type="date" id="vdFecha" class="form-control" style="width:auto" onchange="renderVentasDia()"/>
-          </div>
-          <div>
-            <label style="display:block;font-size:12px;font-weight:600;color:var(--gray);margin-bottom:4px">Sucursal</label>
+          <div><label style="display:block;font-size:12px;font-weight:600;color:var(--gray);margin-bottom:4px">Fecha</label>
+            <input type="date" id="vdFecha" class="form-control" style="width:auto" onchange="renderVentasDia()"/></div>
+          <div><label style="display:block;font-size:12px;font-weight:600;color:var(--gray);margin-bottom:4px">Sucursal</label>
             <select id="vdSucursal" class="form-control" style="width:auto;min-width:160px" onchange="renderVentasDia()">
               <option value="">Todas las sucursales</option>
-            </select>
-          </div>
+            </select></div>
           <button class="btn btn-primary btn-sm" onclick="renderVentasDia()">🔄 Actualizar</button>
         </div>
         <div id="vdResumen" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px"></div>
         <div style="overflow-x:auto;background:#fff;border-radius:10px;border:1px solid var(--border)">
           <table style="width:100%;border-collapse:collapse;font-size:14px">
-            <thead>
-              <tr style="background:#f8f9fa;border-bottom:2px solid var(--border)">
-                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px;text-transform:uppercase;letter-spacing:.5px">Hora</th>
-                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px;text-transform:uppercase;letter-spacing:.5px">N° Factura</th>
-                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px;text-transform:uppercase;letter-spacing:.5px">Sucursal</th>
-                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px;text-transform:uppercase;letter-spacing:.5px">Método de Pago</th>
-                <th style="padding:10px 14px;text-align:right;font-weight:700;color:var(--gray);font-size:12px;text-transform:uppercase;letter-spacing:.5px">Total</th>
-              </tr>
-            </thead>
+            <thead><tr style="background:#f8f9fa;border-bottom:2px solid var(--border)">
+              <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px">Hora</th>
+              <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px">N° Factura</th>
+              <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px">Sucursal</th>
+              <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px">Método de Pago</th>
+              <th style="padding:10px 14px;text-align:right;font-weight:700;color:var(--gray);font-size:12px">Total</th>
+            </tr></thead>
             <tbody id="vdTbody"></tbody>
           </table>
           <div id="vdEmpty" style="display:none;text-align:center;padding:40px;color:var(--gray);font-size:14px">No hay ventas para este filtro</div>
+        </div>
+      </div>
+
+      <!-- CAJAS & VENTAS (panel admin central) -->
+      <div class="section" id="sec-cajas-ventas">
+        <div class="section-header" style="margin-bottom:16px">
+          <h2>💰 Cajas & Ventas</h2>
+          <button class="btn btn-outline btn-sm" onclick="loadCajasVentas()">↺ Actualizar</button>
+        </div>
+        <!-- Tab bar -->
+        <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px">
+          <button id="cvTabBtnResumen" onclick="showCVTab('resumen')" style="background:none;border:none;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;border-bottom:3px solid var(--primary);margin-bottom:-2px;color:var(--primary)">📊 Resumen por Sucursal</button>
+          <button id="cvTabBtnVentas" onclick="showCVTab('ventas')" style="background:none;border:none;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;color:var(--gray)">📋 Ventas del Día</button>
+        </div>
+        <!-- Tab: Resumen por sucursal -->
+        <div id="cvTabResumen">
+          <div id="cvOverviewGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px"></div>
+        </div>
+        <!-- Tab: Ventas del Día -->
+        <div id="cvTabVentas" style="display:none">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end">
+            <div><label style="display:block;font-size:12px;font-weight:600;color:var(--gray);margin-bottom:4px">Fecha</label>
+              <input type="date" id="cvFecha" class="form-control" style="width:auto" onchange="renderCVVentas()"/></div>
+            <div><label style="display:block;font-size:12px;font-weight:600;color:var(--gray);margin-bottom:4px">Sucursal</label>
+              <select id="cvSucursal" class="form-control" style="width:auto;min-width:160px" onchange="renderCVVentas()">
+                <option value="">Todas las sucursales</option>
+              </select></div>
+            <button class="btn btn-primary btn-sm" onclick="renderCVVentas()">🔄 Actualizar</button>
+          </div>
+          <div id="cvVentasResumen" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px"></div>
+          <div style="overflow-x:auto;background:#fff;border-radius:10px;border:1px solid var(--border)">
+            <table style="width:100%;border-collapse:collapse;font-size:14px">
+              <thead><tr style="background:#f8f9fa;border-bottom:2px solid var(--border)">
+                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px">Hora</th>
+                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px">N° Factura</th>
+                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px">Sucursal</th>
+                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--gray);font-size:12px">Método de Pago</th>
+                <th style="padding:10px 14px;text-align:right;font-weight:700;color:var(--gray);font-size:12px">Total</th>
+              </tr></thead>
+              <tbody id="cvVentasTbody"></tbody>
+            </table>
+            <div id="cvVentasEmpty" style="display:none;text-align:center;padding:40px;color:var(--gray);font-size:14px">No hay ventas para este filtro</div>
+          </div>
         </div>
       </div>
 
@@ -2788,6 +2826,15 @@ function initApp() {
     const navPedidos = document.getElementById('navPedidos');
     if (navPedidos) navPedidos.style.display = 'none';
   }
+  // Admin central: módulo unificado Cajas & Ventas; ocultar Caja y Ventas del Día separados
+  if (!_suc && ['admin','supervisor'].includes(currentUser?.rol)) {
+    const navCV = document.getElementById('navCajasVentas');
+    if (navCV) navCV.style.display = 'flex';
+    const navCajaEl = document.getElementById('navCaja');
+    if (navCajaEl) navCajaEl.style.display = 'none';
+    const navVD = document.getElementById('navVentasDia');
+    if (navVD) navVD.style.display = 'none';
+  }
   // Mesa management (create/edit/delete) only for admin and supervisor
   // Restore persisted state
   loadState();
@@ -2800,10 +2847,10 @@ function initApp() {
       return;
     }
     const saved = (() => { try { return localStorage.getItem('pz_last_section'); } catch(e){} return null; })();
-    const validSections = ['dashboard','sucursales','ventas-dia','pedidos','delivery','productos','stock','compras','caja','clientes','reportes','usuarios','config'];
+    const validSections = ['dashboard','sucursales','cajas-ventas','ventas-dia','pedidos','delivery','productos','stock','compras','caja','clientes','reportes','usuarios','config'];
     const target = (saved && validSections.includes(saved)) ? saved : 'dashboard';
     navTo(target, null);
-    renderCaja();
+    if (!['admin','supervisor'].includes(currentUser?.rol)) renderCaja();
     if (target !== 'dashboard') loadDashboard();
   });
   // QZ Tray auto-connect (only for roles that print)
@@ -2950,7 +2997,7 @@ function initApp() {
         const activeEl = document.querySelector('.section.active');
         if (activeEl) {
           const sec = activeEl.id.replace('sec-','');
-          const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,stock:loadStock,compras:loadCompras,caja:renderCaja};
+          const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,stock:loadStock,compras:loadCompras,caja:renderCaja,'cajas-ventas':loadCajasVentas};
           if (loaders[sec]) loaders[sec]();
         }
       } catch(e) {}
@@ -2966,7 +3013,7 @@ function initApp() {
           const activeEl = document.querySelector('.section.active');
           if (activeEl) {
             const sec = activeEl.id.replace('sec-','');
-            const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,stock:loadStock,compras:loadCompras,caja:renderCaja};
+            const loaders = {dashboard:loadDashboard,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,stock:loadStock,compras:loadCompras,caja:renderCaja,'cajas-ventas':loadCajasVentas};
             if (loaders[sec]) loaders[sec]();
           }
         }
@@ -3034,9 +3081,9 @@ function navTo(section, el) {
   else document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('sec-'+section).classList.add('active');
-  const titles = {dashboard:'Vista Principal',sucursales:'🏢 Sucursales','ventas-dia':'📋 Ventas del Día',venta:'Venta Directa',pedidos:'Pedidos',delivery:'Delivery',productos:'Productos',stock:'📦 Stock & Traslados',compras:'🛒 Compras',caja:'Caja',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración'};
+  const titles = {dashboard:'Vista Principal',sucursales:'🏢 Sucursales','cajas-ventas':'💰 Cajas & Ventas','ventas-dia':'📋 Ventas del Día',venta:'Venta Directa',pedidos:'Pedidos',delivery:'Delivery',productos:'Productos',stock:'📦 Stock & Traslados',compras:'🛒 Compras',caja:'Caja',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración'};
   document.getElementById('topbarTitle').textContent = titles[section] || section;
-  const loaders = {dashboard:loadDashboard,sucursales:()=>renderSucursales(),'ventas-dia':renderVentasDia,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,productos:renderProductos,stock:loadStock,compras:loadCompras,caja:renderCaja,clientes:renderClientes,reportes:renderReportes,usuarios:renderUsuarios,config:loadPrintConfigUI};
+  const loaders = {dashboard:loadDashboard,sucursales:()=>renderSucursales(),'cajas-ventas':loadCajasVentas,'ventas-dia':renderVentasDia,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,productos:renderProductos,stock:loadStock,compras:loadCompras,caja:renderCaja,clientes:renderClientes,reportes:renderReportes,usuarios:renderUsuarios,config:loadPrintConfigUI};
   if(loaders[section]) loaders[section]();
   try { localStorage.setItem('pz_last_section', section); } catch(e) {}
 }
@@ -5587,6 +5634,149 @@ async function renderVentasDia() {
       <td style="padding:10px 14px">
         <span style="background:#f0f9ff;color:#0369a1;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600">${f.sucursalNombre || 'Casa Central'}</span>
       </td>
+      <td style="padding:10px 14px">${mpLabel(f.metodoPago)}</td>
+      <td style="padding:10px 14px;text-align:right;font-weight:700;color:#059669">$${(f.total||0).toLocaleString('es-AR')}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ======= CAJAS & VENTAS (admin central) =======
+function showCVTab(tab) {
+  ['resumen','ventas'].forEach(t => {
+    const panel = document.getElementById('cvTab' + t.charAt(0).toUpperCase() + t.slice(1));
+    const btn   = document.getElementById('cvTabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (!panel || !btn) return;
+    const active = t === tab;
+    panel.style.display = active ? '' : 'none';
+    btn.style.borderBottomColor = active ? 'var(--primary)' : 'transparent';
+    btn.style.color = active ? 'var(--primary)' : 'var(--gray)';
+    btn.style.fontWeight = active ? '600' : '500';
+  });
+  if (tab === 'ventas') renderCVVentas();
+}
+
+async function loadCajasVentas() {
+  showCVTab('resumen');
+  const grid = document.getElementById('cvOverviewGrid');
+  if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--gray)">Cargando...</div>';
+  try {
+    const r = await apiFetch('/cajas/overview');
+    const data = await r.json();
+    _renderCVOverview(data);
+  } catch(e) {
+    if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--gray)">Sin datos disponibles</div>';
+  }
+}
+
+function _renderCVOverview(data) {
+  const grid = document.getElementById('cvOverviewGrid');
+  if (!grid) return;
+  const { sucursales = [], totalGlobal = 0, ventasGlobal = 0, fecha = '' } = data;
+
+  const mpIcons = { efectivo:'💵', tarjeta:'💳', transferencia:'📲', mercadopago:'🟦', qr:'📷' };
+
+  // Tarjeta global primero
+  let html = `
+    <div style="grid-column:1/-1;background:linear-gradient(135deg,#1d3557,#457b9d);color:#fff;border-radius:14px;padding:20px 24px;display:flex;flex-wrap:wrap;gap:24px;align-items:center">
+      <div>
+        <div style="font-size:11px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.5px">Total del día · ${fecha}</div>
+        <div style="font-size:36px;font-weight:800;margin-top:4px">$${totalGlobal.toLocaleString('es-AR')}</div>
+      </div>
+      <div style="margin-left:auto;text-align:right">
+        <div style="font-size:11px;font-weight:700;opacity:.7;text-transform:uppercase">Ventas</div>
+        <div style="font-size:32px;font-weight:800">${ventasGlobal}</div>
+      </div>
+    </div>`;
+
+  if (!sucursales.length) {
+    html += '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--gray)">No hay sucursales activas</div>';
+  } else {
+    sucursales.forEach(s => {
+      const methods = Object.entries(s.byMethod || {}).map(([m, v]) =>
+        `<span style="background:#f0f9ff;color:#0369a1;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600">${mpIcons[m]||''} ${m}: $${v.toLocaleString('es-AR')}</span>`
+      ).join(' ');
+      html += `
+        <div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;box-shadow:0 1px 6px rgba(0,0,0,0.06)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <h3 style="margin:0;font-size:15px;font-weight:700">${s.nombre}</h3>
+            <button class="btn btn-outline btn-sm" onclick="showCVTab('ventas');setTimeout(()=>{const el=document.getElementById('cvSucursal');if(el){el.value='${s.id}';renderCVVentas();}},100)" style="font-size:11px">Ver ventas</button>
+          </div>
+          <div style="display:flex;gap:20px;margin-bottom:12px">
+            <div>
+              <div style="font-size:24px;font-weight:800;color:#059669">$${s.total.toLocaleString('es-AR')}</div>
+              <div style="font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase">Recaudado</div>
+            </div>
+            <div>
+              <div style="font-size:24px;font-weight:800;color:var(--primary)">${s.cantVentas}</div>
+              <div style="font-size:11px;color:var(--gray);font-weight:600;text-transform:uppercase">Ventas</div>
+            </div>
+          </div>
+          ${methods ? `<div style="display:flex;flex-wrap:wrap;gap:4px">${methods}</div>` : '<div style="font-size:12px;color:var(--gray)">Sin ventas hoy</div>'}
+        </div>`;
+    });
+  }
+  grid.innerHTML = html;
+}
+
+async function renderCVVentas() {
+  const fechaInput = document.getElementById('cvFecha');
+  const sucInput   = document.getElementById('cvSucursal');
+  if (!fechaInput) return;
+  if (!fechaInput.value) fechaInput.value = new Date().toISOString().slice(0, 10);
+
+  if (sucInput && sucInput.options.length <= 1) {
+    try {
+      const r = await apiFetch('/sucursales');
+      const suc = await r.json();
+      const cur = sucInput.value;
+      sucInput.innerHTML = '<option value="">Todas las sucursales</option>' +
+        suc.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
+      if (cur) sucInput.value = cur;
+    } catch(e) {}
+  }
+
+  const fecha = fechaInput.value;
+  const sucursal_id = sucInput?.value || '';
+  const params = new URLSearchParams({ fecha });
+  if (sucursal_id) params.set('sucursal_id', sucursal_id);
+
+  let data;
+  try {
+    const r = await apiFetch('/ventas/diarias?' + params.toString());
+    data = await r.json();
+  } catch(e) { return; }
+
+  const resumen = document.getElementById('cvVentasResumen');
+  if (resumen) {
+    resumen.innerHTML = `
+      <div style="background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px 20px">
+        <div style="font-size:28px;font-weight:800;color:var(--primary)">${data.totalVentas}</div>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;text-transform:uppercase">Ventas</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px 20px">
+        <div style="font-size:28px;font-weight:800;color:#059669">$${(data.totalMonto||0).toLocaleString('es-AR')}</div>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;text-transform:uppercase">Total recaudado</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px 20px">
+        <div style="font-size:28px;font-weight:800;color:#7c3aed">$${(data.ticketProm||0).toLocaleString('es-AR')}</div>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;text-transform:uppercase">Ticket promedio</div>
+      </div>`;
+  }
+
+  const tbody = document.getElementById('cvVentasTbody');
+  const empty = document.getElementById('cvVentasEmpty');
+  if (!tbody) return;
+  if (!data.facturas?.length) {
+    tbody.innerHTML = ''; if (empty) empty.style.display = 'block'; return;
+  }
+  if (empty) empty.style.display = 'none';
+  const mpLabel = mp => ({ efectivo:'Efectivo', tarjeta:'Tarjeta', transferencia:'Transferencia', mercadopago:'Mercado Pago', qr:'QR' }[mp] || mp || '-');
+  tbody.innerHTML = data.facturas.map((f, i) => {
+    const hora = new Date(f.createdAt).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
+    return `<tr style="background:${i%2===0?'#fff':'#f9fafb'};border-bottom:1px solid var(--border)">
+      <td style="padding:10px 14px;color:var(--gray)">${hora}</td>
+      <td style="padding:10px 14px;font-family:monospace;font-size:13px">${f.numero || '-'}</td>
+      <td style="padding:10px 14px"><span style="background:#f0f9ff;color:#0369a1;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600">${f.sucursalNombre || 'Casa Central'}</span></td>
       <td style="padding:10px 14px">${mpLabel(f.metodoPago)}</td>
       <td style="padding:10px 14px;text-align:right;font-weight:700;color:#059669">$${(f.total||0).toLocaleString('es-AR')}</td>
     </tr>`;

@@ -2177,7 +2177,9 @@ input:checked+.slider:before{transform:translateX(20px)}
 /* ── Modo sucursal: solo muestra Venta y Pedidos en el nav ── */
 .sidebar.sucursal-mode .nav-item { display: none !important; }
 .sidebar.sucursal-mode .nav-item[data-section="venta"],
-.sidebar.sucursal-mode .nav-item[data-section="pedidos"] { display: flex !important; }
+.sidebar.sucursal-mode .nav-item[data-section="pedidos"],
+.sidebar.sucursal-mode .nav-item[data-section="caja"],
+.sidebar.sucursal-mode .nav-item[data-section="config"] { display: flex !important; }
 .sidebar.sucursal-mode .sidebar-logo { cursor: default; pointer-events: none; }
 </style>
 
@@ -3190,7 +3192,7 @@ function initApp() {
     document.documentElement.style.setProperty('--login-accent',   '#f97316');
     document.documentElement.style.setProperty('--login-accent-l', '#fb923c');
     fetch('/api/sucursales/publicas').then(r=>r.json()).then(suc => {
-      const found = suc.find(s => String(s.id) === String(sucId));
+      const found = suc.find(s => s.slug === sucId || String(s.id) === String(sucId));
       if (found) document.getElementById('loginTitle').textContent = found.nombre;
     }).catch(()=>{});
     return;

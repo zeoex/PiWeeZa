@@ -987,6 +987,11 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         <div class="section-header" style="margin-bottom:12px">
           <h2>🛒 Venta Directa</h2>
         </div>
+        <div id="posCajaWarning" style="display:none;background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span style="font-size:22px">🔴</span>
+          <span style="font-weight:600;color:#92400e;flex:1">Caja cerrada — no se puede cobrar hasta abrir la caja</span>
+          <button class="btn btn-sm" style="background:#f59e0b;color:#fff;border:none;padding:6px 14px;font-weight:700" onclick="navTo('caja',document.querySelector('[data-section=caja]'))">Ir a Caja →</button>
+        </div>
         <div class="pos-wrap">
           <!-- LEFT: Catalog -->
           <div class="pos-catalog">
@@ -2882,11 +2887,11 @@ function _setSucursalMode(sucursalId) {
     if (biz) biz.textContent = 'Sistema POS';
     return;
   }
-  // Modo sucursal: ocultar todo excepto Venta y Pedidos (CSS + inline por las dudas)
+  // Modo sucursal: ocultar todo excepto Venta, Pedidos y Caja
   if (sidebar) sidebar.classList.add('sucursal-mode');
   document.querySelectorAll('.nav-item').forEach(el => {
     const sec = el.getAttribute('data-section');
-    el.style.display = (sec === 'venta' || sec === 'pedidos') ? '' : 'none';
+    el.style.display = (sec === 'venta' || sec === 'pedidos' || sec === 'caja') ? '' : 'none';
   });
   // Mostrar nombre de la sucursal en el sidebar
   apiFetch('/sucursales').then(r => r.json()).then(suc => {
@@ -2897,8 +2902,13 @@ function _setSucursalMode(sucursalId) {
       if (el) el.textContent = s.nombre;
     }
   }).catch(() => {});
-  // En modo sucursal ir directo a Venta
-  navTo('venta', document.querySelector('[data-section="venta"]'));
+  // En modo sucursal: si la caja está cerrada ir a Caja, si no ir a Venta
+  if (!cajaAbierta) {
+    navTo('caja', document.querySelector('[data-section="caja"]'));
+    showToast('Abrí la caja para poder vender', 'warning');
+  } else {
+    navTo('venta', document.querySelector('[data-section="venta"]'));
+  }
 }
 
 // ======= INIT =======
@@ -5187,6 +5197,7 @@ function abrirCaja() {
   cajaInicial=monto; cajaAbierta=true;
   cajaMoves = [{..._cajaNow(),tipo:'ingreso',desc:'Apertura de caja',monto}];
   saveState(); renderCaja(); showToast('Caja abierta','success');
+  if (_currentSucursalId) navTo('venta', document.querySelector('[data-section="venta"]'));
 }
 
 function abrirArqueoModal() {
@@ -6986,6 +6997,8 @@ function renderVenta() {
   _posCart = _posCart || [];
   _posSelectedMP = null;
   _posClienteId = null;
+  const warn = document.getElementById('posCajaWarning');
+  if (warn) warn.style.display = (_currentSucursalId && !cajaAbierta) ? 'flex' : 'none';
   _renderPosCatTabs();
   _renderPosProdGrid();
   _renderPosCart();

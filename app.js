@@ -1944,6 +1944,16 @@ app.delete('/api/materias-primas/:id', authMiddleware, async (req, res) => {
   res.json({ ok: true });
 });
 
+// Limpiar todos los insumos (admin only — para reset inicial)
+app.delete('/api/materias-primas', authMiddleware, async (req, res) => {
+  if (req.user.rol !== 'admin') return res.status(403).json({ error: 'Solo admin' });
+  db.materiasPrimas = [];
+  db.stock = [];
+  db.stockMovimientos = [];
+  await saveStockToFile();
+  res.json({ ok: true, deleted: true });
+});
+
 // ── Stock ──────────────────────────────────────
 // GET /api/stock — inventario por materia prima con cantidades por ubicacion
 app.get('/api/stock', authMiddleware, (_req, res) => {

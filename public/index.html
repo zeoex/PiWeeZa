@@ -4385,8 +4385,8 @@ let _stockSucursales = []; // sucursales activas para columnas
 async function loadStock() {
   try {
     const [sRes, tRes] = await Promise.all([
-      apiFetch('/api/stock'),
-      apiFetch('/api/traslados')
+      apiFetch('/stock'),
+      apiFetch('/traslados')
     ]);
     _stockData = await sRes.json();
     _trasladosData = await tRes.json();
@@ -4535,7 +4535,7 @@ function _renderTraslados() {
 
 async function renderHistorial() {
   try {
-    const r = await apiFetch('/api/stock/movimientos');
+    const r = await apiFetch('/stock/movimientos');
     _stockMovs = await r.json();
   } catch(e) { _stockMovs = []; }
   const filtro = document.getElementById('historialFiltroTipo')?.value || '';
@@ -4582,7 +4582,7 @@ async function guardarAjuste() {
   const motivo    = document.getElementById('ajMotivo').value.trim() || 'Ajuste manual';
   if (isNaN(cantidad) || cantidad < 0) { showToast('Cantidad inválida','error'); return; }
   try {
-    const r = await apiFetch('/api/stock/ajuste', { method:'POST', body: JSON.stringify({ insumoId, ubicacion, cantidad, motivo }) });
+    const r = await apiFetch('/stock/ajuste', { method:'POST', body: JSON.stringify({ insumoId, ubicacion, cantidad, motivo }) });
     if (!r.ok) { const e = await r.json(); showToast(e.error||'Error','error'); return; }
     document.getElementById('modalAjuste').style.display = 'none';
     showToast('Stock ajustado ✓','success');
@@ -4657,7 +4657,7 @@ async function guardarTraslado() {
   if (!items.length) { showToast('Agregá al menos un insumo','error'); return; }
   const nota = document.getElementById('tslNota').value;
   try {
-    const r = await apiFetch('/api/traslados', { method:'POST', body: JSON.stringify({ desde, hasta, items, nota }) });
+    const r = await apiFetch('/traslados', { method:'POST', body: JSON.stringify({ desde, hasta, items, nota }) });
     if (!r.ok) { const e = await r.json(); showToast(e.error||'Error al crear traslado','error'); return; }
     cerrarModalTraslado();
     showToast('Traslado creado — stock descontado del origen ✓','success');
@@ -4668,7 +4668,7 @@ async function guardarTraslado() {
 async function confirmarTraslado(id) {
   if (!confirm('¿Confirmar la recepción de este traslado? Se sumará el stock en destino.')) return;
   try {
-    const r = await apiFetch(`/api/traslados/${id}/confirmar`, { method:'PUT' });
+    const r = await apiFetch(`/traslados/${id}/confirmar`, { method:'PUT' });
     if (!r.ok) { const e = await r.json(); showToast(e.error||'Error','error'); return; }
     showToast('Traslado confirmado — stock acreditado en destino ✓','success');
     await loadStock();
@@ -4678,7 +4678,7 @@ async function confirmarTraslado(id) {
 async function cancelarTraslado(id) {
   if (!confirm('¿Cancelar el traslado? Se devuelve el stock al origen.')) return;
   try {
-    const r = await apiFetch(`/api/traslados/${id}/cancelar`, { method:'PUT' });
+    const r = await apiFetch(`/traslados/${id}/cancelar`, { method:'PUT' });
     if (!r.ok) { const e = await r.json(); showToast(e.error||'Error','error'); return; }
     showToast('Traslado cancelado — stock devuelto al origen','success');
     await loadStock();
@@ -4691,7 +4691,7 @@ let _comprasData = [];
 
 async function loadCompras() {
   try {
-    const r = await apiFetch('/api/compras');
+    const r = await apiFetch('/compras');
     _comprasData = await r.json();
   } catch(e) { _comprasData = []; }
   _renderComprasStats();
@@ -4805,7 +4805,7 @@ async function guardarCompra() {
   const items = _cmpItems.filter(i => i.insumoId && i.cantidad > 0);
   if (!destino || !items.length) { showToast('Seleccioná destino y al menos un insumo','error'); return; }
   try {
-    const r = await apiFetch('/api/compras', { method:'POST', body: JSON.stringify({ proveedor, destino, items, nroFactura, nota }) });
+    const r = await apiFetch('/compras', { method:'POST', body: JSON.stringify({ proveedor, destino, items, nroFactura, nota }) });
     if (!r.ok) { const e = await r.json(); showToast(e.error||'Error al registrar compra','error'); return; }
     cerrarModalCompra();
     showToast('Compra registrada — stock actualizado ✓','success');
@@ -5400,7 +5400,7 @@ async function renderVentasDia() {
   // Poblar selector de sucursales la primera vez
   if (sucInput && sucInput.options.length <= 1) {
     try {
-      const r = await apiFetch('/api/sucursales');
+      const r = await apiFetch('/sucursales');
       const suc = await r.json();
       const cur = sucInput.value;
       sucInput.innerHTML = '<option value="">Todas las sucursales</option>' +
@@ -5416,7 +5416,7 @@ async function renderVentasDia() {
 
   let data;
   try {
-    const r = await apiFetch('/api/ventas/diarias?' + params.toString());
+    const r = await apiFetch('/ventas/diarias?' + params.toString());
     data = await r.json();
   } catch(e) { return; }
 

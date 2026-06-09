@@ -1609,7 +1609,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       <div class="section" id="sec-config">
         <div class="section-header"><h2>⚙️ Configuración</h2></div>
         <div class="grid-2">
-          <div class="card">
+          <div class="card" id="cardDatosNegocio">
             <div class="card-header"><h3>🏢 Datos del Negocio</h3></div>
             <div class="card-body">
               <div class="form-group"><label>Nombre del local</label><input class="form-control" id="cfgNombre" value="Pizza Ya"/></div>
@@ -1633,7 +1633,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
               <button class="btn btn-primary" onclick="saveConfig()">💾 Guardar</button>
             </div>
           </div>
-          <div class="card">
+          <div class="card" id="cardDatosSistema">
             <div class="card-header"><h3>🔄 Datos del sistema</h3></div>
             <div class="card-body">
               <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Los cambios en mesas, delivery, clientes y demás se guardan automáticamente en este navegador.</p>
@@ -1728,7 +1728,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
             </div>
           </div>
         </div>
-        <div class="card">
+        <div class="card" id="cardMediosPago">
           <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
             <h3>💳 Medios de Pago</h3>
             <button class="btn btn-primary btn-sm" onclick="addMedioPago()">+ Agregar</button>
@@ -1738,7 +1738,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
             <div id="mediosPagoList"></div>
           </div>
         </div>
-        <div class="card">
+        <div class="card" id="cardPropinas">
           <div class="card-header"><h3>💰 Propinas</h3></div>
           <div class="card-body">
             <p style="font-size:12px;color:var(--gray);margin-bottom:10px">Si configurás un porcentaje mayor a 0, se mostrará como sugerencia en el ticket de cierre de mesa y en el comprobante X.</p>
@@ -1750,7 +1750,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
             <p style="font-size:11px;color:var(--gray);margin-top:6px">Con 0% no aparece nada en el ticket.</p>
           </div>
         </div>
-        <div class="card">
+        <div class="card" id="cardQRCarta">
           <div class="card-header"><h3>📲 QR de la Carta</h3></div>
           <div class="card-body">
             <p style="font-size:12px;color:var(--gray);margin-bottom:12px">Imprimí el código QR para que tus clientes accedan a la carta digital desde su celular. El QR se genera con el logo del negocio si está configurado.</p>
@@ -1761,7 +1761,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
             </div>
           </div>
         </div>
-        <div class="card">
+        <div class="card" id="cardCocinaDelivery">
           <div class="card-header"><h3>🍕 Cocina & Delivery</h3></div>
           <div class="card-body">
             <div class="grid-3">
@@ -2917,12 +2917,13 @@ function _setSucursalMode(sucursalId) {
     if (biz) biz.textContent = 'Sistema POS';
     return;
   }
-  // Modo sucursal: ocultar todo excepto Venta, Pedidos y Caja
+  // Modo sucursal: ocultar todo excepto Venta, Pedidos, Caja y Configuración
   if (sidebar) sidebar.classList.add('sucursal-mode');
   document.querySelectorAll('.nav-item').forEach(el => {
     const sec = el.getAttribute('data-section');
-    el.style.display = (sec === 'venta' || sec === 'pedidos' || sec === 'caja') ? '' : 'none';
+    el.style.display = ['venta','pedidos','caja','config'].includes(sec) ? '' : 'none';
   });
+  _applyConfigVisibility();
   // Mostrar nombre de la sucursal en el sidebar
   apiFetch('/sucursales').then(r => r.json()).then(suc => {
     const s = (suc || []).find(x => x.id === _currentSucursalId);
@@ -2995,6 +2996,7 @@ function initApp() {
     const saved = (() => { try { return localStorage.getItem('pz_last_section'); } catch(e){} return null; })();
     const validSections = ['dashboard','sucursales','cajas-ventas','ventas-dia','pedidos','delivery','productos','stock','compras','caja','clientes','reportes','usuarios','config'];
     const target = (saved && validSections.includes(saved)) ? saved : 'dashboard';
+    _applyConfigVisibility();
     navTo(target, null);
     if (!['admin','supervisor'].includes(currentUser?.rol)) renderCaja();
     if (target !== 'dashboard') loadDashboard();
@@ -6079,6 +6081,17 @@ async function renderCVVentas() {
       <td style="padding:10px 14px;text-align:right;font-weight:700;color:#059669">$${(f.total||0).toLocaleString('es-AR')}</td>
     </tr>`;
   }).join('');
+}
+
+function _applyConfigVisibility() {
+  const isSuc = !!_currentSucursalId;
+  const adminCards = ['cardDatosNegocio','cardDatosSistema','cardMediosPago','cardPropinas','cardQRCarta','cardCocinaDelivery'];
+  adminCards.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isSuc ? 'none' : '';
+  });
+  const cc = document.getElementById('cardComanderas');
+  if (cc) cc.style.display = isSuc ? '' : 'none';
 }
 
 // ======= SUCURSALES =======

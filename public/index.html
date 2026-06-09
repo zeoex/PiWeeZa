@@ -2098,7 +2098,14 @@ input.form-control:focus{outline:none;border-color:var(--red)}
     <div class="modal-header"><h3 id="modalSucTitulo">Nueva Sucursal</h3><button class="modal-close" onclick="cerrarModalSucursal()">✕</button></div>
     <div class="modal-body">
       <input type="hidden" id="sucEditId"/>
-      <div class="form-group"><label>Nombre *</label><input class="form-control" id="sucNombre" placeholder="Ej: Sucursal Centro"/></div>
+      <div class="form-group"><label>Nombre *</label><input class="form-control" id="sucNombre" placeholder="Ej: 9 de Julio" oninput="_autoSlug()"/></div>
+      <div class="form-group">
+        <label style="display:flex;justify-content:space-between;align-items:center">
+          <span>URL de acceso *</span>
+          <span style="font-size:11px;color:var(--gray);font-weight:400">/sucursal/<strong id="sucSlugPreview" style="color:var(--primary)">…</strong></span>
+        </label>
+        <input class="form-control" id="sucSlug" placeholder="9dejulio" oninput="_sanitizeSlugInput()" style="font-family:monospace"/>
+      </div>
       <div class="form-group"><label>Dirección</label><input class="form-control" id="sucDir" placeholder="Av. Corrientes 1234"/></div>
       <div class="form-group"><label>Teléfono</label><input class="form-control" id="sucTel" placeholder="11-1234-5678"/></div>
     </div>
@@ -2199,15 +2206,33 @@ let _currentSucursalNombre = null;
 // URL path takes priority: /sucursal/:id forces sucursal mode
 const _pathSucMatch = window.location.pathname.match(/^\/sucursal\/([^/]+)/);
 const _pathSucId = _pathSucMatch ? _pathSucMatch[1] : null;
+const _isUUID = s => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
 if (_pathSucId) {
-  _currentSucursalId = _pathSucId;
+  _currentSucursalId = _pathSucId; // may be slug or UUID — resolved below
 } else if (token) {
   const _payload = _decodeJWT(token);
   _currentSucursalId = _payload.sucursal_id || null;
 }
+
+// If path is a slug (not UUID), resolve to real UUID from publicas endpoint
+let _slugResolved = !_pathSucId || _isUUID(_pathSucId);
+async function _resolveSlugToId() {
+  if (_slugResolved) return;
+  try {
+    const r = await fetch('/api/sucursales/publicas');
+    const suc = await r.json();
+    const found = suc.find(s => s.slug === _pathSucId || s.id === _pathSucId);
+    if (found) { _currentSucursalId = found.id; _slugResolved = true; }
+  } catch(e) {}
+}
+
 // Re-apply sucursal mode on page reload once DOM is ready
 if (_currentSucursalId) {
-  window.addEventListener('DOMContentLoaded', () => { try { _setSucursalMode(_currentSucursalId); } catch(e) {} });
+  window.addEventListener('DOMContentLoaded', async () => {
+    await _resolveSlugToId();
+    try { _setSucursalMode(_currentSucursalId); } catch(e) {}
+  });
 }
 let socket = null;
 let currentMesaTab = 'salon';
@@ -2935,8 +2960,9 @@ function initApp() {
     const navSuc = document.getElementById('navSucursales');
     if (navSuc) navSuc.style.display = 'none';
   }
-  // Modo sucursal: URL path tiene prioridad sobre JWT
-  const _suc = _pathSucId || _decodeJWT(token).sucursal_id || null;
+  // Modo sucursal: URL path tiene prioridad sobre JWT (slug ya resuelto a UUID si era slug)
+  const _jwtSuc = _decodeJWT(token).sucursal_id || null;
+  const _suc = _currentSucursalId || _jwtSuc || null;
   _currentSucursalId = _suc;
   // Ajustar nav para admin central (sin sucursal)
   if (!_suc) {
@@ -2957,7 +2983,8 @@ function initApp() {
   // Mesa management (create/edit/delete) only for admin and supervisor
   // Restore persisted state
   loadState();
-  loadStateFromAPI().then(() => {
+  loadStateFromAPI().then(async () => {
+    await _resolveSlugToId();
     _populateCatSelects();
     if (_currentSucursalId) {
       // Modo sucursal: ocultar nav y abrir Venta
@@ -6057,6 +6084,23 @@ async function renderCVVentas() {
 // ======= SUCURSALES =======
 let _sucursalesData = [];
 
+function _toSlugClient(str) {
+  return str.normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+}
+function _autoSlug() {
+  const nombre = document.getElementById('sucNombre').value;
+  const slug = _toSlugClient(nombre);
+  document.getElementById('sucSlug').value = slug;
+  document.getElementById('sucSlugPreview').textContent = slug || '…';
+}
+function _sanitizeSlugInput() {
+  const el = document.getElementById('sucSlug');
+  const clean = _toSlugClient(el.value);
+  el.value = clean;
+  document.getElementById('sucSlugPreview').textContent = clean || '…';
+}
+
 async function renderSucursales() {
   try {
     const r = await apiFetch('/sucursales');
@@ -6080,7 +6124,8 @@ async function renderSucursales() {
         </span>
       </div>
       ${s.direccion ? `<div style="font-size:13px;color:var(--gray);margin-bottom:4px">📍 ${s.direccion}</div>` : ''}
-      ${s.telefono ? `<div style="font-size:13px;color:var(--gray);margin-bottom:8px">📞 ${s.telefono}</div>` : ''}
+      ${s.telefono ? `<div style="font-size:13px;color:var(--gray);margin-bottom:4px">📞 ${s.telefono}</div>` : ''}
+      ${s.slug ? `<div style="font-size:12px;margin-bottom:8px"><a href="/sucursal/${s.slug}" target="_blank" style="color:var(--primary);font-family:monospace;text-decoration:none">🔗 /sucursal/${s.slug}</a></div>` : ''}
       <div id="suc-stats-${s.id}" style="margin-bottom:12px;font-size:13px;color:var(--gray)">Cargando stats...</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-outline btn-sm" onclick="editarSucursal('${s.id}')">✏️ Editar</button>
@@ -6105,6 +6150,8 @@ async function _loadSucursalStats(id) {
 function abrirModalSucursal() {
   document.getElementById('sucEditId').value = '';
   document.getElementById('sucNombre').value = '';
+  document.getElementById('sucSlug').value = '';
+  document.getElementById('sucSlugPreview').textContent = '…';
   document.getElementById('sucDir').value = '';
   document.getElementById('sucTel').value = '';
   document.getElementById('modalSucTitulo').textContent = 'Nueva Sucursal';
@@ -6121,6 +6168,8 @@ function editarSucursal(id) {
   if (!s) return;
   document.getElementById('sucEditId').value = s.id;
   document.getElementById('sucNombre').value = s.nombre;
+  document.getElementById('sucSlug').value = s.slug || '';
+  document.getElementById('sucSlugPreview').textContent = s.slug || '…';
   document.getElementById('sucDir').value = s.direccion || '';
   document.getElementById('sucTel').value = s.telefono || '';
   document.getElementById('modalSucTitulo').textContent = 'Editar Sucursal';
@@ -6130,9 +6179,12 @@ function editarSucursal(id) {
 async function guardarSucursal() {
   const nombre = document.getElementById('sucNombre').value.trim();
   if (!nombre) { showToast('El nombre es requerido','error'); return; }
+  const slug = document.getElementById('sucSlug').value.trim();
+  if (!slug) { showToast('La URL de acceso es requerida','error'); return; }
   const id = document.getElementById('sucEditId').value;
   const body = {
     nombre,
+    slug,
     direccion: document.getElementById('sucDir').value.trim(),
     telefono: document.getElementById('sucTel').value.trim()
   };

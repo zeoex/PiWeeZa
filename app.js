@@ -358,6 +358,8 @@ async function restoreStateFromPG() {
 initPG().then(async () => {
   restoreStateFromFile();    // File first (local, fast)
   await restoreStateFromPG(); // PG overrides file if available
+  _migrateSlugs();
+  saveStateToFile({ sucursales_data: db.sucursales });
 });
 
 async function saveUsersToPG() {
@@ -472,6 +474,26 @@ function restoreStateFromFile() {
 // ─────────────────────────────────────────────
 //  HELPERS
 // ─────────────────────────────────────────────
+function _toSlug(str) {
+  return str.normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+}
+
+function _uniqueSlug(base) {
+  const existing = new Set((db.sucursales || []).map(s => s.slug).filter(Boolean));
+  if (!existing.has(base)) return base;
+  let i = 2;
+  while (existing.has(base + i)) i++;
+  return base + i;
+}
+
+// Migrate: add slug to any sucursal that doesn't have one
+function _migrateSlugs() {
+  (db.sucursales || []).forEach(s => {
+    if (!s.slug) s.slug = _uniqueSlug(_toSlug(s.nombre));
+  });
+}
+
 function calcularTotal(items) {
   return items.reduce((sum, it) => {
     const extrasTotal = (it.extras || []).reduce((s, e) => s + (e.precio || 0), 0);
@@ -1783,7 +1805,7 @@ app.delete('/api/users/:id', authMiddleware, async (req, res) => {
 app.get('/api/sucursales/publicas', (req, res) => {
   const publicas = (db.sucursales || [])
     .filter(s => s.activa)
-    .map(s => ({ id: s.id, nombre: s.nombre }));
+    .map(s => ({ id: s.id, nombre: s.nombre, slug: s.slug || null }));
   res.json(publicas);
 });
 
@@ -1793,11 +1815,15 @@ app.get('/api/sucursales', authMiddleware, (req, res) => {
 
 app.post('/api/sucursales', authMiddleware, async (req, res) => {
   if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
-  const { nombre, direccion, telefono } = req.body;
+  const { nombre, direccion, telefono, slug } = req.body;
   if (!nombre?.trim()) return res.status(400).json({ error: 'Nombre requerido' });
+  const baseSlug = slug ? _toSlug(slug) : _toSlug(nombre.trim());
+  if (!baseSlug) return res.status(400).json({ error: 'El nombre no genera una URL válida' });
+  const finalSlug = _uniqueSlug(baseSlug);
   const nueva = {
     id:        uuidv4(),
     nombre:    nombre.trim(),
+    slug:      finalSlug,
     direccion: direccion?.trim() || '',
     telefono:  telefono?.trim()  || '',
     activa:    true,
@@ -1814,11 +1840,19 @@ app.put('/api/sucursales/:id', authMiddleware, async (req, res) => {
   if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
   const idx = (db.sucursales || []).findIndex(s => s.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Sucursal no encontrada' });
-  const { nombre, direccion, telefono, activa } = req.body;
+  const { nombre, direccion, telefono, activa, slug } = req.body;
   if (nombre    !== undefined) db.sucursales[idx].nombre    = nombre.trim();
   if (direccion !== undefined) db.sucursales[idx].direccion = direccion.trim();
   if (telefono  !== undefined) db.sucursales[idx].telefono  = telefono.trim();
   if (activa    !== undefined) db.sucursales[idx].activa    = Boolean(activa);
+  if (slug      !== undefined) {
+    const newSlug = _toSlug(slug);
+    if (newSlug) {
+      // Check uniqueness ignoring current record
+      const others = new Set((db.sucursales || []).filter((_, i) => i !== idx).map(s => s.slug).filter(Boolean));
+      db.sucursales[idx].slug = others.has(newSlug) ? newSlug + '2' : newSlug;
+    }
+  }
   await saveSucursalesToPG();
   io.emit('sucursal:update', db.sucursales[idx]);
   res.json(db.sucursales[idx]);

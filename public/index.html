@@ -1228,6 +1228,48 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         </div>
       </div>
 
+      <!-- MODAL ARQUEO DE CAJA (sucursal) -->
+      <div id="modalArqueoCaja" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center">
+        <div style="background:#fff;border-radius:14px;padding:28px;width:min(420px,96vw);box-shadow:0 8px 40px rgba(0,0,0,0.2)">
+          <h3 style="margin:0 0 6px;font-size:18px">📊 Arqueo de Caja</h3>
+          <p style="margin:0 0 20px;font-size:13px;color:var(--gray)">Conteo de efectivo sin cerrar la caja</p>
+          <div style="background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:13px;color:var(--gray)">Monto inicial</span>
+              <span id="arqueoSaldoInicial" style="font-weight:700">$0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:13px;color:var(--gray)">Ventas en efectivo</span>
+              <span id="arqueoVentasEfectivo" style="font-weight:700;color:#059669">$0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:13px;color:var(--gray)">Retiros</span>
+              <span id="arqueoRetiros" style="font-weight:700;color:#dc2626">$0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px">
+              <span style="font-size:13px;font-weight:700">Efectivo esperado</span>
+              <span id="arqueoEsperado" style="font-weight:800;font-size:16px">$0</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label style="font-weight:600">Efectivo contado (físico)</label>
+            <input type="number" class="form-control" id="arqueoContado" min="0" placeholder="0" style="font-size:20px;font-weight:700" oninput="_recalcArqueo()">
+          </div>
+          <div style="background:#f0f9ff;border-radius:8px;padding:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:13px;font-weight:600">Diferencia</span>
+            <span id="arqueoDiferencia" style="font-size:18px;font-weight:800;color:var(--gray)">—</span>
+          </div>
+          <div class="form-group">
+            <label>Observaciones (opcional)</label>
+            <input class="form-control" id="arqueoNota" placeholder="Ej: Todo en orden">
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+            <button class="btn btn-secondary" onclick="document.getElementById('modalArqueoCaja').style.display='none'">Cancelar</button>
+            <button class="btn btn-warning" onclick="confirmarArqueo()">📊 Registrar Arqueo</button>
+          </div>
+        </div>
+      </div>
+
       <!-- MODAL INSUMO (add/edit) -->
       <div id="modalInsumo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center">
         <div style="background:#fff;border-radius:14px;padding:28px;width:min(420px,96vw);box-shadow:0 8px 40px rgba(0,0,0,0.2)">
@@ -5100,11 +5142,16 @@ function renderCaja() {
   document.getElementById('cajaTotal').textContent   = '$'+(cajaInicial+r.totalVentas-r.retiros).toLocaleString();
   const hoy = new Date().toISOString().slice(0,10);
   const horaAp = cajaMoves.filter(m=>m.tipo==='ingreso'&&m.desc?.includes('Apertura')).slice(-1)[0]?.hora || '--:--';
+  const _cajaBtn = cajaAbierta
+    ? (_currentSucursalId
+        ? `<button class="btn btn-warning mt-2" onclick="abrirArqueoModal()">📊 Arqueo de Caja</button>`
+        : `<button class="btn btn-danger mt-2" onclick="cerrarCaja()">🔴 Cerrar Caja</button>`)
+    : '';
   document.getElementById('cajaEstado').innerHTML = cajaAbierta ? `
     <div class="badge badge-success" style="font-size:14px;padding:6px 16px;margin-bottom:12px">🟢 CAJA ABIERTA</div>
     <div style="margin:10px 0;font-size:13px"><strong>Turno iniciado:</strong> ${horaAp} hs</div>
     <div style="font-size:13px"><strong>Monto inicial:</strong> $${cajaInicial.toLocaleString()}</div>
-    <button class="btn btn-danger mt-2" onclick="cerrarCaja()">🔴 Cerrar Caja</button>` :
+    ${_cajaBtn}` :
     `<div class="badge badge-danger" style="font-size:14px;padding:6px 16px;margin-bottom:12px">🔴 CAJA CERRADA</div>
     <div class="form-group mt-2"><label>Monto inicial ($)</label><input class="form-control" id="cajaInicialInput" type="number" placeholder="5000" value="5000"/></div>
     <button class="btn btn-success mt-1" onclick="abrirCaja()">🟢 Abrir Caja</button>`;
@@ -5126,10 +5173,12 @@ function renderCajaMov() {
   tbody.innerHTML = movsFiltrados.map(m=>`
     <tr>
       <td>${m.hora}</td>
-      <td><span class="badge ${m.tipo==='ingreso'?'badge-success':'badge-danger'}">${m.tipo.toUpperCase()}</span></td>
-      <td>${m.desc}</td>
-      <td style="font-weight:600;color:${m.tipo==='ingreso'?'var(--success)':'var(--danger)'}">
-        ${m.tipo==='ingreso'?'+':'-'}$${(m.monto||0).toLocaleString()}</td>
+      <td>${m.tipo==='arqueo'
+        ? '<span class="badge" style="background:#fef3c7;color:#92400e">ARQUEO</span>'
+        : `<span class="badge ${m.tipo==='ingreso'?'badge-success':'badge-danger'}">${m.tipo.toUpperCase()}</span>`}</td>
+      <td>${m.desc}${m.tipo==='arqueo' && m.diferencia != null ? ` <small style="color:${m.diferencia===0?'#059669':m.diferencia>0?'#2563eb':'#dc2626'}">(${m.diferencia>=0?'+':''}$${m.diferencia.toLocaleString('es-AR')})</small>` : ''}</td>
+      <td style="font-weight:600;color:${m.tipo==='arqueo'?'#92400e':m.tipo==='ingreso'?'var(--success)':'var(--danger)'}">
+        ${m.tipo==='arqueo'?'$'+(m.monto||0).toLocaleString():m.tipo==='ingreso'?'+$'+( m.monto||0).toLocaleString():'-$'+(m.monto||0).toLocaleString()}</td>
     </tr>`).join('');
 }
 
@@ -5138,6 +5187,55 @@ function abrirCaja() {
   cajaInicial=monto; cajaAbierta=true;
   cajaMoves = [{..._cajaNow(),tipo:'ingreso',desc:'Apertura de caja',monto}];
   saveState(); renderCaja(); showToast('Caja abierta','success');
+}
+
+function abrirArqueoModal() {
+  const r = _cajaResumen();
+  const esperado = cajaInicial + r.ventasEfectivo - r.retiros;
+  document.getElementById('arqueoSaldoInicial').textContent = '$' + cajaInicial.toLocaleString('es-AR');
+  document.getElementById('arqueoVentasEfectivo').textContent = '$' + r.ventasEfectivo.toLocaleString('es-AR');
+  document.getElementById('arqueoRetiros').textContent = '$' + r.retiros.toLocaleString('es-AR');
+  document.getElementById('arqueoEsperado').textContent = '$' + esperado.toLocaleString('es-AR');
+  document.getElementById('arqueoContado').value = '';
+  document.getElementById('arqueoDiferencia').textContent = '—';
+  document.getElementById('arqueoDiferencia').style.color = 'var(--gray)';
+  document.getElementById('arqueoNota').value = '';
+  document.getElementById('modalArqueoCaja').style.display = 'flex';
+}
+
+function _recalcArqueo() {
+  const esperado = parseFloat(document.getElementById('arqueoEsperado').textContent.replace(/[^0-9.-]/g,'')) || 0;
+  const contado = parseFloat(document.getElementById('arqueoContado').value);
+  if (isNaN(contado)) { document.getElementById('arqueoDiferencia').textContent = '—'; return; }
+  const dif = contado - esperado;
+  const span = document.getElementById('arqueoDiferencia');
+  span.textContent = (dif >= 0 ? '+' : '') + '$' + dif.toLocaleString('es-AR');
+  span.style.color = dif === 0 ? '#059669' : dif > 0 ? '#2563eb' : '#dc2626';
+}
+
+function confirmarArqueo() {
+  const contadoRaw = document.getElementById('arqueoContado').value;
+  if (contadoRaw === '') { showToast('Ingresá el efectivo contado', 'error'); return; }
+  const contado = parseFloat(contadoRaw);
+  const r = _cajaResumen();
+  const esperado = cajaInicial + r.ventasEfectivo - r.retiros;
+  const dif = contado - esperado;
+  const nota = document.getElementById('arqueoNota').value.trim();
+  cajaMoves.push({
+    ..._cajaNow(),
+    tipo: 'arqueo',
+    desc: 'Arqueo de caja' + (nota ? ' — ' + nota : ''),
+    monto: contado,
+    diferencia: dif,
+    esperado
+  });
+  saveState();
+  renderCaja();
+  document.getElementById('modalArqueoCaja').style.display = 'none';
+  const msg = dif === 0 ? 'Arqueo registrado — Sin diferencia ✅'
+    : dif > 0 ? `Arqueo registrado — Sobrante $${dif.toLocaleString('es-AR')}`
+    : `Arqueo registrado — Faltante $${Math.abs(dif).toLocaleString('es-AR')}`;
+  showToast(msg, dif < 0 ? 'error' : 'success');
 }
 
 let _cierreDeclared = null;

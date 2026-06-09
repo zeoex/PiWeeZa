@@ -2196,12 +2196,17 @@ function _decodeJWT(t) {
 }
 let _currentSucursalId = null;
 let _currentSucursalNombre = null;
-if (token) {
+// URL path takes priority: /sucursal/:id forces sucursal mode
+const _pathSucMatch = window.location.pathname.match(/^\/sucursal\/([^/]+)/);
+const _pathSucId = _pathSucMatch ? _pathSucMatch[1] : null;
+if (_pathSucId) {
+  _currentSucursalId = _pathSucId;
+} else if (token) {
   const _payload = _decodeJWT(token);
   _currentSucursalId = _payload.sucursal_id || null;
 }
 // Re-apply sucursal mode on page reload once DOM is ready
-if (token && _currentSucursalId) {
+if (_currentSucursalId) {
   window.addEventListener('DOMContentLoaded', () => { try { _setSucursalMode(_currentSucursalId); } catch(e) {} });
 }
 let socket = null;
@@ -2930,8 +2935,8 @@ function initApp() {
     const navSuc = document.getElementById('navSucursales');
     if (navSuc) navSuc.style.display = 'none';
   }
-  // Multi-sucursal: detectar modo sucursal desde el JWT
-  const _suc = _decodeJWT(token).sucursal_id || null;
+  // Modo sucursal: URL path tiene prioridad sobre JWT
+  const _suc = _pathSucId || _decodeJWT(token).sucursal_id || null;
   _currentSucursalId = _suc;
   // Ajustar nav para admin central (sin sucursal)
   if (!_suc) {

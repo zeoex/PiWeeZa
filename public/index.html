@@ -3965,6 +3965,7 @@ async function imprimirComanda(id) {
       mesa:{numero:m.numero,mozo:m.mozo},
       mesaNumero:m.numero,
       label:`Comanda — Mesa #${m.numero}`,
+      sucursal_id: _currentSucursalId || null,
       printedByClient: printedLocal   // admin no re-imprime si el mozo ya lo hizo
     })});
     showToast(printedLocal ? '🖨️ Comanda impresa y enviada a admin' : '🖨️ Comanda enviada a cocina','success');
@@ -4001,7 +4002,7 @@ async function imprimirCuenta(id) {
     <p class="center" style="margin-top:4px">Gracias por su visita</p>`;
   const html = buildPrintDoc(`Cuenta – Mesa ${m.numero}`, cuerpo);
   try {
-    await apiFetch('/print', {method:'POST', body:JSON.stringify({type:'cuenta',html,items,mesa:{numero:m.numero,mozo:m.mozo},mesaNumero:m.numero,label:`Cuenta — Mesa #${m.numero}`})});
+    await apiFetch('/print', {method:'POST', body:JSON.stringify({type:'cuenta',html,items,mesa:{numero:m.numero,mozo:m.mozo},mesaNumero:m.numero,label:`Cuenta — Mesa #${m.numero}`,sucursal_id:_currentSucursalId||null})});
     showToast('🖨️ Cuenta enviada a imprimir','success');
   } catch(e) { autoPrint(html); }
 }
@@ -4245,7 +4246,7 @@ async function imprimirDelivery(id) {
     await fetch('/api/print', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ type:'delivery', delivery:o, html:htmlFallback, label:`Delivery ${o.numero}` })
+      body: JSON.stringify({ type:'delivery', delivery:o, html:htmlFallback, label:`Delivery ${o.numero}`, sucursal_id:_currentSucursalId||null })
     });
     showToast('🖨️ Enviado a impresora','success');
   } catch(e) {

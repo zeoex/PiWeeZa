@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comandera</title>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/qz-tray.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f0f0f;color:#f1f5f9;font-family:'Courier New',monospace;min-height:100vh}
+
+/* ── Header ── */
+.hdr{background:#1a1a2e;padding:14px 20px;border-bottom:3px solid #e63946;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:100}
+.hdr-left h1{font-size:18px;font-weight:800;color:#fff;letter-spacing:.5px;margin-bottom:2px}
+.hdr-left p{font-size:11px;color:#6b7280;font-family:monospace}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* ── Status badge ── */
+.conn{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border-radius:20px;background:#1f2937;color:#9ca3af}
+.conn.on{background:#052e16;color:#86efac}
+.conn.off{background:#450a0a;color:#fca5a5}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* ── Buttons ── */
+.btn{padding:7px 14px;border-radius:6px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px;transition:all .15s}
+.btn-mute{background:#1f2937;color:#9ca3af}
+.btn-mute.muted{background:#1f2937;color:#4b5563}
+.btn-test{background:#1e3a8a;color:#93c5fd}
+.btn-qz{background:#064e3b;color:#6ee7b7}
+.btn-qz.active{background:#14532d;color:#86efac}
+.btn-reprint{background:#1f2937;color:#9ca3af;padding:5px 12px;border:1px solid #374151;border-radius:5px;cursor:pointer;font-size:11px;font-family:inherit}
+.btn-reprint:hover{background:#374151;color:#e5e7eb}
+
+/* ── Stats bar ── */
+.stats{padding:8px 20px;background:#161616;border-bottom:1px solid #222;font-size:12px;color:#6b7280;display:flex;gap:16px;align-items:center}
+.stats strong{color:#e5e7eb}
+
+/* ── Feed ── */
+.feed{padding:16px;max-width:560px;margin:0 auto}
+.empty{text-align:center;color:#374151;padding:80px 24px;font-size:16px;line-height:1.8}
+
+/* ── Card ── */
+.card{background:#1a1a1a;border:1px solid #2d2d2d;border-radius:10px;margin-bottom:14px;overflow:hidden;transition:border-color .3s}
+.card.new{border-color:#e63946;box-shadow:0 0 16px rgba(230,57,70,.35)}
+.card.new .card-hdr{background:#2a0a0e}
+
+@keyframes pulse{0%,100%{box-shadow:0 0 16px rgba(230,57,70,.35)}50%{box-shadow:0 0 30px rgba(230,57,70,.6)}}
+.card.flash{animation:pulse .5s ease 3}
+
+.card-hdr{background:#1f1f1f;padding:10px 14px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #2d2d2d}
+.card-title{font-size:20px;font-weight:900;color:#fff;letter-spacing:.5px}
+.card-title.del{color:#60a5fa}
+.card-sub{font-size:12px;color:#9ca3af;margin-top:2px}
+.card-time{font-size:11px;color:#6b7280;text-align:right;white-space:nowrap;margin-left:8px;flex-shrink:0}
+
+.card-body{padding:12px 14px}
+.item{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;line-height:1.4}
+.item:last-child{margin-bottom:0}
+.qty{background:#e63946;color:#fff;font-weight:900;border-radius:4px;padding:2px 7px;font-size:13px;min-width:32px;text-align:center;flex-shrink:0;letter-spacing:.5px}
+.qty.d{background:#1d4ed8}
+.item-name{font-size:15px;color:#e5e7eb;flex:1}
+.item-size{color:#9ca3af;font-size:12px}
+.item-nota{font-size:12px;color:#fbbf24;margin-top:3px;font-style:italic}
+.delivery-info{font-size:13px;color:#9ca3af;margin-bottom:10px;line-height:1.6;padding:8px;background:#111;border-radius:6px;border:1px solid #1e3a5f}
+.delivery-nota{background:#1a1200;border:1px solid #78350f;border-radius:4px;padding:6px 10px;color:#fbbf24;font-size:12px;margin-top:8px}
+
+.card-ftr{padding:8px 14px;border-top:1px solid #222;display:flex;justify-content:flex-end;gap:6px}
+
+/* ── Print ── */
+@media print{
+  body{background:#fff;color:#000}
+  .no-print{display:none!important}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr no-print">
+  <div class="hdr-left">
+    <h1>🖨️ <span id="sucNombre">Cargando…</span></h1>
+    <p id="myUrl"></p>
+  </div>
+  <div class="hdr-right">
+    <span class="conn" id="connBadge"><span class="dot"></span> Conectando…</span>
+    <button class="btn btn-mute" id="btnMute" onclick="toggleMute()">🔊</button>
+    <button class="btn btn-test" onclick="testPrint()">🖨️ Prueba</button>
+    <button class="btn btn-qz" id="btnQz" onclick="connectQz()">QZ Tray</button>
+  </div>
+</div>
+
+<div class="stats no-print">
+  <span>Comandas hoy: <strong id="todayCnt">0</strong></span>
+  <span>·</span>
+  <span id="qzStatus" style="color:#374151">QZ: —</span>
+  <span style="margin-left:auto;font-size:11px" id="lastTime"></span>
+</div>
+
+<div class="feed" id="feed">
+  <div class="empty" id="emptyState">
+    ⏳ Esperando comandas…<br>
+    <span style="font-size:13px">Las comandas de esta sucursal aparecerán aquí automáticamente</span>
+  </div>
+</div>
+
+<script>
+// ─── Config ──────────────────────────────────────────────────
+let mySucursalId  = null;
+let comandas      = [];       // local log (newest first)
+let muted         = localStorage.getItem('cmd_muted') === 'true';
+let todayCnt      = 0;
+let socket        = null;
+
+const pathMatch = window.location.pathname.match(/^\/comandera\/([^/]+)/);
+const pathId    = pathMatch ? pathMatch[1] : null;
+document.getElementById('myUrl').textContent = window.location.pathname;
+
+// ─── Boot ────────────────────────────────────────────────────
+async function init() {
+  updateMuteBtn();
+  if (!pathId) { document.getElementById('sucNombre').textContent = 'URL inválida — usá /comandera/<slug>'; return; }
+
+  try {
+    const r   = await fetch('/api/sucursales/publicas');
+    const suc = await r.json();
+    const found = suc.find(s => s.slug === pathId || s.id === pathId);
+    if (!found) { document.getElementById('sucNombre').textContent = 'Sucursal no encontrada'; return; }
+    mySucursalId = found.id;
+    document.getElementById('sucNombre').textContent = found.nombre;
+    document.title = '🖨️ ' + found.nombre;
+  } catch(e) {
+    mySucursalId = pathId;
+    document.getElementById('sucNombre').textContent = pathId;
+  }
+
+  // Load recent jobs from server (fill history on page open)
+  try {
+    const r2   = await fetch('/api/print/comandera/' + mySucursalId);
+    const jobs = await r2.json();
+    if (Array.isArray(jobs) && jobs.length) {
+      // Newest first, don't auto-print historical jobs
+      jobs.reverse().forEach(j => addToLog(j, false));
+    }
+  } catch(e) {}
+
+  connectSocket();
+}
+
+// ─── Socket.io ───────────────────────────────────────────────
+function connectSocket() {
+  socket = io({ transports: ['polling', 'websocket'] });
+
+  socket.on('connect',    () => setConn(true));
+  socket.on('disconnect', () => setConn(false));
+
+  socket.on('print:job', job => {
+    if (!job || !job.sucursal_id) return;            // ignora jobs sin sucursal (son del admin)
+    if (job.sucursal_id !== mySucursalId) return;    // no es para esta sucursal
+    if (comandas.find(c => c.id === job.id)) return; // ya lo tenemos
+    addToLog(job, true);
+  });
+}
+
+function setConn(on) {
+  const b = document.getElementById('connBadge');
+  b.className = 'conn ' + (on ? 'on' : 'off');
+  b.innerHTML = `<span class="dot"></span> ${on ? 'Conectado' : 'Desconectado'}`;
+}
+
+// ─── Job handling ─────────────────────────────────────────────
+function addToLog(job, autoprint) {
+  comandas.unshift(job);
+  if (comandas.length > 60) comandas.pop();
+
+  if (autoprint) {
+    todayCnt++;
+    document.getElementById('todayCnt').textContent = todayCnt;
+    document.getElementById('lastTime').textContent =
+      'Última: ' + new Date(job.createdAt).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    if (!muted) beep();
+    autoPrint(job);
+  }
+
+  renderFeed();
+
+  if (autoprint) {
+    // Highlight the new card briefly
+    setTimeout(() => {
+      const el = document.getElementById('card-' + job.id);
+      if (el) { el.classList.add('flash'); el.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+    }, 50);
+  }
+}
+
+// ─── Render ───────────────────────────────────────────────────
+function renderFeed() {
+  const feed  = document.getElementById('feed');
+  const empty = document.getElementById('emptyState');
+  if (!comandas.length) { if(empty) empty.style.display='block'; return; }
+  if (empty) empty.style.display = 'none';
+
+  const first = comandas[0]?.id;
+  feed.innerHTML = comandas.map(j => buildCard(j, j.id === first)).join('');
+}
+
+function buildCard(job, isNew) {
+  const time = new Date(job.createdAt || Date.now()).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  let hdrHtml = '', bodyHtml = '';
+
+  if (job.type === 'delivery' && job.delivery) {
+    const d = job.delivery;
+    hdrHtml = `<div class="card-title del">🛵 Delivery #${d.numero||''}</div>`;
+    const cli = d.cliente || {};
+    const infoLines = [cli.nombre,cli.telefono,cli.direccion].filter(Boolean).join(' · ');
+    bodyHtml = `<div class="delivery-info">${infoLines || 'Sin datos de cliente'}</div>`;
+    bodyHtml += (d.items||[]).map(i=>`
+      <div class="item">
+        <span class="qty d">×${i.qty}</span>
+        <div class="item-name">${i.nombre}${i.size?`<span class="item-size"> (${i.size})</span>`:''}
+          ${i.nota?`<div class="item-nota">📝 ${i.nota}</div>`:''}
+        </div>
+      </div>`).join('');
+    if (d.nota) bodyHtml += `<div class="delivery-nota">📝 Nota del pedido: ${d.nota}</div>`;
+  } else if (job.mesa && job.items) {
+    hdrHtml = `<div class="card-title">MESA ${job.mesa.numero}</div>
+               ${job.mesa.mozo?`<div class="card-sub">👤 ${job.mesa.mozo}</div>`:''}`;
+    bodyHtml = job.items.map(i=>`
+      <div class="item">
+        <span class="qty">×${i.qty}</span>
+        <div class="item-name">${i.nombre}${i.size?`<span class="item-size"> (${i.size})</span>`:''}
+          ${i.nota?`<div class="item-nota">📝 ${i.nota}</div>`:''}
+        </div>
+      </div>`).join('');
+  } else {
+    hdrHtml = `<div class="card-title">Comanda</div>`;
+    bodyHtml = `<div style="color:#6b7280;font-size:13px">Ver ticket impreso</div>`;
+  }
+
+  return `<div class="card${isNew?' new':''}" id="card-${job.id}">
+    <div class="card-hdr">
+      <div>${hdrHtml}</div>
+      <div class="card-time">${time}</div>
+    </div>
+    <div class="card-body">${bodyHtml}</div>
+    <div class="card-ftr no-print">
+      <button class="btn-reprint" onclick="reprintJob('${job.id}')">🖨️ Reimprimir</button>
+    </div>
+  </div>`;
+}
+
+function reprintJob(id) {
+  const job = comandas.find(c => c.id === id);
+  if (job) autoPrint(job);
+}
+
+// ─── Auto-print ───────────────────────────────────────────────
+async function autoPrint(job) {
+  // Intentar QZ Tray primero si está activo
+  if (QzTray.isOn() && (job.items||job.delivery)) {
+    const esc = buildEscPos(job);
+    if (esc) {
+      const ok = await QzTray.send(esc);
+      if (ok) return;
+    }
+  }
+  // Fallback: iframe window.print()
+  const html = buildPrintHtml(job);
+  if (!html) return;
+  const f = document.createElement('iframe');
+  f.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:0;opacity:0;pointer-events:none';
+  document.body.appendChild(f);
+  const doc = f.contentDocument;
+  doc.open(); doc.write(html); doc.close();
+  f.onload = () => {
+    try { f.contentWindow.focus(); f.contentWindow.print(); } catch(e) {}
+    setTimeout(() => { try { f.remove(); } catch(e) {} }, 20000);
+  };
+}
+
+// ─── HTML térmico ─────────────────────────────────────────────
+function buildPrintHtml(job) {
+  if (job.html) return job.html;
+
+  const time = new Date(job.createdAt || Date.now()).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  let body = '';
+
+  const CSS = `@page{size:80mm auto;margin:2mm 3mm}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Courier New',monospace;font-size:12pt;width:76mm}
+  .c{text-align:center} .b{font-weight:bold} .big{font-size:16pt;margin:4px 0}
+  hr{border:none;border-top:1px dashed #000;margin:5px 0}
+  .row{display:flex;gap:4px;margin:3px 0;line-height:1.4}
+  .q{font-weight:bold;min-width:26px} .nota{font-style:italic;font-size:10pt;margin-left:26px;margin-top:1px}`;
+
+  if (job.type === 'delivery' && job.delivery) {
+    const d = job.delivery;
+    const cli = d.cliente || {};
+    body += `<div class="c b big">DELIVERY #${d.numero||''}</div><hr>
+    <div>${cli.nombre||''}</div><div>${cli.telefono||''}</div>
+    <div>${cli.direccion||''}</div><hr>
+    ${(d.items||[]).map(i=>`<div class="row"><span class="q">×${i.qty}</span><span>${i.nombre}${i.size?' ('+i.size+')':''}${i.nota?'<div class="nota">Nota: '+i.nota+'</div>':''}</span></div>`).join('')}
+    <hr>${d.nota?`<div class="nota">Nota: ${d.nota}</div><hr>`:''}`;
+  } else if (job.items && job.mesa) {
+    body += `<div class="c b">COCINA</div><hr>
+    <div class="c b big">MESA ${job.mesa.numero}</div>
+    ${job.mesa.mozo?`<div class="c">${job.mesa.mozo}</div>`:''}
+    <div class="c">${time}</div><hr>
+    ${job.items.map(i=>`<div class="row"><span class="q">×${i.qty}</span><span>${i.nombre}${i.size?' ('+i.size+')':''}${i.nota?'<div class="nota">Nota: '+i.nota+'</div>':''}</span></div>`).join('')}
+    <hr>`;
+  } else {
+    return null;
+  }
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${CSS}</style></head><body>${body}</body></html>`;
+}
+
+// ─── ESC/POS para QZ Tray ────────────────────────────────────
+function buildEscPos(job) {
+  const E='\x1B', G='\x1D', NL='\n', cols=42, SEP='-'.repeat(cols);
+  let s = E+'@';
+
+  if (job.type === 'delivery' && job.delivery) {
+    const d = job.delivery;
+    s += E+'a\x01'+E+'E\x01'+G+'!\x10'+'DELIVERY'+NL+G+'!\x00'+E+'E\x00';
+    s += SEP+NL;
+    s += E+'a\x01'+G+'!\x11'+E+'E\x01'+'#'+d.numero+NL+G+'!\x00'+E+'E\x00';
+    const cli = d.cliente||{};
+    if(cli.nombre) s+=E+'a\x01'+cli.nombre+NL;
+    if(cli.telefono) s+=E+'a\x01'+cli.telefono+NL;
+    if(cli.direccion) s+=E+'a\x01'+cli.direccion+NL;
+    s += SEP+NL+E+'a\x00';
+    (d.items||[]).forEach(i=>{
+      const l='x'+i.qty+'  '+i.nombre+(i.size?' ('+i.size+')':'');
+      s+=E+'E\x01'+l+E+'E\x00'+(i.nota?'\n   Nota: '+i.nota:'')+NL;
+    });
+    if(d.nota) s+=E+'a\x01'+E+'E\x01'+'Nota: '+d.nota+E+'E\x00'+NL;
+  } else if (job.items && job.mesa) {
+    s += E+'a\x01'+E+'E\x01'+G+'!\x10'+'COCINA'+NL+G+'!\x00'+E+'E\x00';
+    s += SEP+NL;
+    s += E+'a\x01'+G+'!\x11'+E+'E\x01'+'MESA '+job.mesa.numero+NL+G+'!\x00'+E+'E\x00';
+    if(job.mesa.mozo) s+=E+'a\x01'+job.mesa.mozo+NL;
+    s+=E+'a\x01'+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})+NL;
+    s+=SEP+NL+E+'a\x00';
+    job.items.forEach(i=>{
+      const l='x'+i.qty+'  '+i.nombre+(i.size?' ('+i.size+')':'');
+      s+=E+'E\x01'+l+E+'E\x00'+(i.nota?'\n   Nota: '+i.nota:'')+NL;
+    });
+  } else {
+    return null;
+  }
+
+  s += SEP+NL+NL+NL+G+'V\x42\x00';
+  return [{type:'raw',format:'plain',data:s,options:{language:'ESCPOS'}}];
+}
+
+// ─── QZ Tray wrapper ─────────────────────────────────────────
+const QzTray = {
+  _ok: false,
+  isOn(){ try{return this._ok && typeof qz!=='undefined' && qz.websocket.isActive()}catch(e){return false} },
+  async send(data){
+    if(!this.isOn()) return false;
+    try{
+      const p = localStorage.getItem('cmd_qz_printer')||'';
+      await qz.print(qz.configs.create(p), data);
+      return true;
+    }catch(e){ return false; }
+  }
+};
+
+async function connectQz() {
+  if(typeof qz==='undefined'){ alert('QZ Tray no está instalado en este equipo.'); return; }
+  try {
+    qz.security.setCertificatePromise((resolve,reject)=>{
+      fetch('/api/qz/certificate').then(r=>r.text()).then(resolve).catch(reject);
+    });
+    qz.security.setSignaturePromise(toSign=>(resolve,reject)=>{
+      fetch('/api/qz/sign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({request:toSign})})
+        .then(r=>r.json()).then(d=>resolve(d.signature)).catch(reject);
+    });
+    if(!qz.websocket.isActive()) await qz.websocket.connect({retries:3,delay:1});
+    QzTray._ok = true;
+    document.getElementById('btnQz').className='btn btn-qz active';
+    document.getElementById('btnQz').textContent='🖨️ QZ ON';
+    document.getElementById('qzStatus').textContent='QZ: ✅ Conectado';
+    document.getElementById('qzStatus').style.color='#86efac';
+    // Seleccionar impresora
+    const printers = await qz.printers.find().catch(()=>[]);
+    if(printers.length){
+      const saved = localStorage.getItem('cmd_qz_printer')||'';
+      const opts  = printers.map(p=>`<option value="${p}"${p===saved?' selected':''}>${p}</option>`).join('');
+      const sel   = document.createElement('select');
+      sel.innerHTML='<option value="">-- Elegir impresora --</option>'+opts;
+      sel.style.cssText='position:fixed;top:60px;right:20px;z-index:999;background:#1f2937;color:#e5e7eb;border:1px solid #374151;padding:6px 10px;border-radius:6px;font-size:13px';
+      sel.onchange=()=>{ localStorage.setItem('cmd_qz_printer',sel.value); setTimeout(()=>sel.remove(),500); };
+      document.body.appendChild(sel);
+      setTimeout(()=>{ try{sel.remove()}catch(e){} }, 8000);
+    }
+  } catch(e) {
+    alert('Error al conectar QZ Tray: '+e.message);
+  }
+}
+
+// ─── Sound ───────────────────────────────────────────────────
+function beep(){
+  try{
+    const ctx=new AudioContext();
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type='square'; o.frequency.value=880;
+    g.gain.setValueAtTime(.25,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.35);
+    o.start(); o.stop(ctx.currentTime+.35);
+    setTimeout(()=>ctx.close(),500);
+  }catch(e){}
+}
+
+function toggleMute(){
+  muted=!muted;
+  localStorage.setItem('cmd_muted',muted);
+  updateMuteBtn();
+}
+function updateMuteBtn(){
+  const b=document.getElementById('btnMute');
+  b.textContent = muted ? '🔇' : '🔊';
+  b.className   = 'btn btn-mute' + (muted?' muted':'');
+  b.title       = muted ? 'Silenciado — clic para activar sonido' : 'Sonido activo — clic para silenciar';
+}
+
+// ─── Test ────────────────────────────────────────────────────
+function testPrint(){
+  const job = {
+    id: 'test-'+Date.now(), type:'comanda',
+    sucursal_id: mySucursalId,
+    createdAt: new Date().toISOString(),
+    mesa:{numero:99, mozo:'Prueba'},
+    items:[{qty:2,nombre:'Ítem de prueba',size:'',nota:''},{qty:1,nombre:'Otro ítem',size:'Grande',nota:'Sin sal'}]
+  };
+  addToLog(job, true);
+}
+
+// ─── Boot ────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

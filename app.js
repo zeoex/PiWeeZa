@@ -548,6 +548,7 @@ app.get('/cocina', (_req, res) => { noCache(res); res.sendFile(path.join(__dirna
 app.get('/repartidor', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'repartidor.html')); });
 app.get('/cliente', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'cliente.html')); });
 app.get('/sucursal/:id', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'index.html')); });
+app.get('/comandera/:id', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'comandera.html')); });
 
 app.use(express.static(path.join(__dirname, 'public'), { etag: false, lastModified: false, setHeaders: (res) => { res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); } }));
 
@@ -814,16 +815,18 @@ app.patch('/api/mesas/:id', authMiddleware, (req, res) => {
 //  PRINT ROUTES
 // ─────────────────────────────────────────────
 app.post('/api/print', (req, res) => {
-  const { type, html, mesaNumero, label, items, mesa, printedByClient } = req.body;
-  if (!html && !printedByClient) return res.status(400).json({ error: 'html requerido' });
+  const { type, html, mesaNumero, label, items, mesa, delivery, printedByClient, sucursal_id } = req.body;
+  if (!html && !printedByClient && !items && !delivery) return res.status(400).json({ error: 'html o items requerido' });
   const job = {
     id: uuidv4(),
     type: type || 'comanda',
     html: html || '',
     items: items || null,
     mesa: mesa || null,
+    delivery: delivery || null,
     mesaNumero,
     label: label || null,
+    sucursal_id: sucursal_id || null,
     printedByClient: !!printedByClient,
     status: printedByClient ? 'printed' : 'pending',
     createdAt: new Date().toISOString(),
@@ -834,6 +837,13 @@ app.post('/api/print', (req, res) => {
   io.emit('print:job', job);
   io.emit('print:queue:update', _pendingJobs());
   res.status(201).json({ ok: true, jobId: job.id });
+});
+
+// Recent print jobs for a specific sucursal (no auth — comandera page is open)
+app.get('/api/print/comandera/:sucursalId', (req, res) => {
+  const { sucursalId } = req.params;
+  const jobs = db.printJobs.filter(j => j.sucursal_id === sucursalId).slice(-30);
+  res.json(jobs);
 });
 
 function _pendingJobs() {

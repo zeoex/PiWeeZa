@@ -1096,6 +1096,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
           <button id="stockTabBtnInventario" onclick="showStockTab('inventario')" style="background:none;border:none;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;border-bottom:3px solid var(--primary);margin-bottom:-2px;color:var(--primary)">📊 Inventario</button>
           <button id="stockTabBtnTraslados" onclick="showStockTab('traslados')" style="background:none;border:none;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;color:var(--gray)">🔄 Traslados</button>
           <button id="stockTabBtnHistorial" onclick="showStockTab('historial')" style="background:none;border:none;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;color:var(--gray)">🧾 Historial</button>
+          <button id="stockTabBtnInsumos" onclick="showStockTab('insumos')" style="background:none;border:none;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;color:var(--gray)">🧪 Insumos</button>
         </div>
         <!-- Tab: Inventario -->
         <div id="stockTabInventario">
@@ -1139,6 +1140,56 @@ input.form-control:focus{outline:none;border-color:var(--red)}
             <div id="stockHistorialBody" style="font-size:13px"></div>
           </div>
         </div>
+        <!-- Tab: Insumos -->
+        <div id="stockTabInsumos" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <span style="font-size:13px;color:var(--gray)">Materias primas que forman parte del stock. Los artículos de venta son independientes.</span>
+            <button class="btn btn-primary btn-sm" onclick="abrirModalInsumo()">+ Nuevo Insumo</button>
+          </div>
+          <div class="card" style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead>
+                <tr style="background:#f8fafc">
+                  <th style="text-align:left;padding:10px 12px;font-size:12px;color:var(--gray)">Nombre</th>
+                  <th style="padding:10px 12px;font-size:12px;color:var(--gray);text-align:center">Unidad</th>
+                  <th style="padding:10px 12px;font-size:12px;color:var(--gray);text-align:center">Stock Mínimo</th>
+                  <th style="padding:10px 12px;font-size:12px;color:var(--gray);text-align:center">Estado</th>
+                  <th style="padding:10px 12px;font-size:12px;color:var(--gray)"></th>
+                </tr>
+              </thead>
+              <tbody id="insumosBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL INSUMO (add/edit) -->
+      <div id="modalInsumo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center">
+        <div style="background:#fff;border-radius:14px;padding:28px;width:min(420px,96vw);box-shadow:0 8px 40px rgba(0,0,0,0.2)">
+          <h3 id="modalInsumoTitle" style="margin:0 0 20px;font-size:18px">🧪 Nuevo Insumo</h3>
+          <input type="hidden" id="insumoEditId">
+          <div class="form-group"><label style="font-weight:600">Nombre *</label>
+            <input class="form-control" id="insumoNombre" placeholder="Ej: Harina de trigo"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group"><label style="font-weight:600">Unidad *</label>
+              <select class="form-control" id="insumoUnidad">
+                <option value="kg">kg</option>
+                <option value="gr">gr</option>
+                <option value="litros">litros</option>
+                <option value="ml">ml</option>
+                <option value="unidades">unidades</option>
+                <option value="cajas">cajas</option>
+                <option value="bolsas">bolsas</option>
+                <option value="latas">latas</option>
+              </select></div>
+            <div class="form-group"><label style="font-weight:600">Stock Mínimo</label>
+              <input type="number" class="form-control" id="insumoStockMin" value="0" min="0"></div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+            <button class="btn btn-secondary" onclick="document.getElementById('modalInsumo').style.display='none'">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarInsumo()">Guardar</button>
+          </div>
+        </div>
       </div>
 
       <!-- COMPRAS -->
@@ -1175,7 +1226,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
           <div id="tslLocationError" style="display:none;color:#dc2626;font-size:13px;margin-bottom:12px">⚠️ Origen y destino deben ser distintos</div>
           <div style="margin-bottom:12px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <label style="font-weight:600">Productos *</label>
+              <label style="font-weight:600">Insumos *</label>
               <button class="btn btn-outline btn-sm" onclick="addTslItem()">+ Agregar</button>
             </div>
             <div id="tslItems"></div>
@@ -4414,7 +4465,7 @@ function _renderStockStats() {
 }
 
 function showStockTab(tab) {
-  ['inventario','traslados','historial'].forEach(t => {
+  ['inventario','traslados','historial','insumos'].forEach(t => {
     const panel = document.getElementById('stockTab' + t.charAt(0).toUpperCase() + t.slice(1));
     const btn   = document.getElementById('stockTabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
     if (!panel || !btn) return;
@@ -4428,9 +4479,84 @@ function showStockTab(tab) {
   if (tab === 'inventario') _renderInventario();
   if (tab === 'traslados')  _renderTraslados();
   if (tab === 'historial')  renderHistorial();
+  if (tab === 'insumos')    _renderInsumos();
 }
 
 function filtrarStock() { _renderInventario(); }
+
+// ─── Insumos (materias primas) CRUD ───
+let _insumosData = [];
+
+async function _loadInsumos() {
+  try {
+    const r = await apiFetch('/materias-primas');
+    _insumosData = await r.json();
+  } catch(e) { _insumosData = []; }
+}
+
+function _renderInsumos() {
+  _loadInsumos().then(() => {
+    const tbody = document.getElementById('insumosBody');
+    if (!tbody) return;
+    tbody.innerHTML = _insumosData.map(mp => {
+      const activo = mp.activo !== false;
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:10px 12px"><strong>${mp.nombre}</strong></td>
+        <td style="text-align:center;padding:10px 12px;color:var(--gray)">${mp.unidad}</td>
+        <td style="text-align:center;padding:10px 12px">${mp.stockMinimo}</td>
+        <td style="text-align:center;padding:10px 12px">
+          <span style="background:${activo?'#d1fae5':'#f1f5f9'};color:${activo?'#059669':'#94a3b8'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">
+            ${activo ? 'Activo' : 'Inactivo'}
+          </span>
+        </td>
+        <td style="padding:10px 12px;white-space:nowrap">
+          <button class="btn btn-outline btn-sm" onclick="abrirModalInsumo('${mp.id}')" style="margin-right:4px">✏️</button>
+          <button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:none" onclick="eliminarInsumo('${mp.id}','${mp.nombre.replace(/'/g,'')}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--gray)">No hay insumos cargados</td></tr>';
+  });
+}
+
+function abrirModalInsumo(id) {
+  const mp = id ? _insumosData.find(m => m.id === id) : null;
+  document.getElementById('modalInsumoTitle').textContent = mp ? '✏️ Editar Insumo' : '🧪 Nuevo Insumo';
+  document.getElementById('insumoEditId').value = id || '';
+  document.getElementById('insumoNombre').value = mp?.nombre || '';
+  document.getElementById('insumoUnidad').value = mp?.unidad || 'kg';
+  document.getElementById('insumoStockMin').value = mp?.stockMinimo ?? 0;
+  document.getElementById('modalInsumo').style.display = 'flex';
+  setTimeout(() => document.getElementById('insumoNombre').focus(), 50);
+}
+
+async function guardarInsumo() {
+  const id        = document.getElementById('insumoEditId').value;
+  const nombre    = document.getElementById('insumoNombre').value.trim();
+  const unidad    = document.getElementById('insumoUnidad').value;
+  const stockMinimo = parseInt(document.getElementById('insumoStockMin').value) || 0;
+  if (!nombre) { showToast('El nombre es obligatorio','error'); return; }
+  try {
+    const method = id ? 'PUT' : 'POST';
+    const url    = id ? `/materias-primas/${id}` : '/materias-primas';
+    const r = await apiFetch(url, { method, body: JSON.stringify({ nombre, unidad, stockMinimo }) });
+    if (!r.ok) { const e = await r.json(); showToast(e.error||'Error','error'); return; }
+    document.getElementById('modalInsumo').style.display = 'none';
+    showToast(id ? 'Insumo actualizado ✓' : 'Insumo creado ✓','success');
+    await loadStock();
+    _renderInsumos();
+  } catch(e) { showToast('Error de conexión','error'); }
+}
+
+async function eliminarInsumo(id, nombre) {
+  if (!confirm(`¿Eliminar "${nombre}"? Se eliminará también su stock asociado.`)) return;
+  try {
+    const r = await apiFetch(`/materias-primas/${id}`, { method:'DELETE' });
+    if (!r.ok) { const e = await r.json(); showToast(e.error||'Error al eliminar','error'); return; }
+    showToast('Insumo eliminado','success');
+    await loadStock();
+    _renderInsumos();
+  } catch(e) { showToast('Error de conexión','error'); }
+}
 
 function _renderInventario() {
   const buscar  = (document.getElementById('stockBuscar')?.value || '').toLowerCase();

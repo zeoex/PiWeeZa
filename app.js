@@ -548,7 +548,6 @@ app.get('/cocina', (_req, res) => { noCache(res); res.sendFile(path.join(__dirna
 app.get('/repartidor', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'repartidor.html')); });
 app.get('/cliente', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'cliente.html')); });
 app.get('/sucursal/:id', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'index.html')); });
-app.get('/comandera/:id', (_req, res) => { noCache(res); res.sendFile(path.join(__dirname, 'public', 'comandera.html')); });
 
 app.use(express.static(path.join(__dirname, 'public'), { etag: false, lastModified: false, setHeaders: (res) => { res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); } }));
 
@@ -839,12 +838,6 @@ app.post('/api/print', (req, res) => {
   res.status(201).json({ ok: true, jobId: job.id });
 });
 
-// Recent print jobs for a specific sucursal (no auth — comandera page is open)
-app.get('/api/print/comandera/:sucursalId', (req, res) => {
-  const { sucursalId } = req.params;
-  const jobs = db.printJobs.filter(j => j.sucursal_id === sucursalId).slice(-30);
-  res.json(jobs);
-});
 
 function _pendingJobs() {
   const now = Date.now();

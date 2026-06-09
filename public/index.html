@@ -3003,8 +3003,8 @@ function initApp() {
     if (!['admin','supervisor'].includes(currentUser?.rol)) renderCaja();
     if (target !== 'dashboard') loadDashboard();
   });
-  // QZ Tray auto-connect (only for roles that print)
-  if (['admin','cajero','supervisor'].includes(currentUser?.rol)) {
+  // QZ Tray auto-connect (admin/cajero/supervisor, y también en modo sucursal si estaba conectado)
+  if (['admin','cajero','supervisor'].includes(currentUser?.rol) || _currentSucursalId) {
     setTimeout(() => QzTray.connect().catch(()=>{}), 1500);
   }
   // Clock
@@ -3071,10 +3071,36 @@ function initApp() {
       }
     });
     socket.on('print:job', (job) => {
+      if (!job) return;
       const rol = currentUser?.rol;
+
+      // ── Modo sucursal: imprimir solo los jobs de esta sucursal via QZ Tray ──
+      if (_currentSucursalId) {
+        if (job.sucursal_id !== _currentSucursalId) return;
+        if (job.printedByClient) return;
+        if (QzTray.isOn()) {
+          let escData = null;
+          if (job.type === 'delivery' && job.delivery) {
+            escData = epComandaDelivery(job.delivery);
+          } else if (job.items && job.mesa) {
+            escData = epComanda(job.mesa, job.items);
+          }
+          if (escData) {
+            QzTray.send(escData).then(ok => {
+              if (ok) showToast('🖨️ Comanda impresa', 'success');
+              else    showToast('⚠️ QZ Tray: error al imprimir', 'error');
+            });
+          }
+        } else {
+          showToast('⚠️ Nueva comanda — conectá QZ Tray para imprimir', 'warning');
+        }
+        return;
+      }
+
+      // ── Modo admin: comportamiento original ──
       if (rol !== 'admin' && rol !== 'cajero' && rol !== 'supervisor') return;
       // Add to local queue so the badge updates even if admin has the panel closed
-      if (job && job.id && !printQueue.find(j => j.id === job.id)) {
+      if (job.id && !printQueue.find(j => j.id === job.id)) {
         printQueue.push(job);
         updatePqBadge();
       }

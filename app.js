@@ -1247,6 +1247,7 @@ app.post('/api/caja/abrir', authMiddleware, (req, res) => {
     estado: 'abierta'
   };
   db.caja.push(caja);
+  saveStateToFile({ caja_sessions: db.caja });
   io.emit('caja:update', caja);
   res.status(201).json(caja);
 });

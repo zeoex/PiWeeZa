@@ -3298,7 +3298,13 @@ function initApp() {
       if (document.getElementById('lldDrawer')?.classList.contains('open')) renderLldList();
     });
     socket.on('caja:update', (caja) => {
-      if (!caja || !_currentSucursalId) return;
+      if (!caja) return;
+      if (!_currentSucursalId) {
+        // Admin mode: refresh overview if that section is active
+        const activeSec = document.querySelector('.section.active');
+        if (activeSec && activeSec.id === 'sec-cajas-ventas') loadCajasVentas();
+        return;
+      }
       if (String(caja.sucursal_id) !== String(_currentSucursalId)) return;
       const wasOpen = cajaAbierta;
       cajaAbierta = caja.estado === 'abierta';

@@ -3068,17 +3068,13 @@ function _setSucursalMode(sucursalId) {
       if (el) el.textContent = s.nombre;
     }
   }).catch(() => {});
-  // Sync caja state from db.caja (backend) so admin view and sucursal agree
-  apiFetch('/caja/actual').then(r => {
-    cajaAbierta = r.ok;
-  }).catch(() => {}).finally(() => {
-    if (!cajaAbierta) {
-      navTo('caja', document.querySelector('[data-section="caja"]'));
-      showToast('Abrí la caja para poder vender', 'warning');
-    } else {
-      navTo('venta', document.querySelector('[data-section="venta"]'));
-    }
-  });
+  // En modo sucursal: si la caja está cerrada ir a Caja, si no ir a Venta
+  if (!cajaAbierta) {
+    navTo('caja', document.querySelector('[data-section="caja"]'));
+    showToast('Abrí la caja para poder vender', 'warning');
+  } else {
+    navTo('venta', document.querySelector('[data-section="venta"]'));
+  }
 }
 
 // ======= INIT =======
@@ -3130,6 +3126,7 @@ function initApp() {
       // Modo sucursal: ocultar nav y abrir Venta
       _setSucursalMode(_currentSucursalId);
       renderCaja();
+      _syncCajaSucursal(); // sync local caja state → db.caja (admin can see it)
       return;
     }
     const saved = (() => { try { return localStorage.getItem('pz_last_section'); } catch(e){} return null; })();
@@ -5440,6 +5437,26 @@ function abrirCajaDesdeGuard() {
     apiFetch('/caja/abrir', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({saldoInicial:monto})}).catch(()=>{});
   }
   if (_pendingCajaAction) { const fn = _pendingCajaAction; _pendingCajaAction = null; fn(); }
+}
+
+// Ensures db.caja reflects the sucursal's local caja state (open/closed).
+// Runs after login so the token is available.
+async function _syncCajaSucursal() {
+  if (!_currentSucursalId) return;
+  try {
+    const r = await apiFetch('/caja/actual');
+    if (r.ok) {
+      // db.caja says open — ensure local agrees
+      if (!cajaAbierta) { cajaAbierta = true; saveState(); renderCaja(); }
+    } else if (r.status === 404 && cajaAbierta) {
+      // Local says open but db.caja doesn't know → register it so admin sees it
+      await apiFetch('/caja/abrir', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ saldoInicial: cajaInicial || 0 })
+      }).catch(() => {});
+    }
+  } catch(e) {}
 }
 
 function _cajaResumen() {

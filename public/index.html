@@ -992,6 +992,13 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       <!-- MESAS -->
       <!-- VENTA DIRECTA POS -->
       <div class="section" id="sec-venta">
+      <!-- Sucursal: caja cerrada pantalla de bloqueo -->
+      <div id="pos2CajaWarning" style="display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px 20px;text-align:center">
+        <div style="font-size:56px">🔒</div>
+        <div style="font-size:22px;font-weight:800;color:var(--text)">Caja cerrada</div>
+        <div style="color:var(--gray);max-width:280px">No se puede vender hasta que la caja esté abierta.</div>
+        <button class="btn btn-primary" style="margin-top:8px;padding:12px 28px;font-size:15px;font-weight:700" onclick="navTo('caja',document.querySelector('[data-section=caja]'))">Ir a Caja →</button>
+      </div>
       <!-- Admin layout (envuelto) -->
       <div id="posAdminLayout">
         <div class="section-header" style="margin-bottom:12px">
@@ -3279,6 +3286,8 @@ function initApp() {
         saveState(); renderCaja();
         if (!cajaAbierta) showToast('La caja fue cerrada por el administrador', 'warning');
         else showToast('La caja fue abierta por el administrador', 'success');
+        const activeSec = document.querySelector('.section.active');
+        if (activeSec && activeSec.id === 'sec-venta') renderVenta();
       }
     });
     socket.on('connect', async () => {
@@ -5552,30 +5561,28 @@ function abrirCaja() {
 let _cierreDeclared = null;
 
 function cerrarCaja() {
-  const ocupadas = mesasData.filter(m=>m.estado==='ocupada');
-  if (ocupadas.length > 0) {
-    document.getElementById('mesasAbiertasCount').textContent = ocupadas.length;
-    document.getElementById('mesasAbiertasList').textContent = ocupadas.map(m=>`Mesa #${m.numero}`).join(', ');
-    openModal('modalMesasAbiertas');
-    return;
+  if (!_currentSucursalId) {
+    const ocupadas = mesasData.filter(m=>m.estado==='ocupada');
+    if (ocupadas.length > 0) {
+      document.getElementById('mesasAbiertasCount').textContent = ocupadas.length;
+      document.getElementById('mesasAbiertasList').textContent = ocupadas.map(m=>`Mesa #${m.numero}`).join(', ');
+      openModal('modalMesasAbiertas');
+      return;
+    }
   }
   const r = _cajaResumen();
   // restore footer button in case we're coming back from step 2
   const bc = document.getElementById('btnConfirmarCierre');
-  if (bc) { bc.style.display=''; bc.textContent='✅ Confirmar Cierre'; bc.onclick=()=>prepararCierreFinal(); }
+  if (bc) {
+    bc.style.display=''; bc.textContent='✅ Confirmar Cierre'; bc.onclick=()=>prepararCierreFinal();
+    if (_currentSucursalId) { bc.disabled=true; bc.style.opacity='0.45'; bc.style.cursor='not-allowed'; }
+    else { bc.disabled=false; bc.style.opacity=''; bc.style.cursor=''; }
+  }
   const bi = document.getElementById('btnImprimirCierre');
   if (bi) { bi.disabled=true; bi.style.opacity='0.45'; bi.style.cursor='not-allowed'; }
   document.getElementById('cierreCajaBody').innerHTML = `
     <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
-      <div style="font-size:12px;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Ventas del Sistema</div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span>💵 Efectivo</span><strong style="color:var(--success)">$${r.ventasEfectivo.toLocaleString()}</strong></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span>💳 Posnet</span><strong style="color:var(--info)">$${r.ventasTarjeta.toLocaleString()}</strong></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span>📲 Transferencias</span><strong style="color:var(--warning)">$${r.ventasTransfer.toLocaleString()}</strong></div>
-      <hr style="border-color:var(--border);margin:8px 0">
-      <div style="display:flex;justify-content:space-between;font-weight:800"><span>Total Ventas</span><span>$${r.totalVentas.toLocaleString()}</span></div>
-    </div>
-    <div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
-      <div style="font-size:12px;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Declaración de Cierre</div>
+      <div style="font-size:12px;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Arqueo de Cierre</div>
       <div class="form-group" style="margin-bottom:8px">
         <label style="font-size:12px;font-weight:600">💵 Dinero en caja (efectivo)</label>
         <input class="form-control" id="cierreDinero" type="number" min="0" placeholder="0" oninput="_checkCierreFields()"/>
@@ -5589,11 +5596,11 @@ function cerrarCaja() {
         <input class="form-control" id="cierreTransfer" type="number" min="0" placeholder="0" oninput="_checkCierreFields()"/>
       </div>
     </div>
-    <div style="padding:12px 14px;background:#f8f9fa;border-radius:10px;display:flex;align-items:center;gap:10px">
+    ${!_currentSucursalId ? `<div style="padding:12px 14px;background:#f8f9fa;border-radius:10px;display:flex;align-items:center;gap:10px">
       <input type="checkbox" id="chkControlado" disabled style="width:18px;height:18px;cursor:not-allowed;opacity:0.4"
         onchange="const b=document.getElementById('btnImprimirCierre');b.disabled=!this.checked;b.style.opacity=this.checked?'1':'0.45';b.style.cursor=this.checked?'pointer':'not-allowed'"/>
       <label for="chkControlado" style="font-size:14px;font-weight:600;color:var(--gray)" id="lblControlado">Controlado por encargado</label>
-    </div>`;
+    </div>` : ''}`;
   openModal('modalCierreCaja');
 }
 
@@ -5619,6 +5626,11 @@ function _checkCierreFields() {
   const p = document.getElementById('cierrePostnet');
   const t = document.getElementById('cierreTransfer');
   const ok = d&&p&&t && d.value!=='' && p.value!=='' && t.value!=='';
+  if (_currentSucursalId) {
+    const bc = document.getElementById('btnConfirmarCierre');
+    if (bc) { bc.disabled=!ok; bc.style.opacity=ok?'1':'0.45'; bc.style.cursor=ok?'pointer':'not-allowed'; }
+    return;
+  }
   const chk = document.getElementById('chkControlado');
   const lbl = document.getElementById('lblControlado');
   if (!chk) return;
@@ -6191,6 +6203,12 @@ function _renderCVOverview(data) {
       // Resumen del cierre (solo si caja cerrada y tiene datos)
       const _difColor = v => v == null ? '#6b7280' : v === 0 ? '#059669' : v > 0 ? '#2563eb' : '#dc2626';
       const _difFmt   = v => v == null ? '—' : (v >= 0 ? '+' : '') + '$' + Math.abs(v).toLocaleString('es-AR');
+      const vE = caja.ventasEfectivo != null ? caja.ventasEfectivo : (caja.saldoFinal || 0);
+      const vT = caja.ventasTarjeta  != null ? caja.ventasTarjeta  : null;
+      const vX = caja.ventasTransfer != null ? caja.ventasTransfer : null;
+      const difE = caja.efectivoContado != null ? caja.efectivoContado - vE : null;
+      const difT = vT != null && caja.posnet != null ? caja.posnet - vT : null;
+      const difX = vX != null && caja.transferencia != null ? caja.transferencia - vX : null;
       const cierrePanel = !cajaAbierta && caja.ultimoCierre ? `
         <div style="background:#fdf4f4;border:1px solid #fecaca;border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px">
           <div style="font-weight:700;color:#dc2626;margin-bottom:8px">
@@ -6203,18 +6221,29 @@ function _renderCVOverview(data) {
             </tr>
             <tr style="border-top:1px solid #fecaca">
               <td style="padding:4px 0">💵 Efectivo</td>
-              <td style="text-align:right;font-weight:600">$${(caja.saldoFinal||0).toLocaleString('es-AR')}</td>
+              <td style="text-align:right;font-weight:600">$${vE.toLocaleString('es-AR')}</td>
               <td style="text-align:right;font-weight:600">${caja.efectivoContado != null ? '$'+caja.efectivoContado.toLocaleString('es-AR') : '—'}</td>
-              <td style="text-align:right;font-weight:700;color:${_difColor(caja.diferencia)}">${_difFmt(caja.diferencia)}</td>
+              <td style="text-align:right;font-weight:700;color:${_difColor(difE)}">${_difFmt(difE)}</td>
             </tr>
-            ${caja.posnet != null ? `<tr style="border-top:1px solid #fecaca">
+            ${vT != null ? `<tr style="border-top:1px solid #fecaca">
               <td style="padding:4px 0">💳 Posnet</td>
-              <td style="text-align:right;color:var(--gray)">—</td>
-              <td style="text-align:right;font-weight:600">$${caja.posnet.toLocaleString('es-AR')}</td>
-              <td style="text-align:right">—</td>
+              <td style="text-align:right;font-weight:600">$${vT.toLocaleString('es-AR')}</td>
+              <td style="text-align:right;font-weight:600">${caja.posnet != null ? '$'+caja.posnet.toLocaleString('es-AR') : '—'}</td>
+              <td style="text-align:right;font-weight:700;color:${_difColor(difT)}">${_difFmt(difT)}</td>
+            </tr>` : ''}
+            ${vX != null ? `<tr style="border-top:1px solid #fecaca">
+              <td style="padding:4px 0">📲 Transferencias</td>
+              <td style="text-align:right;font-weight:600">$${vX.toLocaleString('es-AR')}</td>
+              <td style="text-align:right;font-weight:600">${caja.transferencia != null ? '$'+caja.transferencia.toLocaleString('es-AR') : '—'}</td>
+              <td style="text-align:right;font-weight:700;color:${_difColor(difX)}">${_difFmt(difX)}</td>
             </tr>` : ''}
           </table>
           ${caja.nota ? `<div style="margin-top:6px;color:#6b7280;font-style:italic">📝 ${caja.nota}</div>` : ''}
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid #fecaca;display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="chkGerencia_${s.id}" ${caja.controladoPorGerencia?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed"
+              onchange="(async()=>{const r=await apiFetch('/cajas/${caja.id}/controlar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({controlado:this.checked})});if(!r.ok)this.checked=!this.checked;})()"/>
+            <label for="chkGerencia_${s.id}" style="font-size:12px;font-weight:700;cursor:pointer;color:#7c3aed">✅ Controlado por Gerencia</label>
+          </div>
         </div>` : '';
 
       const cajaBtn = cajaAbierta
@@ -7376,6 +7405,14 @@ function renderVenta() {
 
   if (_currentSucursalId) {
     document.getElementById('posAdminLayout').style.display = 'none';
+    const _w2 = document.getElementById('pos2CajaWarning');
+    if (!cajaAbierta) {
+      document.getElementById('sec-venta').classList.remove('pos2-active');
+      document.getElementById('posSucursalLayout').style.display = 'none';
+      if (_w2) _w2.style.display = 'flex';
+      return;
+    }
+    if (_w2) _w2.style.display = 'none';
     document.getElementById('posSucursalLayout').style.display = 'flex';
     document.getElementById('sec-venta').classList.add('pos2-active');
     ['pos2CatOverlay','pos2ProdOverlay'].forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
@@ -7896,6 +7933,10 @@ function _posFinalizarVenta(tipo, datosDelivery) {
       hora: new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})
     });
     _printComandaPOS(pedNum, clienteNombre, tipo, _posCart);
+  }
+
+  if (_currentSucursalId) {
+    apiFetch('/facturas', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({total, metodoPago: _posSelectedMP})}).catch(()=>{});
   }
 
   saveState();

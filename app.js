@@ -1257,15 +1257,20 @@ app.post('/api/caja/cerrar', authMiddleware, (req, res) => {
   const caja = cajaActual(sid);
   if (!caja) return res.status(404).json({ error: 'No hay caja abierta' });
   const saldoFinal = caja.movimientos.reduce((s, m) => m.tipo === 'ingreso' ? s + m.monto : s - m.monto, 0);
-  caja.cierre          = new Date().toISOString();
-  caja.saldoFinal      = saldoFinal;
-  caja.efectivoContado = req.body.efectivoContado != null ? parseFloat(req.body.efectivoContado) : null;
-  caja.posnet          = req.body.posnet != null ? parseFloat(req.body.posnet) : null;
-  caja.transferencia   = req.body.transferencia != null ? parseFloat(req.body.transferencia) : null;
-  caja.diferencia      = caja.efectivoContado != null ? caja.efectivoContado - saldoFinal : null;
-  caja.nota            = req.body.nota || '';
-  caja.cerradoPor      = req.user.id;
-  caja.estado          = 'cerrada';
+  caja.cierre           = new Date().toISOString();
+  caja.saldoFinal       = saldoFinal;
+  caja.efectivoContado  = req.body.efectivoContado != null ? parseFloat(req.body.efectivoContado) : null;
+  caja.posnet           = req.body.posnet != null ? parseFloat(req.body.posnet) : null;
+  caja.transferencia    = req.body.transferencia != null ? parseFloat(req.body.transferencia) : null;
+  caja.ventasEfectivo   = req.body.ventasEfectivo != null ? parseFloat(req.body.ventasEfectivo) : null;
+  caja.ventasTarjeta    = req.body.ventasTarjeta != null ? parseFloat(req.body.ventasTarjeta) : null;
+  caja.ventasTransfer   = req.body.ventasTransfer != null ? parseFloat(req.body.ventasTransfer) : null;
+  caja.diferencia       = caja.efectivoContado != null && caja.ventasEfectivo != null
+    ? caja.efectivoContado - caja.ventasEfectivo
+    : caja.efectivoContado != null ? caja.efectivoContado - saldoFinal : null;
+  caja.nota             = req.body.nota || '';
+  caja.cerradoPor       = req.user.id;
+  caja.estado           = 'cerrada';
   saveStateToFile({ caja_sessions: db.caja });
   io.emit('caja:update', caja);
   res.json(caja);
@@ -2225,14 +2230,20 @@ app.get('/api/cajas/overview', authMiddleware, (req, res) => {
         : ultimaCierre
           ? {
               estado: 'cerrada',
+              id:              ultimaCierre.id,
               ultimoCierre:    ultimaCierre.cierre,
               apertura:        ultimaCierre.apertura,
               saldoInicial:    ultimaCierre.saldoInicial,
               saldoFinal:      ultimaCierre.saldoFinal,
               efectivoContado: ultimaCierre.efectivoContado,
               posnet:          ultimaCierre.posnet,
+              transferencia:   ultimaCierre.transferencia,
+              ventasEfectivo:  ultimaCierre.ventasEfectivo,
+              ventasTarjeta:   ultimaCierre.ventasTarjeta,
+              ventasTransfer:  ultimaCierre.ventasTransfer,
               diferencia:      ultimaCierre.diferencia,
-              nota:            ultimaCierre.nota || ''
+              nota:            ultimaCierre.nota || '',
+              controladoPorGerencia: ultimaCierre.controladoPorGerencia || false
             }
           : { estado: 'cerrada', ultimoCierre: null }
     };
@@ -2282,6 +2293,16 @@ app.post('/api/cajas/sucursal/:sucursalId/cerrar', authMiddleware, (req, res) =>
   saveStateToFile({ caja_sessions: db.caja });
   io.emit('caja:update', caja);
   res.json(caja);
+});
+
+// Admin: marcar caja como controlada por gerencia
+app.post('/api/cajas/:cajaId/controlar', authMiddleware, (req, res) => {
+  if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
+  const caja = db.caja.find(c => c.id === req.params.cajaId);
+  if (!caja) return res.status(404).json({ error: 'Caja no encontrada' });
+  caja.controladoPorGerencia = req.body.controlado !== false;
+  saveStateToFile({ caja_sessions: db.caja });
+  res.json({ ok: true, controladoPorGerencia: caja.controladoPorGerencia });
 });
 
 // ─────────────────────────────────────────────

@@ -5460,8 +5460,23 @@ async function _syncCajaSucursal() {
   try {
     const r = await apiFetch('/caja/actual');
     if (r.ok) {
+      const data = await r.json();
       // db.caja says open — ensure local agrees
-      if (!cajaAbierta) { cajaAbierta = true; saveState(); renderCaja(); }
+      if (!cajaAbierta) { cajaAbierta = true; }
+      // Restore cajaInicial from backend if local is 0
+      if (!cajaInicial && data.saldoInicial) cajaInicial = data.saldoInicial;
+      // Merge backend movimientos into cajaMoves if local is sparse
+      if (Array.isArray(data.movimientos) && data.movimientos.length > cajaMoves.length) {
+        cajaMoves = data.movimientos.map(m => ({
+          fecha: (m.fecha||'').slice(0,10),
+          hora:  (m.fecha||'').slice(11,16),
+          tipo:  m.tipo,
+          desc:  m.concepto || m.desc || '',
+          monto: m.monto || 0,
+          pago:  m.pago || null
+        }));
+      }
+      saveState(); renderCaja();
     } else if (r.status === 404 && cajaAbierta) {
       // Local says open but db.caja doesn't know → register it so admin sees it
       await apiFetch('/caja/abrir', {
@@ -5497,18 +5512,21 @@ function renderCaja() {
   const horaAp = cajaMoves.filter(m=>m.tipo==='ingreso'&&m.desc?.includes('Apertura')).slice(-1)[0]?.hora || '--:--';
 
   if (_currentSucursalId) {
-    // Cierre ciego: solo monto inicial + retiros, sin volumen de ventas
     document.getElementById('cajaResumenCard').innerHTML = `
       <div class="card-header"><h3>Turno</h3></div>
       <div class="card-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
           <div>
             <div class="stat-label" style="margin-bottom:6px">Monto inicial</div>
-            <div style="font-size:26px;font-weight:800;color:var(--success)">$${cajaInicial.toLocaleString()}</div>
+            <div style="font-size:22px;font-weight:800;color:var(--success)">$${cajaInicial.toLocaleString()}</div>
+          </div>
+          <div>
+            <div class="stat-label" style="margin-bottom:6px">Ventas</div>
+            <div style="font-size:22px;font-weight:800;color:var(--primary)">$${r.totalVentas.toLocaleString()}</div>
           </div>
           <div>
             <div class="stat-label" style="margin-bottom:6px">Retiros</div>
-            <div style="font-size:26px;font-weight:800;color:var(--danger)">$${r.retiros.toLocaleString()}</div>
+            <div style="font-size:22px;font-weight:800;color:var(--danger)">$${r.retiros.toLocaleString()}</div>
           </div>
         </div>
       </div>`;
@@ -5546,9 +5564,7 @@ function renderCaja() {
 function renderCajaMov() {
   const fechaInput = document.getElementById('cajaFechaFiltro');
   const filtro = fechaInput?.value || new Date().toISOString().slice(0,10);
-  let movsFiltrados = cajaMoves.filter(m => (m.fecha || _HOY) === filtro);
-  // Cierre ciego: en modo sucursal solo mostrar retiros, no ventas
-  if (_currentSucursalId) movsFiltrados = movsFiltrados.filter(m => m.tipo === 'egreso' && !m.desc?.startsWith('Cierre'));
+  let movsFiltrados = cajaMoves.filter(m => (m.fecha || _HOY) === filtro).filter(m => !m.desc?.startsWith('Cierre'));
   const tbody = document.getElementById('cajaMov');
   if (!tbody) return;
   if (!movsFiltrados.length) {

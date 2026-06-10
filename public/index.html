@@ -1314,6 +1314,27 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       </div>
 
 
+      <!-- MODAL CONTROL CAJA (admin: marcar controlado por gerencia) -->
+      <div id="modalControlCaja" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center">
+        <div style="background:#fff;border-radius:14px;padding:28px;width:min(480px,96vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.25)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <h3 style="margin:0;font-size:17px">📋 Control de Caja</h3>
+            <button onclick="document.getElementById('modalControlCaja').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray)">✕</button>
+          </div>
+          <p id="ctrlCajaNombre" style="margin:0 0 16px;font-size:13px;color:var(--gray)"></p>
+          <input type="hidden" id="ctrlCajaId">
+          <div id="ctrlCajaBody"></div>
+          <div style="margin-top:16px;padding:14px;background:#f5f3ff;border-radius:10px;border:1.5px solid #c4b5fd;display:flex;align-items:center;gap:10px">
+            <input type="checkbox" id="ctrlControlado" style="width:20px;height:20px;cursor:pointer;accent-color:#7c3aed">
+            <label for="ctrlControlado" style="font-size:15px;font-weight:700;cursor:pointer;color:#5b21b6">✅ Controlado por Gerencia</label>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
+            <button class="btn btn-outline" onclick="document.getElementById('modalControlCaja').style.display='none'">Cancelar</button>
+            <button class="btn btn-primary" onclick="confirmarControlCaja()" style="background:#7c3aed;border-color:#7c3aed">Guardar Control</button>
+          </div>
+        </div>
+      </div>
+
       <!-- MODAL INSUMO (add/edit) -->
       <div id="modalInsumo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center">
         <div style="background:#fff;border-radius:14px;padding:28px;width:min(420px,96vw);box-shadow:0 8px 40px rgba(0,0,0,0.2)">
@@ -6239,11 +6260,6 @@ function _renderCVOverview(data) {
             </tr>` : ''}
           </table>
           ${caja.nota ? `<div style="margin-top:6px;color:#6b7280;font-style:italic">📝 ${caja.nota}</div>` : ''}
-          <div style="margin-top:10px;padding-top:10px;border-top:1px solid #fecaca;display:flex;align-items:center;gap:8px">
-            <input type="checkbox" id="chkGerencia_${s.id}" ${caja.controladoPorGerencia?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:#7c3aed"
-              onchange="(async()=>{const r=await apiFetch('/cajas/${caja.id}/controlar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({controlado:this.checked})});if(!r.ok)this.checked=!this.checked;})()"/>
-            <label for="chkGerencia_${s.id}" style="font-size:12px;font-weight:700;cursor:pointer;color:#7c3aed">✅ Controlado por Gerencia</label>
-          </div>
         </div>` : '';
 
       const cajaBtn = cajaAbierta
@@ -6272,13 +6288,93 @@ function _renderCVOverview(data) {
             </div>
           </div>
           ${methods ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${methods}</div>` : '<div style="font-size:12px;color:var(--gray);margin-bottom:12px">Sin ventas hoy</div>'}
-          <div style="border-top:1px solid var(--border);padding-top:12px;display:flex;justify-content:flex-end">
+          <div style="border-top:1px solid var(--border);padding-top:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+            ${!cajaAbierta && caja.ultimoCierre && caja.id ? (()=>{
+              const _cid = caja.id;
+              const _cnm = s.nombre.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+              const _cds = encodeURIComponent(JSON.stringify(caja));
+              return caja.controladoPorGerencia
+                ? `<span style="background:#f5f3ff;color:#5b21b6;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer" onclick="_cvOpenCtrl('${_cid}','${_cnm}','${_cds}')">✅ Controlado</span>`
+                : `<button class="btn btn-sm" style="background:#f5f3ff;color:#7c3aed;border:1.5px solid #c4b5fd;font-size:11px;font-weight:700;padding:5px 12px" onclick="_cvOpenCtrl('${_cid}','${_cnm}','${_cds}')">📋 Controlar</button>`;
+            })() : ''}
             ${cajaBtn}
           </div>
         </div>`;
     });
   }
   grid.innerHTML = html;
+}
+
+function _cvOpenCtrl(cajaId, nombre, encoded) {
+  try { abrirControlCaja(cajaId, nombre, JSON.parse(decodeURIComponent(encoded))); }
+  catch(e) { abrirControlCaja(cajaId, nombre, {}); }
+}
+
+function abrirControlCaja(cajaId, nombre, caja) {
+  if (typeof caja === 'string') try { caja = JSON.parse(caja); } catch(e) { caja = {}; }
+  document.getElementById('ctrlCajaId').value = cajaId;
+  document.getElementById('ctrlCajaNombre').textContent = nombre;
+  document.getElementById('ctrlControlado').checked = !!caja.controladoPorGerencia;
+  const _dC = v => v==null?'#6b7280':v===0?'#059669':v>0?'#2563eb':'#dc2626';
+  const _dF = v => v==null?'—':(v>=0?'+':'')+v.toLocaleString('es-AR');
+  const vE = caja.ventasEfectivo != null ? caja.ventasEfectivo : (caja.saldoFinal||0);
+  const vT = caja.ventasTarjeta  != null ? caja.ventasTarjeta  : null;
+  const vX = caja.ventasTransfer != null ? caja.ventasTransfer : null;
+  const dE = caja.efectivoContado != null ? caja.efectivoContado - vE : null;
+  const dT = vT != null && caja.posnet != null ? caja.posnet - vT : null;
+  const dX = vX != null && caja.transferencia != null ? caja.transferencia - vX : null;
+  const aperturaStr = caja.apertura ? new Date(caja.apertura).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+  const cierreStr   = caja.ultimoCierre ? new Date(caja.ultimoCierre).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+  document.getElementById('ctrlCajaBody').innerHTML = `
+    <div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;display:flex;gap:24px;flex-wrap:wrap">
+      <div><div style="color:var(--gray);font-size:10px;text-transform:uppercase;font-weight:700">Apertura</div><div style="font-weight:700;margin-top:2px">${aperturaStr}</div></div>
+      <div><div style="color:var(--gray);font-size:10px;text-transform:uppercase;font-weight:700">Cierre</div><div style="font-weight:700;color:#dc2626;margin-top:2px">${cierreStr}</div></div>
+      <div><div style="color:var(--gray);font-size:10px;text-transform:uppercase;font-weight:700">Saldo inicial</div><div style="font-weight:700;margin-top:2px">$${(caja.saldoInicial||0).toLocaleString('es-AR')}</div></div>
+    </div>
+    <div style="border-radius:10px;overflow:hidden;border:1px solid var(--border);margin-bottom:12px;font-size:12px">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:#f8f9fa">
+          <th style="padding:8px 10px;text-align:left;color:var(--gray);font-size:10px;text-transform:uppercase">Concepto</th>
+          <th style="padding:8px 10px;text-align:right;color:var(--gray);font-size:10px;text-transform:uppercase">Sistema</th>
+          <th style="padding:8px 10px;text-align:right;color:var(--gray);font-size:10px;text-transform:uppercase">Declarado</th>
+          <th style="padding:8px 10px;text-align:right;color:var(--gray);font-size:10px;text-transform:uppercase">Diferencia</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-top:1px solid var(--border)">
+            <td style="padding:7px 10px">💵 Efectivo</td>
+            <td style="padding:7px 10px;text-align:right;font-weight:600">$${vE.toLocaleString('es-AR')}</td>
+            <td style="padding:7px 10px;text-align:right;font-weight:600">${caja.efectivoContado!=null?'$'+caja.efectivoContado.toLocaleString('es-AR'):'—'}</td>
+            <td style="padding:7px 10px;text-align:right;font-weight:700;color:${_dC(dE)}">${_dF(dE)}</td>
+          </tr>
+          ${vT!=null?`<tr style="border-top:1px solid var(--border)">
+            <td style="padding:7px 10px">💳 Posnet</td>
+            <td style="padding:7px 10px;text-align:right;font-weight:600">$${vT.toLocaleString('es-AR')}</td>
+            <td style="padding:7px 10px;text-align:right;font-weight:600">${caja.posnet!=null?'$'+caja.posnet.toLocaleString('es-AR'):'—'}</td>
+            <td style="padding:7px 10px;text-align:right;font-weight:700;color:${_dC(dT)}">${_dF(dT)}</td>
+          </tr>`:''}
+          ${vX!=null?`<tr style="border-top:1px solid var(--border)">
+            <td style="padding:7px 10px">📲 Transferencias</td>
+            <td style="padding:7px 10px;text-align:right;font-weight:600">$${vX.toLocaleString('es-AR')}</td>
+            <td style="padding:7px 10px;text-align:right;font-weight:600">${caja.transferencia!=null?'$'+caja.transferencia.toLocaleString('es-AR'):'—'}</td>
+            <td style="padding:7px 10px;text-align:right;font-weight:700;color:${_dC(dX)}">${_dF(dX)}</td>
+          </tr>`:''}
+        </tbody>
+      </table>
+    </div>
+    ${caja.nota?`<div style="padding:8px 12px;background:#fefce8;border-radius:8px;font-size:12px;color:#713f12;margin-bottom:4px">📝 ${caja.nota}</div>`:''}`;
+  document.getElementById('modalControlCaja').style.display = 'flex';
+}
+
+async function confirmarControlCaja() {
+  const cajaId = document.getElementById('ctrlCajaId').value;
+  const controlado = document.getElementById('ctrlControlado').checked;
+  try {
+    const r = await apiFetch(`/cajas/${cajaId}/controlar`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({controlado})});
+    if (!r.ok) { showToast('Error al guardar','error'); return; }
+    document.getElementById('modalControlCaja').style.display = 'none';
+    showToast(controlado ? '✅ Caja marcada como controlada' : 'Control removido', 'success');
+    loadCajasVentas();
+  } catch(e) { showToast('Error de conexión','error'); }
 }
 
 function abrirCajaModal(sucursalId, nombre) {
@@ -7937,6 +8033,7 @@ function _posFinalizarVenta(tipo, datosDelivery) {
 
   if (_currentSucursalId) {
     apiFetch('/facturas', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({total, metodoPago: _posSelectedMP})}).catch(()=>{});
+    apiFetch('/caja/movimiento', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tipo:'ingreso',concepto:`Venta ${clienteNombre} — ${mp?.nombre||_posSelectedMP}`,monto:total})}).catch(()=>{});
   }
 
   saveState();

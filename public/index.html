@@ -1057,7 +1057,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
           </div>
           <div class="pos2-ticket-side">
             <div style="padding:10px 12px 6px;flex-shrink:0">
-              <input class="form-control" id="pos2ClienteInput" placeholder="👤 Cliente (opcional)..." autocomplete="off" style="font-size:13px"/>
+              <input class="form-control" id="pos2ClienteInput" placeholder="👤 Cliente (nombre, cel...)" autocomplete="off" style="font-size:13px" oninput="pos2ClienteSearch(this.value)" onfocus="pos2ClienteSearch(this.value)"/>
             </div>
             <div style="padding:0 12px;flex-shrink:0">
               <div class="pos2-mp-label">Método de pago</div>
@@ -1097,6 +1097,8 @@ input.form-control:focus{outline:none;border-color:var(--red)}
             </div>
           </div>
         </div>
+        <!-- Cliente autocomplete dropdown (position:fixed escapes overflow:hidden parents) -->
+        <div id="pos2ClienteSugg" style="display:none;position:fixed;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:1000;max-height:220px;overflow-y:auto"></div>
       </div><!-- /posSucursalLayout -->
 
       </div><!-- /sec-venta -->
@@ -7644,7 +7646,42 @@ function posSelectCliente(id) {
 document.addEventListener('click', e => {
   const sugg = document.getElementById('posClienteSugg');
   if (sugg && !sugg.contains(e.target) && e.target.id !== 'posClienteInput') sugg.style.display = 'none';
+  const sugg2 = document.getElementById('pos2ClienteSugg');
+  if (sugg2 && !sugg2.contains(e.target) && e.target.id !== 'pos2ClienteInput') sugg2.style.display = 'none';
 });
+
+function pos2ClienteSearch(q) {
+  const sugg  = document.getElementById('pos2ClienteSugg');
+  const input = document.getElementById('pos2ClienteInput');
+  if (!sugg || !input) return;
+  const term = q.trim().toLowerCase();
+  if (!term) { sugg.style.display = 'none'; return; }
+  const matches = clientesData.filter(c =>
+    c.nombre.toLowerCase().includes(term) ||
+    (c.telefono||'').replace(/\D/g,'').includes(term.replace(/\D/g,'')) ||
+    (c.email||'').toLowerCase().includes(term)
+  ).slice(0, 7);
+  if (!matches.length) { sugg.style.display = 'none'; return; }
+  const rect = input.getBoundingClientRect();
+  sugg.style.left  = rect.left  + 'px';
+  sugg.style.top   = (rect.bottom + 4) + 'px';
+  sugg.style.width = rect.width + 'px';
+  sugg.innerHTML = matches.map(c =>
+    `<div onclick="pos2SelectCliente(${c.id})" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;font-size:13px" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background=''">
+      <div style="font-weight:700;color:#111">${c.nombre}</div>
+      ${c.telefono?`<div style="font-size:11px;color:#6b7280">${c.telefono}</div>`:''}
+    </div>`
+  ).join('');
+  sugg.style.display = 'block';
+}
+
+function pos2SelectCliente(id) {
+  const c = clientesData.find(x => x.id === id);
+  if (!c) return;
+  _posClienteId = c.id;
+  document.getElementById('pos2ClienteInput').value = c.nombre;
+  document.getElementById('pos2ClienteSugg').style.display = 'none';
+}
 
 function posCheckout() {
   if (!_posCart.length || !_posSelectedMP) return;

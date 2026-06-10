@@ -7341,7 +7341,10 @@ function _renderPosPayment() {
       ${m.icono||''}<br>${m.nombre}${m.recargo>0?`<br><small>(+${m.recargo}%)</small>`:''}
     </button>`;
   }).join('');
-  if (btn) btn.disabled = !_posSelectedMP || !_posCart.length;
+  if (btn) {
+    btn.disabled = !_posSelectedMP || !_posCart.length;
+    btn.textContent = _currentSucursalId ? '📋 CREAR PEDIDO' : '💚 COBRAR';
+  }
 }
 
 function posSelectMP(id) {
@@ -7581,7 +7584,7 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <!-- MODAL TIPO ENTREGA (POS sucursal) -->
-<div class="modal-overlay" id="modalTipoEntrega" style="display:none">
+<div class="modal-overlay" id="modalTipoEntrega">
   <div class="modal" style="max-width:380px">
     <div class="modal-header">
       <h3>¿Cómo va el pedido?</h3>

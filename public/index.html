@@ -2078,6 +2078,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
           <option value="mozo">Mozo</option>
           <option value="cajero">Cajero</option>
           <option value="cocina">Cocina</option>
+          <option value="repartidor">🛵 Repartidor</option>
         </select>
       </div>
       <div class="form-group"><label>Sucursal asignada</label>
@@ -4035,6 +4036,9 @@ async function imprimirCuenta(id) {
 
 // ======= DELIVERY =======
 function renderDelivery() {
+  const baseData = _currentSucursalId
+    ? deliveryData.filter(d => d.sucursal_id === _currentSucursalId)
+    : deliveryData;
   const stages = [
     {key:'nuevo',label:'NUEVO',cls:'pipeline-nuevo'},
     {key:'en_cocina',label:'EN COCINA',cls:'pipeline-cocina'},
@@ -4043,7 +4047,7 @@ function renderDelivery() {
     {key:'entregado',label:'ENTREGADO',cls:'pipeline-entregado'},
   ];
   document.getElementById('deliveryPipeline').innerHTML = stages.map(s=>{
-    const orders = deliveryData.filter(d=>d.estado===s.key);
+    const orders = baseData.filter(d=>d.estado===s.key);
     return `<div class="pipeline-col ${s.cls}">
       <div class="pipeline-header">${s.label} (${orders.length})</div>
       <div class="pipeline-body">${orders.map(o=>renderDeliveryCard(o,s.key)).join('')||'<div style="color:#aaa;font-size:12px;text-align:center;padding:16px">Vacío</div>'}
@@ -4052,56 +4056,88 @@ function renderDelivery() {
 }
 
 function renderDeliveryCard(o,stage) {
-  const nextBtn = {
-    nuevo:`<button class="btn btn-warning btn-sm" onclick="advanceDelivery(${o.id})">▶ A Cocina</button>`,
-    en_cocina:`<button class="btn btn-primary btn-sm" onclick="advanceDelivery(${o.id})">✔ Marcar Listo</button>`,
-    listo:`<button class="btn btn-success btn-sm" onclick="advanceDelivery(${o.id})">🛵 Enviar</button>`,
-    en_camino:`<button class="btn btn-secondary btn-sm" onclick="advanceDelivery(${o.id})">✅ Entregado</button>`,
-    entregado:'',
-  }[stage]||'';
-  const cancelBtn = stage === 'nuevo'
-    ? `<button class="btn btn-danger btn-sm" onclick="cancelarDelivery(${o.id})" title="Cancelar pedido">✕ Cancelar</button>`
+  // Flow depends on tipo: mostrador skips en_camino
+  const flow = (o.tipo==='mostrador')
+    ? ['nuevo','en_cocina','listo','entregado']
+    : ['nuevo','en_cocina','listo','en_camino','entregado'];
+  const idx = flow.indexOf(stage);
+  const nextStage = idx>=0 && idx<flow.length-1 ? flow[idx+1] : null;
+  const nextLabels = {en_cocina:'▶ A Cocina',listo:'✔ Marcar Listo',en_camino:'🛵 En Camino',entregado:'✅ Entregado'};
+  const nextClasses = {en_cocina:'btn-warning',listo:'btn-primary',en_camino:'btn-success',entregado:'btn-secondary'};
+  const nextBtn = nextStage ? `<button class="btn ${nextClasses[nextStage]||'btn-primary'} btn-sm" onclick="advanceDelivery('${o.id}')">${nextLabels[nextStage]||nextStage}</button>` : '';
+  const cancelBtn = stage==='nuevo'
+    ? `<button class="btn btn-danger btn-sm" onclick="cancelarDelivery('${o.id}')" title="Cancelar pedido">✕</button>`
     : '';
   const mp = getMediosPago().find(m => m.id === o.metodo_pago);
   const mpLabel = mp ? `${mp.icono||''} ${mp.nombre}${mp.recargo>0?` (+${mp.recargo}%)`:''}` : o.metodo_pago;
   const waBtn = o.cliente?.telefono
-    ? `<button class="wa-btn" onclick="openWhatsApp('${o.cliente.telefono}')" title="Abrir WhatsApp">📱 WhatsApp</button>`
+    ? `<button class="wa-btn" onclick="openWhatsApp('${o.cliente.telefono}')" title="Abrir WhatsApp">📱</button>`
     : '';
   const origenBadge = o.origen
-    ? `<span class="origen-badge origen-${o.origen}">${{whatsapp:'📱 WhatsApp',instagram:'📸 Instagram',telefono:'📞 Tel.',mostrador:'🏪 Mostrador'}[o.origen]||o.origen}</span>`
+    ? `<span class="origen-badge origen-${o.origen}">${{whatsapp:'📱 WA',instagram:'📸 IG',telefono:'📞 Tel.',mostrador:'🏪 Mostr.'}[o.origen]||o.origen}</span>`
     : '';
+  const tipoBadge = o.tipo
+    ? `<span style="font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;background:${o.tipo==='delivery'?'#dbeafe':'#dcfce7'};color:${o.tipo==='delivery'?'#1d4ed8':'#15803d'}">${o.tipo==='delivery'?'🛵 Delivery':'🏪 Mostrador'}</span>`
+    : '';
+  // Repartidor assignment (sucursal mode, delivery tipo, not entregado)
+  let repRow = '';
+  if (_currentSucursalId && o.tipo==='delivery' && stage!=='entregado') {
+    const reps = usuariosData.filter(u=>u.rol==='repartidor'&&u.activo!==false&&(!u.sucursal_id||String(u.sucursal_id)===String(_currentSucursalId)));
+    if (reps.length) {
+      const repOpts = `<option value="">Sin asignar</option>`+reps.map(r=>`<option value="${r.id}"${String(o.repartidor)===String(r.id)?' selected':''}>${r.nombre}</option>`).join('');
+      repRow = `<div style="margin:6px 0"><select class="form-control" style="font-size:11px;padding:3px 6px;height:auto" onchange="asignarRepartidor('${o.id}',this.value)"><option value="">🛵 Asignar repartidor</option>${repOpts}</select></div>`;
+    }
+  } else if (!_currentSucursalId && o.repartidor) {
+    repRow = `<div style="font-size:11px;color:var(--gray)">🛵 ${o.repartidor}</div>`;
+  }
   return `<div class="delivery-card">
-    <div class="delivery-card-num">${o.numero}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div class="delivery-card-num">${o.numero}</div>
+      ${tipoBadge}
+    </div>
     <div class="delivery-card-client">👤 ${o.cliente.nombre} ${origenBadge}</div>
     <div class="delivery-card-items">${o.items.map(i=>`${i.qty}x ${i.nombre}`).join(', ')}</div>
-    <div style="font-size:11px;color:var(--gray)">📍 ${o.direccion}</div>
+    ${o.tipo!=='mostrador'?`<div style="font-size:11px;color:var(--gray)">📍 ${o.direccion}</div>`:''}
     <div class="delivery-card-total">💰 $${o.total.toLocaleString()} · ${mpLabel}</div>
-    <div class="delivery-card-actions">${nextBtn}<button class="btn btn-outline btn-sm" onclick="imprimirDelivery(${o.id})" title="Imprimir">🖨️</button>${waBtn}${cancelBtn}</div>
+    ${repRow}
+    <div class="delivery-card-actions">${nextBtn}<button class="btn btn-outline btn-sm" onclick="imprimirDelivery('${o.id}')" title="Imprimir">🖨️</button>${waBtn}${cancelBtn}</div>
   </div>`;
 }
 
 function advanceDelivery(id) {
   const o = deliveryData.find(x=>String(x.id)===String(id));
-  const flow = ['nuevo','en_cocina','listo','en_camino','entregado'];
+  if (!o) return;
+  const flow = (o.tipo==='mostrador')
+    ? ['nuevo','en_cocina','listo','entregado']
+    : ['nuevo','en_cocina','listo','en_camino','entregado'];
   const idx = flow.indexOf(o.estado);
   if(idx<flow.length-1) o.estado=flow[idx+1];
   if (o.estado === 'entregado' && o.total > 0) {
     const pago = o.metodo_pago || 'efectivo';
-    cajaMoves.push({..._cajaNow(),tipo:'ingreso',desc:`Delivery ${o.numero} — ${pago}`,monto:o.total,pago});
+    cajaMoves.push({..._cajaNow(),tipo:'ingreso',desc:`${o.tipo==='mostrador'?'Mostrador':'Delivery'} ${o.numero} — ${pago}`,monto:o.total,pago});
   }
   saveState();
-  // Broadcast to repartidor in real time
   if (socket) socket.emit('delivery:broadcast', o);
   renderDelivery();
   loadDashboard();
   showToast(`Pedido ${o.numero} → ${o.estado}`);
 }
 
+function asignarRepartidor(id, repId) {
+  const o = deliveryData.find(x=>String(x.id)===String(id));
+  if (!o) return;
+  o.repartidor = repId || null;
+  const rep = repId ? usuariosData.find(u=>String(u.id)===String(repId)) : null;
+  saveState();
+  renderDelivery();
+  if (rep) showToast(`🛵 ${rep.nombre} asignado al pedido ${o.numero}`, 'success');
+}
+
 function cancelarDelivery(id) {
   const o = deliveryData.find(x=>String(x.id)===String(id));
   if (!o) return;
   if (o.estado !== 'nuevo') { showToast('Solo se pueden cancelar pedidos en estado Nuevo','error'); return; }
-  if (!confirm(`¿Cancelar el pedido ${o.numero} de ${o.cliente.nombre}?`)) return;
+  if (!confirm(`¿Cancelar el pedido ${o.numero} de ${o.cliente?.nombre}?`)) return;
   deliveryData = deliveryData.filter(x=>String(x.id)!==String(id));
   saveState();
   renderDelivery();
@@ -4200,11 +4236,13 @@ function crearDelivery() {
   const newId = deliveryData.length+1;
   deliveryData.unshift({
     id:newId, numero:`D-${String(newId).padStart(3,'0')}`, estado:'nuevo',
+    tipo: 'delivery',
     cliente:{nombre:cliente,telefono:tel}, direccion:dir,
     items, total: totalFinal,
     metodo_pago: mpId,
     origen: _dlvGetOrigen(),
     repartidor: document.getElementById('dlvRepartidor').value||null,
+    sucursal_id: _currentSucursalId || null,
     hora: new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})
   });
   closeModal('modalNuevoDelivery');
@@ -4316,6 +4354,12 @@ function abrirModalNuevoDelivery() {
     `<option value="${m.id}">${m.icono||''} ${m.nombre}${m.recargo>0?` (+${m.recargo}%)`:''}${m.recargo>0?' — aplica recargo':''}</option>`
   ).join('');
   addDlvItem();
+  // Populate repartidores dynamically
+  const repSel = document.getElementById('dlvRepartidor');
+  if (repSel) {
+    const reps = usuariosData.filter(u=>u.rol==='repartidor'&&u.activo!==false&&(!u.sucursal_id||!_currentSucursalId||String(u.sucursal_id)===String(_currentSucursalId)));
+    repSel.innerHTML = `<option value="">Sin asignar</option>`+reps.map(r=>`<option value="${r.id}">${r.nombre}</option>`).join('');
+  }
   openModal('modalNuevoDelivery');
 }
 
@@ -5807,7 +5851,7 @@ function renderReportes() {
 
 // ======= USUARIOS =======
 function renderUsuarios() {
-  const roles = {admin:'Administrador',mozo:'Mozo',cajero:'Cajero',cocina:'Cocina'};
+  const roles = {admin:'Administrador',mozo:'Mozo',cajero:'Cajero',cocina:'Cocina',repartidor:'🛵 Repartidor'};
   document.getElementById('usuariosTbody').innerHTML = usuariosData.map(u=>`
     <tr>
       <td><strong>${u.nombre}</strong></td>
@@ -7340,59 +7384,145 @@ function posCheckout() {
     openModal('modalAbrirCaja');
     return;
   }
+  // Sucursal mode: ask for tipo (mostrador/delivery) before checkout
+  if (_currentSucursalId) {
+    document.getElementById('posDeliveryNombre').value = document.getElementById('posClienteInput')?.value || '';
+    document.getElementById('posDeliveryDir').value = '';
+    document.getElementById('posDeliveryTel').value = '';
+    document.getElementById('tipoDeliveryExtra').style.display = 'none';
+    document.querySelectorAll('.tipo-entrega-btn').forEach(b => { b.style.borderColor='var(--border)'; b.style.background='#f8f9fa'; });
+    openModal('modalTipoEntrega');
+    return;
+  }
+  // Admin mode: direct checkout, no tipo required
+  _posFinalizarVenta('mostrador', null);
+}
+
+function _posTipoSelect(tipo, btn) {
+  document.querySelectorAll('.tipo-entrega-btn').forEach(b => { b.style.borderColor='var(--border)'; b.style.background='#f8f9fa'; });
+  btn.style.borderColor = tipo==='mostrador' ? '#059669' : '#2563eb';
+  btn.style.background  = tipo==='mostrador' ? '#f0fdf4' : '#eff6ff';
+  if (tipo === 'mostrador') {
+    closeModal('modalTipoEntrega');
+    _posFinalizarVenta('mostrador', null);
+  } else {
+    document.getElementById('tipoDeliveryExtra').style.display = 'block';
+  }
+}
+
+function _posConfirmarDelivery() {
+  const nombre = document.getElementById('posDeliveryNombre').value.trim();
+  const dir    = document.getElementById('posDeliveryDir').value.trim();
+  const tel    = document.getElementById('posDeliveryTel').value.trim();
+  if (!nombre || !dir) { showToast('Completá nombre y dirección', 'error'); return; }
+  closeModal('modalTipoEntrega');
+  _posFinalizarVenta('delivery', { nombre, direccion: dir, telefono: tel });
+}
+
+function _posFinalizarVenta(tipo, datosDelivery) {
   const mp = getMediosPago().find(m => m.id === _posSelectedMP);
   const sub = _posCart.reduce((s, i) => s + i.precio * i.qty, 0);
   const recargo = mp?.recargo || 0;
   const total = recargo > 0 ? Math.round(sub * (1 + recargo / 100)) : sub;
   const clienteInput = document.getElementById('posClienteInput');
-  const clienteNombre = clienteInput?.value || 'Mostrador';
-
-  // Build description
+  const clienteNombre = (tipo==='delivery' && datosDelivery?.nombre)
+    ? datosDelivery.nombre
+    : (clienteInput?.value || 'Mostrador');
   const desc = _posCart.map(i => `${i.qty}x ${i.nombre}${i.size?' '+i.size:''}`).join(', ');
 
-  // Register in caja
   cajaMoves.push({
     ..._cajaNow(), tipo: 'ingreso',
     desc: `Venta ${clienteNombre} — ${mp?.nombre||_posSelectedMP}: ${desc}`,
-    monto: total,
-    pago: _posSelectedMP
+    monto: total, pago: _posSelectedMP
   });
 
-  // Register factura
   const fNum = 'V-' + String((facturasData.filter(f=>f.numero.startsWith('V-')).length + 1)).padStart(4,'0');
   facturasData.unshift({
-    id: Date.now(),
-    numero: fNum,
+    id: Date.now(), numero: fNum,
     fecha: new Date().toLocaleString('es-AR'),
     origen: `Venta ${clienteNombre}`,
     items: _posCart.reduce((s, i) => s + i.qty, 0),
-    total,
-    pago: _posSelectedMP,
-    estado: 'pagada',
+    total, pago: _posSelectedMP, estado: 'pagada',
     detalle: _posCart.map(i => ({ nombre: i.nombre, size: i.size, qty: i.qty, precio: i.precio }))
   });
 
-  // Update client stats
   if (_posClienteId) {
     const c = clientesData.find(x => x.id === _posClienteId);
-    if (c) { c.pedidos = (c.pedidos||0)+1; c.total_gastado = (c.total_gastado||0)+total; c.ultimo = new Date().toISOString().slice(0,10); }
+    if (c) { c.pedidos=(c.pedidos||0)+1; c.total_gastado=(c.total_gastado||0)+total; c.ultimo=new Date().toISOString().slice(0,10); }
+  }
+
+  // In sucursal mode: create pedido entry + print comanda x2
+  if (_currentSucursalId) {
+    const pedNum = 'P-' + String((deliveryData.filter(d=>d.numero?.startsWith('P-')).length + 1)).padStart(3,'0');
+    const cliente = tipo==='delivery' ? datosDelivery : { nombre: clienteNombre, telefono:'', direccion:'Mostrador' };
+    deliveryData.unshift({
+      id: Date.now(), numero: pedNum, estado: 'nuevo', tipo,
+      cliente: { nombre: cliente.nombre, telefono: cliente.telefono||'' },
+      direccion: cliente.direccion || 'Mostrador',
+      items: _posCart.map(i=>({ nombre:i.nombre, qty:i.qty, precio:i.precio, size:i.size||null, nota:i.nota||'' })),
+      total, metodo_pago: _posSelectedMP, repartidor: null,
+      sucursal_id: _currentSucursalId,
+      hora: new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})
+    });
+    _printComandaPOS(pedNum, clienteNombre, tipo, _posCart);
   }
 
   saveState();
   loadDashboard();
   showToast(`✅ Venta registrada — $${total.toLocaleString()} · ${mp?.nombre||_posSelectedMP}`, 'success');
 
-  // Print receipt option
-  if (confirm(`Venta de $${total.toLocaleString()} registrada.\n\n¿Imprimir recibo?`)) {
+  if (!_currentSucursalId && confirm(`Venta de $${total.toLocaleString()} registrada.\n\n¿Imprimir recibo?`)) {
     _printPosRecibo(fNum, clienteNombre, mp?.nombre||_posSelectedMP, total, sub, recargo);
   }
 
-  // Clear cart
   _posCart = [];
   _posSelectedMP = null;
   _posClienteId = null;
   if (clienteInput) clienteInput.value = '';
   _renderPosCart();
+}
+
+// Builds ESC/POS comanda for POS orders (2 copies in one job)
+function _epPOS(pedNum, clienteNombre, tipoLabel, items) {
+  const E='\x1B', G='\x1D', NL='\n';
+  const cols = printConfig.paperWidth==='58mm' ? 32 : 42;
+  const SEP = '-'.repeat(cols);
+  function buildCopy() {
+    let s = E+'@';
+    s += E+'a\x01'+E+'E\x01'+G+'!\x30'+tipoLabel+NL+G+'!\x00'+E+'E\x00';
+    s += SEP+NL;
+    s += E+'a\x00'+E+'E\x01'+pedNum+E+'E\x00'+'  '+clienteNombre+NL;
+    s += E+'a\x01'+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})+NL;
+    s += SEP+NL+E+'a\x00';
+    items.forEach(i => {
+      const l = 'x'+i.qty+'  '+i.nombre+(i.size?' ('+i.size+')':'');
+      s += E+'E\x01'+l+E+'E\x00'+(i.nota?'\n   Nota: '+i.nota:'')+NL;
+    });
+    s += SEP+NL+NL+NL+NL+G+'V\x42\x00';
+    return {type:'raw',format:'plain',data:s,options:{language:'ESCPOS'}};
+  }
+  return [buildCopy(), buildCopy()]; // 2 copies in one job
+}
+
+async function _printComandaPOS(pedNum, clienteNombre, tipo, items) {
+  const tipoLabel = tipo==='delivery' ? '\u{1F6F5} DELIVERY' : '\u{1F3EA} MOSTRADOR';
+  const esc = _epPOS(pedNum, clienteNombre, tipoLabel, items);
+  if (QzTray.isOn()) {
+    await QzTray.send(esc);
+    showToast('🖨️ Comanda impresa (2 copias)', 'success');
+  } else {
+    apiFetch('/print', {
+      method:'POST',
+      body: JSON.stringify({
+        type:'comanda',
+        items: items.map(i=>({...i})),
+        mesa: { numero: pedNum, mozo: clienteNombre },
+        label: `${tipo.toUpperCase()} ${pedNum}`,
+        sucursal_id: _currentSucursalId
+      })
+    }).catch(()=>{});
+    showToast('⚠️ QZ Tray no conectado — comanda enviada al hub', 'warning');
+  }
 }
 
 function _printPosRecibo(numero, cliente, metodoPago, total, sub, recargo) {
@@ -7442,11 +7572,41 @@ function _dlvGetOrigen() {
 }
 
 // ======= PWA SERVICE WORKER =======
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
 }
 </script>
+
+<!-- MODAL TIPO ENTREGA (POS sucursal) -->
+<div class="modal-overlay" id="modalTipoEntrega" style="display:none">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <h3>¿Cómo va el pedido?</h3>
+      <button class="modal-close" onclick="closeModal('modalTipoEntrega')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <button class="tipo-entrega-btn" onclick="_posTipoSelect('mostrador',this)"
+          style="padding:28px 12px;font-size:15px;border-radius:14px;border:2px solid var(--border);background:#f8f9fa;cursor:pointer;font-weight:700;line-height:1.8;width:100%">
+          🏪<br>Mostrador
+        </button>
+        <button class="tipo-entrega-btn" onclick="_posTipoSelect('delivery',this)"
+          style="padding:28px 12px;font-size:15px;border-radius:14px;border:2px solid var(--border);background:#f8f9fa;cursor:pointer;font-weight:700;line-height:1.8;width:100%">
+          🛵<br>Delivery
+        </button>
+      </div>
+      <div id="tipoDeliveryExtra" style="display:none;border-top:1px solid var(--border);padding-top:12px">
+        <div class="form-group"><label>Nombre del cliente</label><input class="form-control" id="posDeliveryNombre" placeholder="Nombre"/></div>
+        <div class="form-group"><label>Dirección de entrega</label><input class="form-control" id="posDeliveryDir" placeholder="Calle y número"/></div>
+        <div class="form-group"><label>Teléfono (opcional)</label><input class="form-control" id="posDeliveryTel" type="tel" placeholder=""/></div>
+        <button class="btn btn-primary" style="width:100%" onclick="_posConfirmarDelivery()">🛵 Confirmar Delivery</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

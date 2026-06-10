@@ -3297,6 +3297,17 @@ function initApp() {
       updateLldBadge();
       if (document.getElementById('lldDrawer')?.classList.contains('open')) renderLldList();
     });
+    socket.on('caja:update', (caja) => {
+      if (!caja || !_currentSucursalId) return;
+      if (String(caja.sucursal_id) !== String(_currentSucursalId)) return;
+      const wasOpen = cajaAbierta;
+      cajaAbierta = caja.estado === 'abierta';
+      if (wasOpen !== cajaAbierta) {
+        saveState(); renderCaja();
+        if (!cajaAbierta) showToast('La caja fue cerrada por el administrador', 'warning');
+        else showToast('La caja fue abierta por el administrador', 'success');
+      }
+    });
     socket.on('connect', async () => {
       updatePrinterHubStatus(true);
       loadPrintQueue();
@@ -6228,9 +6239,8 @@ function _renderCVOverview(data) {
       const saldoBadge = cajaAbierta
         ? `<span style="font-size:12px;color:#059669;font-weight:600">Saldo: $${(caja.saldo||0).toLocaleString('es-AR')}</span>`
         : (caja.ultimoCierre ? `<span style="font-size:12px;color:var(--gray)">Último cierre: ${new Date(caja.ultimoCierre).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>` : '');
-      const cajaDataJson = JSON.stringify(caja).replace(/'/g,"\\'");
       const cajaBtn = cajaAbierta
-        ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;font-size:11px;padding:4px 10px" onclick="cerrarCajaModal('${s.id}','${s.nombre.replace(/'/g,"\\'")}',${cajaDataJson},${s.total})">Cerrar caja</button>`
+        ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;font-size:11px;padding:4px 10px" onclick="cerrarCajaModal('${s.id}','${s.nombre.replace(/'/g,"\\'")}',${caja.saldoInicial||0},${caja.saldo||0},${s.total})">Cerrar caja</button>`
         : `<button class="btn btn-sm" style="background:#dcfce7;color:#16a34a;border:1px solid #86efac;font-size:11px;padding:4px 10px" onclick="abrirCajaModal('${s.id}','${s.nombre.replace(/'/g,"\\'")}')">Abrir caja</button>`;
 
       html += `
@@ -6289,14 +6299,12 @@ async function confirmarAbrirCaja() {
   } catch(e) { showToast('Error al abrir caja', 'error'); }
 }
 
-function cerrarCajaModal(sucursalId, nombre, cajaData, ventasTotal) {
+function cerrarCajaModal(sucursalId, nombre, saldoInicial, saldoCaja, ventasTotal) {
   document.getElementById('cerrarCajaSucId').value = sucursalId;
   document.getElementById('cerrarCajaSucNombre').textContent = nombre;
-  const saldoInicial = cajaData.saldoInicial || 0;
-  const saldoSistema = cajaData.saldo || 0;
-  document.getElementById('cerrarSaldoInicial').textContent = '$' + saldoInicial.toLocaleString('es-AR');
-  document.getElementById('cerrarVentasSistema').textContent = '$' + ventasTotal.toLocaleString('es-AR');
-  document.getElementById('cerrarSaldoEsperado').textContent = '$' + (saldoSistema).toLocaleString('es-AR');
+  document.getElementById('cerrarSaldoInicial').textContent = '$' + (saldoInicial||0).toLocaleString('es-AR');
+  document.getElementById('cerrarVentasSistema').textContent = '$' + (ventasTotal||0).toLocaleString('es-AR');
+  document.getElementById('cerrarSaldoEsperado').textContent = '$' + (saldoCaja||0).toLocaleString('es-AR');
   document.getElementById('cerrarEfectivoContado').value = '';
   document.getElementById('cerrarDiferencia').textContent = '—';
   document.getElementById('cerrarNota').value = '';

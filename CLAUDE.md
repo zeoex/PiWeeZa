@@ -177,16 +177,19 @@ saveState();
 - `cajero` — caja y cobros
 
 ### Usuarios semilla (seed) — para login en testing
-Se crean automáticamente en `app.js` si no hay usuarios. Passwords con bcrypt:
+Se crean automáticamente en `app.js` (~línea 274) si no hay usuarios. Passwords con bcrypt.
+**⚠️ El dominio es `@pizzaya.com`, NO `@restito.com`** — usar el email equivocado da `401 Credenciales inválidas` y deja `#app` oculto (todo mide 0×0).
 
 | Email | Password | Rol |
 |---|---|---|
-| `admin@restito.com` | `admin123` | admin |
-| `supervisor@restito.com` | `super123` | supervisor |
-| `cajero01@restito.com` | `cajero123` | cajero |
-| `carlos@restito.com` | `mozo123` | mozo |
-| `cocinero@restito.com` | `cocina123` | cocinero |
-| `repartidor@restito.com` | `delivery123` | repartidor |
+| `admin@pizzaya.com` | `admin123` | admin |
+| `supervisor@pizzaya.com` | `super123` | supervisor |
+| `cajero01@pizzaya.com` | `cajero123` | cajero |
+| `vendedor@pizzaya.com` | `mozo123` | mozo |
+| `vendedor2@pizzaya.com` | `mozo123` | mozo |
+| `vendedor3@pizzaya.com` | `mozo456` | mozo |
+| `cocinero@pizzaya.com` | `cocina123` | cocinero |
+| `repartidor@pizzaya.com` | `delivery123` | repartidor |
 
 Login: `POST /api/auth/login { email, password }` → devuelve JWT (`Authorization: Bearer <token>`). Endpoints con `authMiddleware` requieren el token.
 

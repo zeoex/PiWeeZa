@@ -2028,6 +2028,20 @@ input.form-control:focus{outline:none;border-color:var(--red)}
   </div>
 </div>
 
+<div class="modal-overlay" id="modalEditPedido">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>✏️ Editar Pedido <span id="editPedNum" style="color:var(--blue)"></span></h3>
+      <button class="modal-close" onclick="closeModal('modalEditPedido')">✕</button>
+    </div>
+    <div class="modal-body" id="editPedContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalEditPedido')">Cancelar</button>
+      <button class="btn btn-primary" onclick="_guardarEditPedido()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalCierreCaja">
   <div class="modal">
     <div class="modal-header"><h3>🔴 Cierre de Caja</h3><button class="modal-close" onclick="closeModal('modalCierreCaja')">✕</button></div>
@@ -4168,8 +4182,15 @@ function renderDeliveryCard(o,stage) {
     : '';
   const mp = getMediosPago().find(m => m.id === o.metodo_pago);
   const mpLabel = mp ? `${mp.icono||''} ${mp.nombre}${mp.recargo>0?` (+${mp.recargo}%)`:''}` : o.metodo_pago;
-  const waBtn = o.cliente?.telefono
-    ? `<button class="wa-btn" onclick="openWhatsApp('${o.cliente.telefono}')" title="Abrir WhatsApp">📱</button>`
+  const _waItems = o.items.map(i=>`${i.qty}x ${i.nombre}`).join(', ');
+  const _waMsg = o.tipo==='mostrador'
+    ? `Estimado ${o.cliente?.nombre} su pedido Nº ${o.numero} ${_waItems} está listo para ser retirado`
+    : `Estimado ${o.cliente?.nombre} su pedido Nº ${o.numero} ${_waItems} en breve estaremos enviando a su dirección el pedido`;
+  const waBtn = (o.cliente?.telefono && stage==='listo')
+    ? `<button class="wa-btn" onclick="_waListo('${o.id}')" title="Avisar por WhatsApp">📱 Avisar</button>`
+    : '';
+  const editBtn = stage!=='entregado'
+    ? `<button class="btn btn-outline btn-sm" onclick="editarPedido('${o.id}')" title="Editar pedido">✏️</button>`
     : '';
   const origenBadge = o.origen
     ? `<span class="origen-badge origen-${o.origen}">${{whatsapp:'📱 WA',instagram:'📸 IG',telefono:'📞 Tel.',mostrador:'🏪 Mostr.'}[o.origen]||o.origen}</span>`
@@ -4186,7 +4207,8 @@ function renderDeliveryCard(o,stage) {
       repRow = `<div style="margin:6px 0"><select class="form-control" style="font-size:11px;padding:3px 6px;height:auto" onchange="asignarRepartidor('${o.id}',this.value)"><option value="">🛵 Asignar repartidor</option>${repOpts}</select></div>`;
     }
   } else if (!_currentSucursalId && o.repartidor) {
-    repRow = `<div style="font-size:11px;color:var(--gray)">🛵 ${o.repartidor}</div>`;
+    const _repAdmin = usuariosData.find(u=>String(u.id)===String(o.repartidor));
+    repRow = `<div style="font-size:11px;color:var(--gray)">🛵 ${_repAdmin ? _repAdmin.nombre : o.repartidor}</div>`;
   }
   return `<div class="delivery-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
@@ -4198,7 +4220,7 @@ function renderDeliveryCard(o,stage) {
     ${o.tipo!=='mostrador'?`<div style="font-size:11px;color:var(--gray)">📍 ${o.direccion}</div>`:''}
     <div class="delivery-card-total">💰 $${o.total.toLocaleString()} · ${mpLabel}</div>
     ${repRow}
-    <div class="delivery-card-actions">${nextBtn}<button class="btn btn-outline btn-sm" onclick="imprimirDelivery('${o.id}')" title="Imprimir">🖨️</button>${waBtn}${cancelBtn}</div>
+    <div class="delivery-card-actions">${nextBtn}${editBtn}<button class="btn btn-outline btn-sm" onclick="imprimirDelivery('${o.id}')" title="Imprimir">🖨️</button>${waBtn}${cancelBtn}</div>
   </div>`;
 }
 
@@ -4229,6 +4251,68 @@ function asignarRepartidor(id, repId) {
   saveState();
   renderDelivery();
   if (rep) showToast(`🛵 ${rep.nombre} asignado al pedido ${o.numero}`, 'success');
+}
+
+function _waListo(id) {
+  const o = deliveryData.find(x=>String(x.id)===String(id));
+  if (!o || !o.cliente?.telefono) return;
+  const items = o.items.map(i=>`${i.qty}x ${i.nombre}`).join(', ');
+  const msg = o.tipo==='mostrador'
+    ? `Estimado ${o.cliente.nombre} su pedido Nº ${o.numero} ${items} está listo para ser retirado`
+    : `Estimado ${o.cliente.nombre} su pedido Nº ${o.numero} ${items} en breve estaremos enviando a su dirección el pedido`;
+  openWhatsApp(o.cliente.telefono, msg);
+}
+
+let _editPedidoId = null;
+
+function editarPedido(id) {
+  const o = deliveryData.find(x=>String(x.id)===String(id));
+  if (!o) return;
+  _editPedidoId = id;
+  document.getElementById('editPedNum').textContent = '#' + o.numero;
+
+  const reps = usuariosData.filter(u=>u.rol==='repartidor'&&u.activo!==false);
+  const repSelect = o.tipo==='delivery'
+    ? `<div class="form-group"><label>🛵 Repartidor</label><select class="form-control" id="editPedRep">
+        <option value="">Sin asignar</option>
+        ${reps.map(r=>`<option value="${r.id}"${String(o.repartidor)===String(r.id)?' selected':''}>${r.nombre}</option>`).join('')}
+      </select></div>`
+    : '';
+
+  const mps = getMediosPago();
+  const mpSelect = `<div class="form-group"><label>💳 Método de pago</label><select class="form-control" id="editPedMP">
+    ${mps.map(m=>`<option value="${m.id}"${o.metodo_pago===m.id?' selected':''}>${m.icono||''} ${m.nombre}</option>`).join('')}
+  </select></div>`;
+
+  const notaField = `<div class="form-group"><label>📝 Nota</label>
+    <input class="form-control" id="editPedNota" value="${(o.nota||'').replace(/"/g,'&quot;')}" placeholder="Nota del pedido..."></div>`;
+
+  const itemsHtml = `<div class="form-group"><label>📦 Ítems</label>
+    <div style="background:#f9fafb;border-radius:8px;padding:10px;font-size:13px;line-height:1.8">${o.items.map(i=>`${i.qty}× ${i.nombre}${i.size?' ('+i.size+')':''}`).join('<br>')}</div></div>`;
+
+  document.getElementById('editPedContent').innerHTML = itemsHtml + repSelect + mpSelect + notaField;
+  openModal('modalEditPedido');
+}
+
+function _guardarEditPedido() {
+  const o = deliveryData.find(x=>String(x.id)===String(_editPedidoId));
+  if (!o) return;
+
+  const repEl = document.getElementById('editPedRep');
+  if (repEl) {
+    o.repartidor = repEl.value || null;
+  }
+
+  const mpEl = document.getElementById('editPedMP');
+  if (mpEl) o.metodo_pago = mpEl.value;
+
+  const notaEl = document.getElementById('editPedNota');
+  if (notaEl) o.nota = notaEl.value.trim();
+
+  saveState();
+  renderDelivery();
+  closeModal('modalEditPedido');
+  showToast(`Pedido ${o.numero} actualizado`, 'success');
 }
 
 function cancelarDelivery(id) {

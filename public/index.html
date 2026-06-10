@@ -1043,39 +1043,45 @@ input.form-control:focus{outline:none;border-color:var(--red)}
 
       <!-- Sucursal POS layout (full-screen) -->
       <div id="posSucursalLayout" style="display:none">
-        <!-- Top bar: just Pedidos button -->
+        <!-- Topbar: Pedidos button -->
         <div class="pos2-topbar">
           <button class="pos2-pedidos-btn" onclick="navTo('pedidos',document.querySelector('[data-section=pedidos]'))">📋 Pedidos <span id="pos2PedCount" style="background:#ef4444;color:#fff;border-radius:999px;padding:1px 7px;font-size:11px;display:none">0</span></button>
         </div>
-        <div class="pos2-body">
-          <!-- Upper: categories (left column) + products (right) -->
-          <div class="pos2-upper">
-            <div class="pos2-cats-col" id="pos2CatCol"></div>
-            <div class="pos2-prods-area">
-              <div id="pos2ProdGrid"></div>
-            </div>
+        <!-- Category row: click opens product popup -->
+        <div class="pos2-cat-row" id="pos2CatRow"></div>
+        <!-- Main: ticket items (left) + payment/create (right) -->
+        <div class="pos2-main">
+          <div class="pos2-ticket-body">
+            <div id="pos2CartList"></div>
+            <div id="pos2CartTotals" style="display:none"></div>
           </div>
-          <!-- Ticket panel: always visible at bottom -->
-          <div class="pos2-ticket">
-            <div class="pos2-ticket-hdr">
-              <span style="font-weight:700;font-size:14px">🧾 Ticket</span>
-              <input class="form-control" id="pos2ClienteInput" placeholder="👤 Cliente (opcional)..." autocomplete="off" style="flex:1;max-width:200px;padding:5px 10px;font-size:13px"/>
-              <button class="btn btn-outline btn-sm" onclick="posClearCart2()">🗑️ Limpiar</button>
+          <div class="pos2-ticket-side">
+            <div style="padding:10px 12px 6px;flex-shrink:0">
+              <input class="form-control" id="pos2ClienteInput" placeholder="👤 Cliente (opcional)..." autocomplete="off" style="font-size:13px"/>
             </div>
-            <div class="pos2-ticket-body">
-              <div class="pos2-ticket-items">
-                <div id="pos2CartList"></div>
-                <div id="pos2CartTotals" style="display:none"></div>
-              </div>
-              <div class="pos2-ticket-actions">
-                <div class="pos2-mp-label">Método de pago</div>
-                <div class="pos2-mp-grid" id="pos2MPGrid"></div>
-                <button class="pos2-crear-btn" id="pos2CrearBtn" onclick="posCheckout()" disabled>📋 CREAR PEDIDO</button>
-              </div>
+            <div style="padding:0 12px;flex-shrink:0">
+              <div class="pos2-mp-label">Método de pago</div>
+              <div class="pos2-mp-grid" id="pos2MPGrid"></div>
+            </div>
+            <div style="padding:8px 12px 6px;margin-top:auto;flex-shrink:0">
+              <button class="pos2-crear-btn" id="pos2CrearBtn" onclick="posCheckout()" disabled>📋 CREAR PEDIDO</button>
+            </div>
+            <div style="padding:0 12px 10px;flex-shrink:0">
+              <button class="btn btn-outline btn-sm" onclick="posClearCart2()" style="width:100%">🗑️ Limpiar</button>
             </div>
           </div>
         </div>
-        <!-- Overlay: presentaciones del producto -->
+        <!-- Overlay 1: products of selected category -->
+        <div class="pos2-overlay" id="pos2CatOverlay">
+          <div class="pos2-overlay-inner pos2-cat-modal">
+            <div class="pos2-overlay-hdr">
+              <button class="pos2-back-btn" onclick="_pos2CloseCat()">← Volver</button>
+              <span class="pos2-overlay-title" id="pos2CatTitle"></span>
+            </div>
+            <div class="pos2-prod-grid-modal" id="pos2ProdGrid"></div>
+          </div>
+        </div>
+        <!-- Overlay 2: size/presentation picker -->
         <div class="pos2-overlay" id="pos2ProdOverlay">
           <div class="pos2-overlay-inner">
             <div class="pos2-overlay-hdr">
@@ -2236,37 +2242,33 @@ input:checked+.slider:before{transform:translateX(20px)}
 #posSucursalLayout{flex:1;display:flex;flex-direction:column;min-height:0;position:relative;overflow:hidden}
 .pos2-topbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0}
 .pos2-pedidos-btn{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;border:1.5px solid var(--border);background:#f8f9fa;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
-/* Body = upper(cats+prods) over ticket */
-.pos2-body{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
-.pos2-upper{flex:1;display:grid;grid-template-columns:155px 1fr;min-height:0;overflow:hidden;background:#f4f5f7}
-/* Category column */
-.pos2-cats-col{overflow-y:auto;background:#fff;border-right:2px solid var(--border);padding:8px 6px;display:flex;flex-direction:column;gap:4px}
-.pos2-cat-btn2{width:100%;padding:11px 8px;border-radius:10px;border:2px solid transparent;background:#f3f4f6;font-size:12px;font-weight:700;cursor:pointer;text-align:center;font-family:inherit;color:#374151;transition:all .12s;line-height:1.3}
-.pos2-cat-btn2.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-.pos2-cat-btn2:hover:not(.active){background:#e5e7eb}
-/* Products area */
-.pos2-prods-area{overflow-y:auto;padding:10px}
-#pos2ProdGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;align-content:start}
-.pos2-prod-btn{border-radius:12px;border:2px solid #e5e7eb;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:12px 8px;gap:6px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.05);width:100%;font-family:inherit;transition:transform .1s,border-color .1s}
-.pos2-prod-btn:active{transform:scale(.94);border-color:var(--success)}
-.pos2-prod-emoji{font-size:24px;line-height:1}
-.pos2-prod-name{font-size:11px;color:#374151;text-align:center;line-height:1.3;font-weight:600}
-.pos2-prod-price{font-size:12px;color:var(--success);font-weight:800}
-/* Ticket panel (bottom, fixed height) */
-.pos2-ticket{flex-shrink:0;height:270px;display:flex;flex-direction:column;border-top:2px solid var(--border);background:#fff;overflow:hidden}
-.pos2-ticket-hdr{display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:#fafafa}
-.pos2-ticket-body{flex:1;display:flex;min-height:0;overflow:hidden}
-.pos2-ticket-items{flex:1;overflow-y:auto;padding:4px 8px}
-.pos2-ticket-actions{flex-shrink:0;width:230px;padding:8px 12px 10px;border-left:1.5px solid var(--border);display:flex;flex-direction:column;gap:6px;overflow-y:auto}
-.pos2-mp-label{font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
-.pos2-mp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:5px;flex-shrink:0}
-.pos2-crear-btn{width:100%;padding:12px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px;box-shadow:0 3px 12px rgba(22,163,74,.35);flex-shrink:0;margin-top:auto}
+/* Category row */
+.pos2-cat-row{display:flex;gap:8px;padding:10px 12px;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.pos2-cat-row::-webkit-scrollbar{display:none}
+.pos2-cat-btn3{padding:9px 18px;border-radius:8px;border:2px solid var(--border);background:#f8f9fa;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;color:#374151;transition:all .12s;flex-shrink:0}
+.pos2-cat-btn3:hover{background:#e5e7eb;border-color:#d1d5db}
+.pos2-cat-btn3.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+/* Main split: ticket items (left) + payment panel (right) */
+.pos2-main{flex:1;display:grid;grid-template-columns:1fr 240px;min-height:0;overflow:hidden}
+.pos2-ticket-body{overflow-y:auto;padding:8px 12px;background:#f9fafb}
+.pos2-ticket-side{border-left:2px solid var(--border);background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.pos2-mp-label{font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.pos2-mp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px;margin-bottom:4px}
+.pos2-crear-btn{width:100%;padding:13px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px;box-shadow:0 3px 12px rgba(22,163,74,.35)}
 .pos2-crear-btn:disabled{background:#9ca3af;box-shadow:none;cursor:not-allowed}
-/* Size picker overlay (centered modal) */
+/* Product/size buttons */
+.pos2-prod-btn{border-radius:12px;border:2px solid #e5e7eb;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:14px 10px;gap:7px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.05);width:100%;font-family:inherit;transition:transform .1s,border-color .1s}
+.pos2-prod-btn:active{transform:scale(.94);border-color:var(--success)}
+.pos2-prod-emoji{font-size:28px;line-height:1}
+.pos2-prod-name{font-size:12px;color:#374151;text-align:center;line-height:1.3;font-weight:600}
+.pos2-prod-price{font-size:13px;color:var(--success);font-weight:800}
+/* Overlays */
 .pos2-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:20}
-.pos2-overlay-inner{background:#fff;border-radius:16px;width:min(380px,92vw);max-height:80vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25);animation:pos2Slide .16s ease}
+.pos2-overlay-inner{background:#fff;border-radius:16px;width:min(380px,92vw);max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25);animation:pos2Slide .16s ease}
+.pos2-cat-modal{width:min(860px,96vw)}
+.pos2-prod-grid-modal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;padding:16px;overflow-y:auto}
 @keyframes pos2Slide{from{transform:translateY(14px);opacity:.7}to{transform:translateY(0);opacity:1}}
-.pos2-overlay-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.pos2-overlay-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:#fff}
 .pos2-back-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:10px;border:1.5px solid var(--border);background:#f8f9fa;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
 .pos2-overlay-title{font-size:15px;font-weight:800;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pos2-size-wrap{flex:1;overflow-y:auto;padding:16px}
@@ -7254,11 +7256,9 @@ function renderVenta() {
     document.getElementById('posAdminLayout').style.display = 'none';
     document.getElementById('posSucursalLayout').style.display = 'flex';
     document.getElementById('sec-venta').classList.add('pos2-active');
-    const ov = document.getElementById('pos2ProdOverlay');
-    if (ov) ov.style.display = 'none';
-    _pos2SelCat = 'all';
+    ['pos2CatOverlay','pos2ProdOverlay'].forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
+    _pos2ActiveCat = null;
     _pos2RenderCats();
-    _pos2RenderProds();
     _pos2RenderCart();
     return;
   }
@@ -7276,12 +7276,11 @@ function renderVenta() {
 
 // ──── POS2 Sucursal full-screen ────────────────────────
 let _pos2PendingProd = null;
-let _pos2SelCat = 'all';
+let _pos2ActiveCat   = null;
 
 function _pos2RenderCats() {
-  const col = document.getElementById('pos2CatCol');
-  if (!col) return;
-  const cats = [...new Set(productosData.filter(p=>p.activo).map(p=>p.categoria))];
+  const row = document.getElementById('pos2CatRow');
+  if (!row) return;
   const badge = document.getElementById('pos2PedCount');
   if (badge) {
     const pending = _currentSucursalId
@@ -7290,41 +7289,43 @@ function _pos2RenderCats() {
     badge.textContent = pending;
     badge.style.display = pending ? 'inline' : 'none';
   }
-  const allBtn = `<button class="pos2-cat-btn2${_pos2SelCat==='all'?' active':''}" onclick="_pos2SetCat('all')">Todos</button>`;
-  col.innerHTML = allBtn + cats.map(catId => {
+  const cats = [...new Set(productosData.filter(p=>p.activo).map(p=>p.categoria))];
+  if (!cats.length) { row.innerHTML = '<span style="color:var(--gray);font-size:13px">Sin productos</span>'; return; }
+  row.innerHTML = cats.map(catId => {
     const catObj = categoriasData.find(c => String(c.id)===String(catId) || c.nombre===catId);
     const nombre = catObj?.nombre || String(catId).charAt(0).toUpperCase()+String(catId).slice(1);
-    return `<button class="pos2-cat-btn2${_pos2SelCat===catId?' active':''}" onclick="_pos2SetCat(${JSON.stringify(catId)})">${nombre}</button>`;
+    return `<button class="pos2-cat-btn3${_pos2ActiveCat===catId?' active':''}" onclick="_pos2OpenCat(${JSON.stringify(catId)})">${nombre}</button>`;
   }).join('');
 }
 
-function _pos2SetCat(catId) {
-  _pos2SelCat = catId;
+function _pos2OpenCat(catId) {
+  _pos2ActiveCat = catId;
   _pos2RenderCats();
-  _pos2RenderProds();
+  const prods = productosData.filter(p=>p.activo && p.categoria===catId);
+  const catObj = categoriasData.find(c => String(c.id)===String(catId) || c.nombre===catId);
+  const nombre = catObj?.nombre || String(catId).charAt(0).toUpperCase()+String(catId).slice(1);
+  document.getElementById('pos2CatTitle').textContent = nombre;
+  document.getElementById('pos2ProdGrid').innerHTML = prods.length
+    ? prods.map(p => {
+        const hasSizes = !!p.precio_chica;
+        const priceLabel = hasSizes ? `desde $${p.precio_chica.toLocaleString()}` : `$${(p.precio||0).toLocaleString()}`;
+        const imgEl = p.foto
+          ? `<img src="${p.foto}" style="width:50px;height:50px;object-fit:cover;border-radius:10px">`
+          : `<div class="pos2-prod-emoji">${p.emoji||'🛍️'}</div>`;
+        return `<button class="pos2-prod-btn" onclick="_pos2OpenProd(${p.id})">
+          ${imgEl}
+          <div class="pos2-prod-name">${p.nombre}</div>
+          <div class="pos2-prod-price">${priceLabel}</div>
+        </button>`;
+      }).join('')
+    : '<div style="color:var(--gray);padding:40px;text-align:center">Sin productos en esta categoría</div>';
+  document.getElementById('pos2CatOverlay').style.display = 'flex';
 }
 
-function _pos2RenderProds() {
-  const grid = document.getElementById('pos2ProdGrid');
-  if (!grid) return;
-  let prods = productosData.filter(p=>p.activo);
-  if (_pos2SelCat !== 'all') prods = prods.filter(p=>p.categoria===_pos2SelCat);
-  if (!prods.length) {
-    grid.innerHTML = '<div style="color:var(--gray);text-align:center;padding:40px;grid-column:1/-1;font-size:14px">Sin productos</div>';
-    return;
-  }
-  grid.innerHTML = prods.map(p => {
-    const hasSizes = !!p.precio_chica;
-    const priceLabel = hasSizes ? `desde $${p.precio_chica.toLocaleString()}` : `$${(p.precio||0).toLocaleString()}`;
-    const imgEl = p.foto
-      ? `<img src="${p.foto}" style="width:44px;height:44px;object-fit:cover;border-radius:8px">`
-      : `<div class="pos2-prod-emoji">${p.emoji||'🛍️'}</div>`;
-    return `<button class="pos2-prod-btn" onclick="_pos2OpenProd(${p.id})">
-      ${imgEl}
-      <div class="pos2-prod-name">${p.nombre}</div>
-      <div class="pos2-prod-price">${priceLabel}</div>
-    </button>`;
-  }).join('');
+function _pos2CloseCat() {
+  _pos2ActiveCat = null;
+  _pos2RenderCats();
+  document.getElementById('pos2CatOverlay').style.display = 'none';
 }
 
 function _pos2OpenProd(prodId) {
@@ -7333,6 +7334,7 @@ function _pos2OpenProd(prodId) {
   _pos2PendingProd = prodId;
   if (!p.precio_chica) {
     posAddToCart(p.id, null, p.precio);
+    _pos2CloseCat();
     _pos2RenderCart();
     showToast('✅ ' + p.nombre + ' agregado', 'success');
     return;
@@ -7367,6 +7369,7 @@ function _pos2AddWithSize(size, precio) {
     if (item) item.nota = nota;
   }
   _pos2CloseProd();
+  _pos2CloseCat();
   _pos2RenderCart();
   showToast('✅ ' + (p?.nombre||'') + ' (' + size + ') agregado', 'success');
 }
@@ -7378,7 +7381,7 @@ function _pos2RenderCart() {
   const btn    = document.getElementById('pos2CrearBtn');
   if (!el) return;
   if (!_posCart.length) {
-    el.innerHTML = '<div style="text-align:center;padding:28px;color:var(--gray);font-size:13px">🛒 Vacío</div>';
+    el.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--gray);font-size:14px">Presioná una categoría para agregar productos al pedido</div>';
     if (totEl) totEl.style.display = 'none';
   } else {
     el.innerHTML = _posCart.map(i=>`
@@ -7429,11 +7432,12 @@ function posClearCart2() {
   _pos2RenderCart();
 }
 
-// Escape key handler — closes size picker overlay
+// Escape key handler — closes topmost overlay
 document.addEventListener('keydown', function(e) {
   if (e.key !== 'Escape') return;
   if (!_currentSucursalId) return;
   if (document.getElementById('pos2ProdOverlay')?.style.display === 'flex') { _pos2CloseProd(); return; }
+  if (document.getElementById('pos2CatOverlay')?.style.display === 'flex')  { _pos2CloseCat(); return; }
 });
 
 // ──── END POS2 ─────────────────────────────────────────

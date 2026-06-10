@@ -3024,9 +3024,16 @@ function apiFetch(url, opts={}) {
 function _setSucursalMode(sucursalId) {
   _currentSucursalId = sucursalId || null;
   const sidebar = document.getElementById('sidebar');
+  const main = document.querySelector('.main');
+  const isDesktop = window.innerWidth >= 1024;
   if (!_currentSucursalId) {
     // Modo admin central: mostrar todo
     if (sidebar) sidebar.classList.remove('sucursal-mode');
+    // Restaurar sidebar expandido en desktop
+    if (isDesktop && sidebar) {
+      sidebar.classList.remove('collapsed');
+      if (main) main.style.marginLeft = '240px';
+    }
     document.querySelectorAll('.nav-item').forEach(el => el.style.display = '');
     const biz = document.getElementById('sidebarBiz');
     if (biz) biz.textContent = 'Sistema POS';
@@ -3034,6 +3041,11 @@ function _setSucursalMode(sucursalId) {
   }
   // Modo sucursal: ocultar todo excepto Venta, Pedidos, Caja y Configuración
   if (sidebar) sidebar.classList.add('sucursal-mode');
+  // Auto-colapsar en desktop para liberar pantalla
+  if (isDesktop && sidebar) {
+    sidebar.classList.add('collapsed');
+    if (main) main.style.marginLeft = '64px';
+  }
   document.querySelectorAll('.nav-item').forEach(el => {
     const sec = el.getAttribute('data-section');
     el.style.display = ['venta','pedidos','caja','config'].includes(sec) ? '' : 'none';

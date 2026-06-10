@@ -7294,7 +7294,7 @@ function _pos2RenderCats() {
   row.innerHTML = cats.map(catId => {
     const catObj = categoriasData.find(c => String(c.id)===String(catId) || c.nombre===catId);
     const nombre = catObj?.nombre || String(catId).charAt(0).toUpperCase()+String(catId).slice(1);
-    return `<button class="pos2-cat-btn3${_pos2ActiveCat===catId?' active':''}" onclick="_pos2OpenCat(${JSON.stringify(catId)})">${nombre}</button>`;
+    return `<button class="pos2-cat-btn3${_pos2ActiveCat===catId?' active':''}" onclick="_pos2OpenCat('${String(catId).replace(/'/g,"\\'")}')">${nombre}</button>`;
   }).join('');
 }
 

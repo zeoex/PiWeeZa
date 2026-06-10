@@ -1415,7 +1415,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
             <div class="card-header"><h3>Estado de Caja</h3></div>
             <div class="card-body" id="cajaEstado"></div>
           </div>
-          <div class="card">
+          <div class="card" id="cajaResumenCard">
             <div class="card-header"><h3>Resumen del Turno</h3></div>
             <div class="card-body">
               <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
@@ -5208,26 +5208,50 @@ function _cajaResumen() {
 
 function renderCaja() {
   const r = _cajaResumen();
-  document.getElementById('cajaCash').textContent    = '$'+r.ventasEfectivo.toLocaleString();
-  document.getElementById('cajaTarjeta').textContent = '$'+r.ventasTarjeta.toLocaleString();
-  document.getElementById('cajaTransfer').textContent= '$'+r.ventasTransfer.toLocaleString();
-  document.getElementById('cajaRetiros').textContent = r.retiros > 0 ? '-$'+r.retiros.toLocaleString() : '-$0';
-  document.getElementById('cajaTotal').textContent   = '$'+(cajaInicial+r.totalVentas-r.retiros).toLocaleString();
   const hoy = new Date().toISOString().slice(0,10);
   const horaAp = cajaMoves.filter(m=>m.tipo==='ingreso'&&m.desc?.includes('Apertura')).slice(-1)[0]?.hora || '--:--';
-  const _cajaBtn = cajaAbierta
-    ? (_currentSucursalId
-        ? `<button class="btn btn-warning mt-2" onclick="abrirArqueoModal()">📊 Arqueo de Caja</button>`
-        : `<button class="btn btn-danger mt-2" onclick="cerrarCaja()">🔴 Cerrar Caja</button>`)
-    : '';
-  document.getElementById('cajaEstado').innerHTML = cajaAbierta ? `
-    <div class="badge badge-success" style="font-size:14px;padding:6px 16px;margin-bottom:12px">🟢 CAJA ABIERTA</div>
-    <div style="margin:10px 0;font-size:13px"><strong>Turno iniciado:</strong> ${horaAp} hs</div>
-    <div style="font-size:13px"><strong>Monto inicial:</strong> $${cajaInicial.toLocaleString()}</div>
-    ${_cajaBtn}` :
-    `<div class="badge badge-danger" style="font-size:14px;padding:6px 16px;margin-bottom:12px">🔴 CAJA CERRADA</div>
-    <div class="form-group mt-2"><label>Monto inicial ($)</label><input class="form-control" id="cajaInicialInput" type="number" placeholder="5000" value="5000"/></div>
-    <button class="btn btn-success mt-1" onclick="abrirCaja()">🟢 Abrir Caja</button>`;
+
+  if (_currentSucursalId) {
+    // Cierre ciego: solo monto inicial + retiros, sin volumen de ventas
+    document.getElementById('cajaResumenCard').innerHTML = `
+      <div class="card-header"><h3>Turno</h3></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>
+            <div class="stat-label" style="margin-bottom:6px">Monto inicial</div>
+            <div style="font-size:26px;font-weight:800;color:var(--success)">$${cajaInicial.toLocaleString()}</div>
+          </div>
+          <div>
+            <div class="stat-label" style="margin-bottom:6px">Retiros</div>
+            <div style="font-size:26px;font-weight:800;color:var(--danger)">$${r.retiros.toLocaleString()}</div>
+          </div>
+        </div>
+      </div>`;
+    document.getElementById('cajaEstado').innerHTML = cajaAbierta
+      ? `<div class="badge badge-success" style="font-size:14px;padding:6px 16px;margin-bottom:12px">🟢 CAJA ABIERTA</div>
+         <div style="margin:10px 0;font-size:13px"><strong>Turno iniciado:</strong> ${horaAp} hs</div>`
+      : `<div class="badge badge-danger" style="font-size:14px;padding:6px 16px;margin-bottom:12px">🔴 CAJA CERRADA</div>
+         <div class="form-group mt-2"><label>Monto inicial ($)</label><input class="form-control" id="cajaInicialInput" type="number" placeholder="5000" value="5000"/></div>
+         <button class="btn btn-success mt-1" onclick="abrirCaja()">🟢 Abrir Caja</button>`;
+  } else {
+    document.getElementById('cajaCash').textContent    = '$'+r.ventasEfectivo.toLocaleString();
+    document.getElementById('cajaTarjeta').textContent = '$'+r.ventasTarjeta.toLocaleString();
+    document.getElementById('cajaTransfer').textContent= '$'+r.ventasTransfer.toLocaleString();
+    document.getElementById('cajaRetiros').textContent = r.retiros > 0 ? '-$'+r.retiros.toLocaleString() : '-$0';
+    document.getElementById('cajaTotal').textContent   = '$'+(cajaInicial+r.totalVentas-r.retiros).toLocaleString();
+    const _cajaBtn = cajaAbierta
+      ? `<button class="btn btn-danger mt-2" onclick="cerrarCaja()">🔴 Cerrar Caja</button>`
+      : '';
+    document.getElementById('cajaEstado').innerHTML = cajaAbierta ? `
+      <div class="badge badge-success" style="font-size:14px;padding:6px 16px;margin-bottom:12px">🟢 CAJA ABIERTA</div>
+      <div style="margin:10px 0;font-size:13px"><strong>Turno iniciado:</strong> ${horaAp} hs</div>
+      <div style="font-size:13px"><strong>Monto inicial:</strong> $${cajaInicial.toLocaleString()}</div>
+      ${_cajaBtn}` :
+      `<div class="badge badge-danger" style="font-size:14px;padding:6px 16px;margin-bottom:12px">🔴 CAJA CERRADA</div>
+      <div class="form-group mt-2"><label>Monto inicial ($)</label><input class="form-control" id="cajaInicialInput" type="number" placeholder="5000" value="5000"/></div>
+      <button class="btn btn-success mt-1" onclick="abrirCaja()">🟢 Abrir Caja</button>`;
+  }
+
   const fechaInput = document.getElementById('cajaFechaFiltro');
   if (fechaInput && !fechaInput.value) fechaInput.value = hoy;
   renderCajaMov();
@@ -5236,7 +5260,9 @@ function renderCaja() {
 function renderCajaMov() {
   const fechaInput = document.getElementById('cajaFechaFiltro');
   const filtro = fechaInput?.value || new Date().toISOString().slice(0,10);
-  const movsFiltrados = cajaMoves.filter(m => (m.fecha || _HOY) === filtro);
+  let movsFiltrados = cajaMoves.filter(m => (m.fecha || _HOY) === filtro);
+  // Cierre ciego: en modo sucursal solo mostrar retiros, no ventas
+  if (_currentSucursalId) movsFiltrados = movsFiltrados.filter(m => m.tipo === 'egreso' && !m.desc?.startsWith('Cierre'));
   const tbody = document.getElementById('cajaMov');
   if (!tbody) return;
   if (!movsFiltrados.length) {

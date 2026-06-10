@@ -1306,39 +1306,6 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         </div>
       </div>
 
-      <!-- MODAL ARQUEO DE CAJA (sucursal) -->
-      <div id="modalArqueoCaja" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center">
-        <div style="background:#fff;border-radius:14px;padding:28px;width:min(420px,96vw);box-shadow:0 8px 40px rgba(0,0,0,0.2)">
-          <h3 style="margin:0 0 6px;font-size:18px">📊 Arqueo de Caja</h3>
-          <p style="margin:0 0 20px;font-size:13px;color:var(--gray)">Precierre de caja</p>
-          <div style="background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:20px">
-            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-              <span style="font-size:13px;color:var(--gray)">Monto inicial</span>
-              <span id="arqueoSaldoInicial" style="font-weight:700">$0</span>
-            </div>
-            <div style="display:flex;justify-content:space-between">
-              <span style="font-size:13px;color:var(--gray)">Retiros</span>
-              <span id="arqueoRetiros" style="font-weight:700;color:#dc2626">$0</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label style="font-weight:600">Efectivo contado (físico) *</label>
-            <input type="number" class="form-control" id="arqueoContado" min="0" placeholder="0" style="font-size:20px;font-weight:700" oninput="_arqueoCheckBtn()">
-          </div>
-          <div class="form-group">
-            <label style="font-weight:600">Cierres POSNET / Virtuales *</label>
-            <input type="number" class="form-control" id="arqueoPostnet" min="0" placeholder="0" style="font-size:20px;font-weight:700" oninput="_arqueoCheckBtn()">
-          </div>
-          <div class="form-group">
-            <label>Observaciones (opcional)</label>
-            <input class="form-control" id="arqueoNota" placeholder="Ej: Todo en orden">
-          </div>
-          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">
-            <button class="btn btn-secondary" onclick="document.getElementById('modalArqueoCaja').style.display='none'">Cancelar</button>
-            <button class="btn btn-warning" id="arqueoBtn" onclick="confirmarArqueo()" disabled>📊 Registrar Arqueo</button>
-          </div>
-        </div>
-      </div>
 
       <!-- MODAL INSUMO (add/edit) -->
       <div id="modalInsumo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;align-items:center;justify-content:center">
@@ -5518,7 +5485,7 @@ function renderCaja() {
     document.getElementById('cajaEstado').innerHTML = cajaAbierta
       ? `<div class="badge badge-success" style="font-size:14px;padding:6px 16px;margin-bottom:12px">🟢 CAJA ABIERTA</div>
          <div style="margin:10px 0;font-size:13px"><strong>Turno iniciado:</strong> ${horaAp} hs</div>
-         <button class="btn btn-warning mt-2" onclick="abrirArqueoModal()">📊 Arqueo de Caja</button>`
+         <button class="btn btn-danger mt-2" onclick="cerrarCaja()">🔴 Cerrar Caja</button>`
       : `<div class="badge badge-danger" style="font-size:14px;padding:6px 16px;margin-bottom:12px">🔴 CAJA CERRADA</div>
          <div class="form-group mt-2"><label>Monto inicial ($)</label><input class="form-control" id="cajaInicialInput" type="number" placeholder="5000" value="5000"/></div>
          <button class="btn btn-success mt-1" onclick="abrirCaja()">🟢 Abrir Caja</button>`;
@@ -5575,45 +5542,12 @@ function abrirCaja() {
   cajaInicial=monto; cajaAbierta=true;
   cajaMoves = [{..._cajaNow(),tipo:'ingreso',desc:'Apertura de caja',monto}];
   saveState(); renderCaja(); showToast('Caja abierta','success');
-  if (_currentSucursalId) navTo('venta', document.querySelector('[data-section="venta"]'));
+  if (_currentSucursalId) {
+    apiFetch('/caja/abrir', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({saldoInicial:monto})}).catch(()=>{});
+    navTo('venta', document.querySelector('[data-section="venta"]'));
+  }
 }
 
-function abrirArqueoModal() {
-  const r = _cajaResumen();
-  document.getElementById('arqueoSaldoInicial').textContent = '$' + cajaInicial.toLocaleString('es-AR');
-  document.getElementById('arqueoRetiros').textContent = '$' + r.retiros.toLocaleString('es-AR');
-  document.getElementById('arqueoContado').value = '';
-  document.getElementById('arqueoPostnet').value = '';
-  document.getElementById('arqueoNota').value = '';
-  document.getElementById('arqueoBtn').disabled = true;
-  document.getElementById('modalArqueoCaja').style.display = 'flex';
-}
-
-function _arqueoCheckBtn() {
-  const c = document.getElementById('arqueoContado').value;
-  const p = document.getElementById('arqueoPostnet').value;
-  document.getElementById('arqueoBtn').disabled = (c === '' || p === '');
-}
-
-function confirmarArqueo() {
-  const contadoRaw = document.getElementById('arqueoContado').value;
-  const posnetRaw  = document.getElementById('arqueoPostnet').value;
-  if (contadoRaw === '' || posnetRaw === '') { showToast('Completá los campos requeridos', 'error'); return; }
-  const contado = parseFloat(contadoRaw);
-  const posnet  = parseFloat(posnetRaw);
-  const nota = document.getElementById('arqueoNota').value.trim();
-  cajaMoves.push({
-    ..._cajaNow(),
-    tipo: 'arqueo',
-    desc: 'Arqueo de caja' + (nota ? ' — ' + nota : ''),
-    monto: contado,
-    posnet
-  });
-  saveState();
-  renderCaja();
-  document.getElementById('modalArqueoCaja').style.display = 'none';
-  showToast(`Arqueo registrado — Efectivo $${contado.toLocaleString('es-AR')} · POSNET $${posnet.toLocaleString('es-AR')}`, 'success');
-}
 
 let _cierreDeclared = null;
 
@@ -5780,9 +5714,17 @@ function ejecutarCierreCaja() {
   _cierreDeclared = null;
   saveState(); closeModal('modalCierreCaja'); renderCaja();
   showToast('Caja cerrada correctamente','success');
-  // Sync to db.caja so admin "Cajas & Ventas" shows this sucursal as closed
+  // Sync to db.caja with full cierre data so admin "Cajas & Ventas" shows complete summary
   if (_currentSucursalId) {
-    apiFetch('/caja/cerrar', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})}).catch(()=>{});
+    apiFetch('/caja/cerrar', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      efectivoContado: d.dinero,
+      posnet:          d.posnet,
+      transferencia:   d.transf,
+      ventasEfectivo:  r.ventasEfectivo,
+      ventasTarjeta:   r.ventasTarjeta,
+      ventasTransfer:  r.ventasTransfer,
+      totalVentas:     r.totalVentas
+    })}).catch(()=>{});
   }
 }
 
@@ -6244,7 +6186,37 @@ function _renderCVOverview(data) {
         : `<span style="background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">🔴 Caja cerrada</span>`;
       const saldoBadge = cajaAbierta
         ? `<span style="font-size:12px;color:#059669;font-weight:600">Saldo: $${(caja.saldo||0).toLocaleString('es-AR')}</span>`
-        : (caja.ultimoCierre ? `<span style="font-size:12px;color:var(--gray)">Último cierre: ${new Date(caja.ultimoCierre).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>` : '');
+        : '';
+
+      // Resumen del cierre (solo si caja cerrada y tiene datos)
+      const _difColor = v => v == null ? '#6b7280' : v === 0 ? '#059669' : v > 0 ? '#2563eb' : '#dc2626';
+      const _difFmt   = v => v == null ? '—' : (v >= 0 ? '+' : '') + '$' + Math.abs(v).toLocaleString('es-AR');
+      const cierrePanel = !cajaAbierta && caja.ultimoCierre ? `
+        <div style="background:#fdf4f4;border:1px solid #fecaca;border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px">
+          <div style="font-weight:700;color:#dc2626;margin-bottom:8px">
+            🔴 Cierre: ${new Date(caja.ultimoCierre).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
+            ${caja.apertura ? `<span style="font-weight:400;color:var(--gray);margin-left:8px">· Apertura: ${new Date(caja.apertura).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}</span>` : ''}
+          </div>
+          <table style="width:100%;border-collapse:collapse">
+            <tr style="color:var(--gray);font-size:10px;text-transform:uppercase;font-weight:700">
+              <td style="padding:2px 0">Concepto</td><td style="text-align:right">Sistema</td><td style="text-align:right">Declarado</td><td style="text-align:right">Diferencia</td>
+            </tr>
+            <tr style="border-top:1px solid #fecaca">
+              <td style="padding:4px 0">💵 Efectivo</td>
+              <td style="text-align:right;font-weight:600">$${(caja.saldoFinal||0).toLocaleString('es-AR')}</td>
+              <td style="text-align:right;font-weight:600">${caja.efectivoContado != null ? '$'+caja.efectivoContado.toLocaleString('es-AR') : '—'}</td>
+              <td style="text-align:right;font-weight:700;color:${_difColor(caja.diferencia)}">${_difFmt(caja.diferencia)}</td>
+            </tr>
+            ${caja.posnet != null ? `<tr style="border-top:1px solid #fecaca">
+              <td style="padding:4px 0">💳 Posnet</td>
+              <td style="text-align:right;color:var(--gray)">—</td>
+              <td style="text-align:right;font-weight:600">$${caja.posnet.toLocaleString('es-AR')}</td>
+              <td style="text-align:right">—</td>
+            </tr>` : ''}
+          </table>
+          ${caja.nota ? `<div style="margin-top:6px;color:#6b7280;font-style:italic">📝 ${caja.nota}</div>` : ''}
+        </div>` : '';
+
       const cajaBtn = cajaAbierta
         ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;font-size:11px;padding:4px 10px" onclick="cerrarCajaModal('${s.id}','${s.nombre.replace(/'/g,"\\'")}',${caja.saldoInicial||0},${caja.saldo||0},${s.total})">Cerrar caja</button>`
         : `<button class="btn btn-sm" style="background:#dcfce7;color:#16a34a;border:1px solid #86efac;font-size:11px;padding:4px 10px" onclick="abrirCajaModal('${s.id}','${s.nombre.replace(/'/g,"\\'")}')">Abrir caja</button>`;
@@ -6259,6 +6231,7 @@ function _renderCVOverview(data) {
             ${cajaBadge}
             ${saldoBadge}
           </div>
+          ${cierrePanel}
           <div style="display:flex;gap:20px;margin-bottom:12px">
             <div>
               <div style="font-size:24px;font-weight:800;color:#059669">$${s.total.toLocaleString('es-AR')}</div>

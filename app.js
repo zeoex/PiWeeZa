@@ -1260,6 +1260,8 @@ app.post('/api/caja/cerrar', authMiddleware, (req, res) => {
   caja.cierre          = new Date().toISOString();
   caja.saldoFinal      = saldoFinal;
   caja.efectivoContado = req.body.efectivoContado != null ? parseFloat(req.body.efectivoContado) : null;
+  caja.posnet          = req.body.posnet != null ? parseFloat(req.body.posnet) : null;
+  caja.transferencia   = req.body.transferencia != null ? parseFloat(req.body.transferencia) : null;
   caja.diferencia      = caja.efectivoContado != null ? caja.efectivoContado - saldoFinal : null;
   caja.nota            = req.body.nota || '';
   caja.cerradoPor      = req.user.id;
@@ -2220,7 +2222,19 @@ app.get('/api/cajas/overview', authMiddleware, (req, res) => {
       id: s.id, nombre: s.nombre, cantVentas: facturas.length, total, byMethod,
       caja: cajaAbierta
         ? { estado: 'abierta', id: cajaAbierta.id, apertura: cajaAbierta.apertura, saldoInicial: cajaAbierta.saldoInicial, saldo: saldoCaja }
-        : { estado: 'cerrada', ultimoCierre: ultimaCierre?.cierre || null }
+        : ultimaCierre
+          ? {
+              estado: 'cerrada',
+              ultimoCierre:    ultimaCierre.cierre,
+              apertura:        ultimaCierre.apertura,
+              saldoInicial:    ultimaCierre.saldoInicial,
+              saldoFinal:      ultimaCierre.saldoFinal,
+              efectivoContado: ultimaCierre.efectivoContado,
+              posnet:          ultimaCierre.posnet,
+              diferencia:      ultimaCierre.diferencia,
+              nota:            ultimaCierre.nota || ''
+            }
+          : { estado: 'cerrada', ultimoCierre: null }
     };
   });
   const totalGlobal  = resultado.reduce((s, r) => s + r.total, 0);

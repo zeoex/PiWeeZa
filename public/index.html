@@ -1043,30 +1043,35 @@ input.form-control:focus{outline:none;border-color:var(--red)}
 
       <!-- Sucursal POS layout (full-screen) -->
       <div id="posSucursalLayout" style="display:none">
-        <!-- Top bar: Pedidos button + category chips -->
+        <!-- Top bar: just Pedidos button -->
         <div class="pos2-topbar">
           <button class="pos2-pedidos-btn" onclick="navTo('pedidos',document.querySelector('[data-section=pedidos]'))">📋 Pedidos <span id="pos2PedCount" style="background:#ef4444;color:#fff;border-radius:999px;padding:1px 7px;font-size:11px;display:none">0</span></button>
-          <div class="pos2-cat-strip" id="pos2CatStrip"></div>
         </div>
-        <!-- Split: products (left) + cart (right) -->
-        <div class="pos2-split">
-          <div class="pos2-prods-panel">
-            <div id="pos2ProdGrid"></div>
+        <div class="pos2-body">
+          <!-- Upper: categories (left column) + products (right) -->
+          <div class="pos2-upper">
+            <div class="pos2-cats-col" id="pos2CatCol"></div>
+            <div class="pos2-prods-area">
+              <div id="pos2ProdGrid"></div>
+            </div>
           </div>
-          <div class="pos2-cart-panel">
-            <div class="pos2-cart-hdr">
-              <span style="font-weight:700;font-size:15px">🧾 Ticket</span>
+          <!-- Ticket panel: always visible at bottom -->
+          <div class="pos2-ticket">
+            <div class="pos2-ticket-hdr">
+              <span style="font-weight:700;font-size:14px">🧾 Ticket</span>
+              <input class="form-control" id="pos2ClienteInput" placeholder="👤 Cliente (opcional)..." autocomplete="off" style="flex:1;max-width:200px;padding:5px 10px;font-size:13px"/>
               <button class="btn btn-outline btn-sm" onclick="posClearCart2()">🗑️ Limpiar</button>
             </div>
-            <div style="padding:8px 12px 4px;flex-shrink:0">
-              <input class="form-control" id="pos2ClienteInput" placeholder="👤 Cliente (opcional)..." autocomplete="off"/>
-            </div>
-            <div id="pos2CartList" style="flex:1;overflow-y:auto;padding:4px 12px 8px;min-height:0"></div>
-            <div id="pos2CartTotals" style="padding:0 12px 8px;flex-shrink:0;display:none"></div>
-            <div class="pos2-cart-footer">
-              <div class="pos2-mp-label">Método de pago</div>
-              <div class="pos2-mp-grid" id="pos2MPGrid"></div>
-              <button class="pos2-crear-btn" id="pos2CrearBtn" onclick="posCheckout()" disabled>📋 CREAR PEDIDO</button>
+            <div class="pos2-ticket-body">
+              <div class="pos2-ticket-items">
+                <div id="pos2CartList"></div>
+                <div id="pos2CartTotals" style="display:none"></div>
+              </div>
+              <div class="pos2-ticket-actions">
+                <div class="pos2-mp-label">Método de pago</div>
+                <div class="pos2-mp-grid" id="pos2MPGrid"></div>
+                <button class="pos2-crear-btn" id="pos2CrearBtn" onclick="posCheckout()" disabled>📋 CREAR PEDIDO</button>
+              </div>
             </div>
           </div>
         </div>
@@ -2228,32 +2233,40 @@ input:checked+.slider:before{transform:translateX(20px)}
 .sidebar.sucursal-mode .sidebar-logo { cursor: default; pointer-events: none; }
 /* ──── Sucursal POS full-screen (pos2) ──── */
 #sec-venta.pos2-active{padding:0!important;overflow:hidden!important;display:flex!important;flex-direction:column}
-#posSucursalLayout{flex:1;display:flex;flex-direction:column;min-height:0;position:relative;overflow:hidden;background:#f4f5f7}
-.pos2-topbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0;overflow:hidden}
-.pos2-pedidos-btn{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;border:1.5px solid var(--border);background:#f8f9fa;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit}
-.pos2-cat-strip{display:flex;gap:6px;overflow-x:auto;flex:1;scrollbar-width:none;padding-bottom:1px}
-.pos2-cat-strip::-webkit-scrollbar{display:none}
-.pos2-cat-chip{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:#f8f9fa;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .1s;flex-shrink:0}
-.pos2-cat-chip.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-.pos2-split{flex:1;display:grid;grid-template-columns:1fr 300px;min-height:0;overflow:hidden}
-.pos2-prods-panel{overflow-y:auto;padding:10px}
+#posSucursalLayout{flex:1;display:flex;flex-direction:column;min-height:0;position:relative;overflow:hidden}
+.pos2-topbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0}
+.pos2-pedidos-btn{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;border:1.5px solid var(--border);background:#f8f9fa;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
+/* Body = upper(cats+prods) over ticket */
+.pos2-body{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.pos2-upper{flex:1;display:grid;grid-template-columns:155px 1fr;min-height:0;overflow:hidden;background:#f4f5f7}
+/* Category column */
+.pos2-cats-col{overflow-y:auto;background:#fff;border-right:2px solid var(--border);padding:8px 6px;display:flex;flex-direction:column;gap:4px}
+.pos2-cat-btn2{width:100%;padding:11px 8px;border-radius:10px;border:2px solid transparent;background:#f3f4f6;font-size:12px;font-weight:700;cursor:pointer;text-align:center;font-family:inherit;color:#374151;transition:all .12s;line-height:1.3}
+.pos2-cat-btn2.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.pos2-cat-btn2:hover:not(.active){background:#e5e7eb}
+/* Products area */
+.pos2-prods-area{overflow-y:auto;padding:10px}
 #pos2ProdGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;align-content:start}
 .pos2-prod-btn{border-radius:12px;border:2px solid #e5e7eb;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:12px 8px;gap:6px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.05);width:100%;font-family:inherit;transition:transform .1s,border-color .1s}
 .pos2-prod-btn:active{transform:scale(.94);border-color:var(--success)}
 .pos2-prod-emoji{font-size:24px;line-height:1}
 .pos2-prod-name{font-size:11px;color:#374151;text-align:center;line-height:1.3;font-weight:600}
 .pos2-prod-price{font-size:12px;color:var(--success);font-weight:800}
-.pos2-cart-panel{display:flex;flex-direction:column;border-left:2px solid var(--border);background:#f8fafc;min-height:0;overflow:hidden}
-.pos2-cart-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:#fff}
-.pos2-cart-footer{padding:10px 12px 14px;border-top:1px solid var(--border);flex-shrink:0;background:#fff}
-.pos2-mp-label{font-size:10px;font-weight:700;color:var(--gray);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
-.pos2-mp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px;margin-bottom:10px}
-.pos2-crear-btn{width:100%;padding:13px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px;box-shadow:0 4px 14px rgba(22,163,74,.35)}
+/* Ticket panel (bottom, fixed height) */
+.pos2-ticket{flex-shrink:0;height:270px;display:flex;flex-direction:column;border-top:2px solid var(--border);background:#fff;overflow:hidden}
+.pos2-ticket-hdr{display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:#fafafa}
+.pos2-ticket-body{flex:1;display:flex;min-height:0;overflow:hidden}
+.pos2-ticket-items{flex:1;overflow-y:auto;padding:4px 8px}
+.pos2-ticket-actions{flex-shrink:0;width:230px;padding:8px 12px 10px;border-left:1.5px solid var(--border);display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.pos2-mp-label{font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.pos2-mp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:5px;flex-shrink:0}
+.pos2-crear-btn{width:100%;padding:12px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px;box-shadow:0 3px 12px rgba(22,163,74,.35);flex-shrink:0;margin-top:auto}
 .pos2-crear-btn:disabled{background:#9ca3af;box-shadow:none;cursor:not-allowed}
+/* Size picker overlay (centered modal) */
 .pos2-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:20}
 .pos2-overlay-inner{background:#fff;border-radius:16px;width:min(380px,92vw);max-height:80vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25);animation:pos2Slide .16s ease}
 @keyframes pos2Slide{from{transform:translateY(14px);opacity:.7}to{transform:translateY(0);opacity:1}}
-.pos2-overlay-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:#fff}
+.pos2-overlay-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
 .pos2-back-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:10px;border:1.5px solid var(--border);background:#f8f9fa;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
 .pos2-overlay-title{font-size:15px;font-weight:800;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pos2-size-wrap{flex:1;overflow-y:auto;padding:16px}
@@ -2263,7 +2276,6 @@ input:checked+.slider:before{transform:translateX(20px)}
 .pos2-size-btn:active{transform:scale(.95)}
 .pos2-size-name{font-size:16px;font-weight:800;color:#374151}
 .pos2-size-price{font-size:18px;color:var(--success);font-weight:800}
-@media(max-width:600px){.pos2-split{grid-template-columns:1fr;grid-template-rows:auto 1fr}.pos2-cart-panel{max-height:260px;border-left:none;border-top:2px solid var(--border)}}
 </style>
 
 <script>
@@ -7267,8 +7279,8 @@ let _pos2PendingProd = null;
 let _pos2SelCat = 'all';
 
 function _pos2RenderCats() {
-  const strip = document.getElementById('pos2CatStrip');
-  if (!strip) return;
+  const col = document.getElementById('pos2CatCol');
+  if (!col) return;
   const cats = [...new Set(productosData.filter(p=>p.activo).map(p=>p.categoria))];
   const badge = document.getElementById('pos2PedCount');
   if (badge) {
@@ -7278,11 +7290,11 @@ function _pos2RenderCats() {
     badge.textContent = pending;
     badge.style.display = pending ? 'inline' : 'none';
   }
-  const allBtn = `<button class="pos2-cat-chip${_pos2SelCat==='all'?' active':''}" onclick="_pos2SetCat('all')">Todos</button>`;
-  strip.innerHTML = allBtn + cats.map(catId => {
+  const allBtn = `<button class="pos2-cat-btn2${_pos2SelCat==='all'?' active':''}" onclick="_pos2SetCat('all')">Todos</button>`;
+  col.innerHTML = allBtn + cats.map(catId => {
     const catObj = categoriasData.find(c => String(c.id)===String(catId) || c.nombre===catId);
     const nombre = catObj?.nombre || String(catId).charAt(0).toUpperCase()+String(catId).slice(1);
-    return `<button class="pos2-cat-chip${_pos2SelCat===catId?' active':''}" onclick="_pos2SetCat(${JSON.stringify(catId)})">${nombre}</button>`;
+    return `<button class="pos2-cat-btn2${_pos2SelCat===catId?' active':''}" onclick="_pos2SetCat(${JSON.stringify(catId)})">${nombre}</button>`;
   }).join('');
 }
 

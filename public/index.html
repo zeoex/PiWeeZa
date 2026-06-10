@@ -7778,9 +7778,10 @@ function posCheckout() {
   // Sucursal mode: ask for tipo (mostrador/delivery) before checkout
   if (_currentSucursalId) {
     const ci = document.getElementById('pos2ClienteInput');
+    const _posCliente = _posClienteId ? clientesData.find(c => c.id === _posClienteId) : null;
     document.getElementById('posDeliveryNombre').value = ci?.value || '';
-    document.getElementById('posDeliveryDir').value = '';
-    document.getElementById('posDeliveryTel').value = '';
+    document.getElementById('posDeliveryDir').value = _posCliente?.direccion || '';
+    document.getElementById('posDeliveryTel').value = _posCliente?.telefono || '';
     document.getElementById('tipoDeliveryExtra').style.display = 'none';
     document.querySelectorAll('.tipo-entrega-btn').forEach(b => { b.style.borderColor='var(--border)'; b.style.background='#f8f9fa'; });
     openModal('modalTipoEntrega');

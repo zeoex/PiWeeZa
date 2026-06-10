@@ -3068,13 +3068,17 @@ function _setSucursalMode(sucursalId) {
       if (el) el.textContent = s.nombre;
     }
   }).catch(() => {});
-  // En modo sucursal: si la caja está cerrada ir a Caja, si no ir a Venta
-  if (!cajaAbierta) {
-    navTo('caja', document.querySelector('[data-section="caja"]'));
-    showToast('Abrí la caja para poder vender', 'warning');
-  } else {
-    navTo('venta', document.querySelector('[data-section="venta"]'));
-  }
+  // Sync caja state from db.caja (backend) so admin view and sucursal agree
+  apiFetch('/caja/actual').then(r => {
+    cajaAbierta = r.ok;
+  }).catch(() => {}).finally(() => {
+    if (!cajaAbierta) {
+      navTo('caja', document.querySelector('[data-section="caja"]'));
+      showToast('Abrí la caja para poder vender', 'warning');
+    } else {
+      navTo('venta', document.querySelector('[data-section="venta"]'));
+    }
+  });
 }
 
 // ======= INIT =======
@@ -5431,6 +5435,10 @@ function abrirCajaDesdeGuard() {
   cajaMoves = [{..._cajaNow(),tipo:'ingreso',desc:'Apertura de caja',monto}];
   saveState(); renderCaja(); showToast('Caja abierta','success');
   closeModal('modalAbrirCaja');
+  // Sync to db.caja so admin "Cajas & Ventas" shows this sucursal as open
+  if (_currentSucursalId) {
+    apiFetch('/caja/abrir', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({saldoInicial:monto})}).catch(()=>{});
+  }
   if (_pendingCajaAction) { const fn = _pendingCajaAction; _pendingCajaAction = null; fn(); }
 }
 
@@ -5738,6 +5746,10 @@ function ejecutarCierreCaja() {
   _cierreDeclared = null;
   saveState(); closeModal('modalCierreCaja'); renderCaja();
   showToast('Caja cerrada correctamente','success');
+  // Sync to db.caja so admin "Cajas & Ventas" shows this sucursal as closed
+  if (_currentSucursalId) {
+    apiFetch('/caja/cerrar', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})}).catch(()=>{});
+  }
 }
 
 function abrirCierresHistorial() {

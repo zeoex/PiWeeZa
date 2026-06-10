@@ -984,6 +984,8 @@ input.form-control:focus{outline:none;border-color:var(--red)}
       <!-- MESAS -->
       <!-- VENTA DIRECTA POS -->
       <div class="section" id="sec-venta">
+      <!-- Admin layout (envuelto) -->
+      <div id="posAdminLayout">
         <div class="section-header" style="margin-bottom:12px">
           <h2>🛒 Venta Directa</h2>
           <button class="btn btn-outline btn-sm" onclick="navTo('pedidos',document.querySelector('[data-section=pedidos]'))">📋 Ver Pedidos</button>
@@ -1037,7 +1039,70 @@ input.form-control:focus{outline:none;border-color:var(--red)}
             <button class="pos-pres-cancel" onclick="document.getElementById('posPresentOverlay').style.display='none'">Cancelar</button>
           </div>
         </div>
-      </div>
+      </div><!-- /posAdminLayout -->
+
+      <!-- Sucursal POS layout (full-screen) -->
+      <div id="posSucursalLayout" style="display:none">
+        <!-- Top bar -->
+        <div class="pos2-topbar">
+          <button class="pos2-pedidos-btn" onclick="navTo('pedidos',document.querySelector('[data-section=pedidos]'))">📋 Pedidos <span id="pos2PedCount" style="background:#ef4444;color:#fff;border-radius:999px;padding:1px 7px;font-size:11px;display:none">0</span></button>
+          <button class="pos2-cart-pill empty" id="pos2CartPill" onclick="_pos2OpenCart()">
+            <span id="pos2CartPillLabel">🛒 Carrito vacío</span>
+            <span id="pos2CartPillTotal" style="opacity:.7;font-size:12px">Elegí productos</span>
+          </button>
+        </div>
+        <!-- Category grid -->
+        <div class="pos2-cat-grid" id="pos2CatGrid">
+          <div style="color:var(--gray);text-align:center;padding:40px;grid-column:1/-1;font-size:14px">Cargando...</div>
+        </div>
+
+        <!-- Overlay 1: productos de la categoría -->
+        <div class="pos2-overlay" id="pos2CatOverlay">
+          <div class="pos2-overlay-hdr">
+            <button class="pos2-back-btn" onclick="_pos2CloseCat()">← Volver</button>
+            <span class="pos2-overlay-title" id="pos2CatTitle"></span>
+          </div>
+          <div class="pos2-prod-grid" id="pos2ProdGrid"></div>
+        </div>
+
+        <!-- Overlay 2: presentaciones del producto -->
+        <div class="pos2-overlay" id="pos2ProdOverlay">
+          <div class="pos2-overlay-hdr">
+            <button class="pos2-back-btn" onclick="_pos2CloseProd()">← Volver</button>
+            <span class="pos2-overlay-title" id="pos2ProdTitle"></span>
+          </div>
+          <div class="pos2-size-wrap">
+            <div class="pos2-size-grid" id="pos2SizeGrid"></div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--gray);display:block;margin-bottom:6px">Nota para cocina (opcional)</label>
+              <input class="form-control" id="pos2Nota" placeholder="Ej: sin cebolla, bien cocida..."/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overlay 3: carrito + pago + crear pedido -->
+        <div class="pos2-overlay" id="pos2CartOverlay">
+          <div class="pos2-overlay-hdr">
+            <button class="pos2-back-btn" onclick="_pos2CloseCart()">← Volver</button>
+            <span class="pos2-overlay-title">🧾 Ticket</span>
+            <button class="btn btn-outline btn-sm" onclick="posClearCart2()" style="flex-shrink:0">🗑️ Limpiar</button>
+          </div>
+          <div class="pos2-cart-body">
+            <div style="padding:10px 14px 6px">
+              <input class="form-control" id="pos2ClienteInput" placeholder="👤 Cliente (opcional)..." autocomplete="off"/>
+            </div>
+            <div id="pos2CartList" style="padding:4px 14px 8px"></div>
+            <div id="pos2CartTotals" style="padding:0 14px 8px;display:none"></div>
+          </div>
+          <div class="pos2-cart-actions">
+            <div class="pos2-mp-label">Método de pago</div>
+            <div class="pos2-mp-grid" id="pos2MPGrid"></div>
+            <button class="pos2-crear-btn" id="pos2CrearBtn" onclick="posCheckout()" disabled>📋 CREAR PEDIDO</button>
+          </div>
+        </div>
+      </div><!-- /posSucursalLayout -->
+
+      </div><!-- /sec-venta -->
 
       <!-- PEDIDOS -->
       <div class="section" id="sec-pedidos">
@@ -2183,6 +2248,44 @@ input:checked+.slider:before{transform:translateX(20px)}
 .sidebar.sucursal-mode .nav-item[data-section="caja"],
 .sidebar.sucursal-mode .nav-item[data-section="config"] { display: flex !important; }
 .sidebar.sucursal-mode .sidebar-logo { cursor: default; pointer-events: none; }
+/* ──── Sucursal POS full-screen (pos2) ──── */
+#sec-venta.pos2-active{padding:0!important;overflow:hidden!important;display:flex!important;flex-direction:column}
+#posSucursalLayout{flex:1;display:flex;flex-direction:column;min-height:0;position:relative;overflow:hidden;background:#f4f5f7}
+.pos2-topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0}
+.pos2-pedidos-btn{display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;border:1.5px solid var(--border);background:#f8f9fa;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit}
+.pos2-cart-pill{flex:1;background:var(--blue);color:#fff;border-radius:12px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-weight:700;font-size:14px;min-height:44px;gap:8px;border:none;font-family:inherit;transition:opacity .15s}
+.pos2-cart-pill:active{opacity:.82}
+.pos2-cart-pill.empty{background:#d1d5db;color:#6b7280;cursor:default}
+.pos2-cat-grid{flex:1;overflow-y:auto;padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;align-content:start}
+.pos2-cat-btn{aspect-ratio:1;border-radius:16px;border:2px solid #e5e7eb;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:13px;padding:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);transition:transform .12s,border-color .12s;font-family:inherit}
+.pos2-cat-btn:active{transform:scale(.94);border-color:var(--primary)}
+.pos2-cat-emoji{font-size:30px;line-height:1}
+.pos2-cat-count{font-size:11px;color:var(--gray);font-weight:400}
+/* Overlays */
+.pos2-overlay{position:absolute;inset:0;background:#fff;display:none;flex-direction:column;z-index:20;animation:pos2Slide .16s ease}
+@keyframes pos2Slide{from{transform:translateY(14px);opacity:.7}to{transform:translateY(0);opacity:1}}
+.pos2-overlay-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:#fff}
+.pos2-back-btn{display:flex;align-items:center;gap:5px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--border);background:#f8f9fa;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
+.pos2-overlay-title{font-size:15px;font-weight:800;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pos2-prod-grid{flex:1;overflow-y:auto;padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:10px;align-content:start}
+.pos2-prod-btn{border-radius:14px;border:2px solid #e5e7eb;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:14px 8px;gap:7px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.05);width:100%;font-family:inherit;transition:transform .1s,border-color .1s}
+.pos2-prod-btn:active{transform:scale(.94);border-color:var(--success)}
+.pos2-prod-emoji{font-size:26px;line-height:1}
+.pos2-prod-name{font-size:11px;color:#374151;text-align:center;line-height:1.3;font-weight:600}
+.pos2-prod-price{font-size:12px;color:var(--success);font-weight:800}
+.pos2-size-wrap{flex:1;overflow-y:auto;padding:16px}
+.pos2-size-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.pos2-size-btn{padding:22px 12px;border-radius:14px;border:2px solid #e5e7eb;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;font-family:inherit;transition:transform .1s,border-color .12s,background .12s}
+.pos2-size-btn:active,.pos2-size-btn.highlight{border-color:var(--success);background:#f0fdf4}
+.pos2-size-btn:active{transform:scale(.95)}
+.pos2-size-name{font-size:16px;font-weight:800;color:#374151}
+.pos2-size-price{font-size:18px;color:var(--success);font-weight:800}
+.pos2-cart-body{flex:1;overflow-y:auto}
+.pos2-cart-actions{padding:12px 14px 16px;border-top:1px solid var(--border);flex-shrink:0;background:#fff}
+.pos2-mp-label{font-size:11px;font-weight:700;color:var(--gray);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.pos2-mp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-bottom:12px}
+.pos2-crear-btn{width:100%;padding:15px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px;box-shadow:0 4px 14px rgba(22,163,74,.35)}
+.pos2-crear-btn:disabled{background:#9ca3af;box-shadow:none;cursor:not-allowed}
 </style>
 
 <script>
@@ -5274,7 +5377,8 @@ function renderCaja() {
       </div>`;
     document.getElementById('cajaEstado').innerHTML = cajaAbierta
       ? `<div class="badge badge-success" style="font-size:14px;padding:6px 16px;margin-bottom:12px">🟢 CAJA ABIERTA</div>
-         <div style="margin:10px 0;font-size:13px"><strong>Turno iniciado:</strong> ${horaAp} hs</div>`
+         <div style="margin:10px 0;font-size:13px"><strong>Turno iniciado:</strong> ${horaAp} hs</div>
+         <button class="btn btn-warning mt-2" onclick="abrirArqueoModal()">📊 Arqueo de Caja</button>`
       : `<div class="badge badge-danger" style="font-size:14px;padding:6px 16px;margin-bottom:12px">🔴 CAJA CERRADA</div>
          <div class="form-group mt-2"><label>Monto inicial ($)</label><input class="form-control" id="cajaInicialInput" type="number" placeholder="5000" value="5000"/></div>
          <button class="btn btn-success mt-1" onclick="abrirCaja()">🟢 Abrir Caja</button>`;
@@ -7167,14 +7271,234 @@ function renderVenta() {
   _posCart = _posCart || [];
   _posSelectedMP = null;
   _posClienteId = null;
+
+  if (_currentSucursalId) {
+    document.getElementById('posAdminLayout').style.display = 'none';
+    document.getElementById('posSucursalLayout').style.display = 'flex';
+    document.getElementById('sec-venta').classList.add('pos2-active');
+    // Close any open overlays
+    ['pos2CatOverlay','pos2ProdOverlay','pos2CartOverlay'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    _pos2RenderCats();
+    _pos2RenderCartPill();
+    return;
+  }
+
+  document.getElementById('posAdminLayout').style.display = '';
+  document.getElementById('posSucursalLayout').style.display = 'none';
+  document.getElementById('sec-venta').classList.remove('pos2-active');
   const warn = document.getElementById('posCajaWarning');
-  if (warn) warn.style.display = (_currentSucursalId && !cajaAbierta) ? 'flex' : 'none';
+  if (warn) warn.style.display = (!cajaAbierta) ? 'flex' : 'none';
   _renderPosCatTabs();
   _renderPosProdGrid();
   _renderPosCart();
   _renderPosPayment();
 }
 
+// ──── POS2 Sucursal full-screen ────────────────────────
+let _pos2PendingProd = null;
+
+function _pos2RenderCats() {
+  const grid = document.getElementById('pos2CatGrid');
+  if (!grid) return;
+  const cats = [...new Set(productosData.filter(p=>p.activo).map(p=>p.categoria))];
+  if (!cats.length) {
+    grid.innerHTML = '<div style="color:var(--gray);text-align:center;padding:40px;grid-column:1/-1;font-size:14px">Sin productos configurados</div>';
+    return;
+  }
+  grid.innerHTML = cats.map(catId => {
+    const catObj = categoriasData.find(c => String(c.id)===String(catId) || c.nombre===catId);
+    const emoji = catObj?.emoji || '🛍️';
+    const nombre = catObj?.nombre || String(catId).charAt(0).toUpperCase()+String(catId).slice(1);
+    const count = productosData.filter(p=>p.activo && p.categoria===catId).length;
+    return `<button class="pos2-cat-btn" onclick="_pos2OpenCat(${JSON.stringify(catId)})">
+      <div class="pos2-cat-emoji">${emoji}</div>
+      <div>${nombre}</div>
+      <div class="pos2-cat-count">${count} producto${count!==1?'s':''}</div>
+    </button>`;
+  }).join('');
+  // Update pending pedidos badge
+  const badge = document.getElementById('pos2PedCount');
+  if (badge) {
+    const pending = _currentSucursalId
+      ? deliveryData.filter(d=>d.sucursal_id===_currentSucursalId && d.estado!=='entregado').length
+      : 0;
+    badge.textContent = pending;
+    badge.style.display = pending ? 'inline' : 'none';
+  }
+}
+
+function _pos2OpenCat(catId) {
+  const prods = productosData.filter(p=>p.activo && p.categoria===catId);
+  const catObj = categoriasData.find(c => String(c.id)===String(catId) || c.nombre===catId);
+  const emoji = catObj?.emoji || '🛍️';
+  const nombre = catObj?.nombre || String(catId).charAt(0).toUpperCase()+String(catId).slice(1);
+  document.getElementById('pos2CatTitle').textContent = emoji + ' ' + nombre;
+  document.getElementById('pos2ProdGrid').innerHTML = prods.map(p => {
+    const hasSizes = !!p.precio_chica;
+    const priceLabel = hasSizes ? `desde $${p.precio_chica.toLocaleString()}` : `$${(p.precio||0).toLocaleString()}`;
+    const imgEl = p.foto
+      ? `<img src="${p.foto}" style="width:44px;height:44px;object-fit:cover;border-radius:10px">`
+      : `<div class="pos2-prod-emoji">${p.emoji||'🛍️'}</div>`;
+    return `<button class="pos2-prod-btn" onclick="_pos2OpenProd(${p.id})">
+      ${imgEl}
+      <div class="pos2-prod-name">${p.nombre}</div>
+      <div class="pos2-prod-price">${priceLabel}</div>
+    </button>`;
+  }).join('');
+  const overlay = document.getElementById('pos2CatOverlay');
+  overlay.style.display = 'flex';
+}
+
+function _pos2CloseCat() {
+  document.getElementById('pos2CatOverlay').style.display = 'none';
+}
+
+function _pos2OpenProd(prodId) {
+  const p = productosData.find(x=>x.id===prodId);
+  if (!p) return;
+  _pos2PendingProd = prodId;
+  if (!p.precio_chica) {
+    posAddToCart(p.id, null, p.precio);
+    _pos2CloseCat();
+    _pos2RenderCartPill();
+    showToast('✅ ' + p.nombre + ' agregado', 'success');
+    return;
+  }
+  document.getElementById('pos2ProdTitle').textContent = (p.emoji||'🛍️') + ' ' + p.nombre;
+  document.getElementById('pos2Nota').value = '';
+  const sizes = [
+    {label:'Chica',  precio:p.precio_chica},
+    {label:'Mediana',precio:p.precio_mediana},
+    {label:'Grande', precio:p.precio_grande, star:true}
+  ].filter(s=>s.precio);
+  document.getElementById('pos2SizeGrid').innerHTML = sizes.map(s=>`
+    <button class="pos2-size-btn${s.star?' highlight':''}" onclick="_pos2AddWithSize('${s.label}',${s.precio})">
+      <div class="pos2-size-name">${s.label}${s.star?' ★':''}</div>
+      <div class="pos2-size-price">$${s.precio.toLocaleString()}</div>
+    </button>`).join('');
+  document.getElementById('pos2ProdOverlay').style.display = 'flex';
+}
+
+function _pos2CloseProd() {
+  document.getElementById('pos2ProdOverlay').style.display = 'none';
+}
+
+function _pos2AddWithSize(size, precio) {
+  if (!_pos2PendingProd) return;
+  const p = productosData.find(x=>x.id===_pos2PendingProd);
+  const nota = document.getElementById('pos2Nota')?.value.trim() || '';
+  posAddToCart(_pos2PendingProd, size, precio);
+  if (nota) {
+    const key = `${_pos2PendingProd}_${size||''}`;
+    const item = _posCart.find(i=>i._key===key);
+    if (item) item.nota = nota;
+  }
+  _pos2CloseProd();
+  _pos2CloseCat();
+  _pos2RenderCartPill();
+  showToast('✅ ' + (p?.nombre||'') + ' (' + size + ') agregado', 'success');
+}
+
+function _pos2OpenCart() {
+  if (!_posCart.length) { showToast('Agregá productos primero', 'warning'); return; }
+  _pos2RenderCartContents();
+  document.getElementById('pos2CartOverlay').style.display = 'flex';
+}
+
+function _pos2CloseCart() {
+  document.getElementById('pos2CartOverlay').style.display = 'none';
+}
+
+function _pos2RenderCartPill() {
+  const pill = document.getElementById('pos2CartPill');
+  const lbl  = document.getElementById('pos2CartPillLabel');
+  const tot  = document.getElementById('pos2CartPillTotal');
+  if (!pill || !lbl || !tot) return;
+  const totalItems = _posCart.reduce((s,i)=>s+i.qty,0);
+  const sub = _posCart.reduce((s,i)=>s+i.precio*i.qty,0);
+  if (!totalItems) {
+    pill.classList.add('empty');
+    lbl.textContent = '🛒 Carrito vacío';
+    tot.textContent = 'Elegí productos';
+  } else {
+    pill.classList.remove('empty');
+    lbl.textContent = '🛒 ' + totalItems + ' ítem' + (totalItems!==1?'s':'');
+    tot.textContent = '$' + sub.toLocaleString();
+  }
+}
+
+function _pos2RenderCartContents() {
+  const el     = document.getElementById('pos2CartList');
+  const totEl  = document.getElementById('pos2CartTotals');
+  const mpGrid = document.getElementById('pos2MPGrid');
+  const btn    = document.getElementById('pos2CrearBtn');
+  if (!el) return;
+  if (!_posCart.length) {
+    el.innerHTML = '<div style="text-align:center;padding:28px;color:var(--gray);font-size:14px">🛒 Carrito vacío</div>';
+    if (totEl) totEl.style.display = 'none';
+  } else {
+    el.innerHTML = _posCart.map(i=>`
+      <div class="pos-item-row">
+        <span class="pos-item-emoji">${i.emoji}</span>
+        <div class="pos-item-info">
+          <div class="pos-item-name">${i.nombre}</div>
+          ${i.size?`<div class="pos-item-sub">${i.size}</div>`:''}
+          ${i.nota?`<div class="pos-item-sub" style="color:#7c3aed">📝 ${i.nota}</div>`:''}
+        </div>
+        <div class="pos-item-qty">
+          <button class="pos-iqbtn minus" onclick="posQtyChange('${i._key}',-1);_pos2RenderCartContents();_pos2RenderCartPill()">−</button>
+          <span class="pos-iqnum">${i.qty}</span>
+          <button class="pos-iqbtn" onclick="posQtyChange('${i._key}',1);_pos2RenderCartContents();_pos2RenderCartPill()">+</button>
+        </div>
+        <span class="pos-item-price">$${(i.precio*i.qty).toLocaleString()}</span>
+      </div>`).join('');
+    const sub = _posCart.reduce((s,i)=>s+i.precio*i.qty,0);
+    const mp  = _posSelectedMP ? getMediosPago().find(m=>m.id===_posSelectedMP) : null;
+    const rec = mp?.recargo||0;
+    const tot = rec>0 ? Math.round(sub*(1+rec/100)) : sub;
+    if (totEl) {
+      totEl.style.display='';
+      totEl.innerHTML=`
+        <div class="pos-total-row"><span>Subtotal</span><span>$${sub.toLocaleString()}</span></div>
+        ${rec>0?`<div class="pos-total-row"><span>Recargo ${rec}%</span><span>+$${(tot-sub).toLocaleString()}</span></div>`:''}
+        <div class="pos-total-final"><span>TOTAL</span><span>$${tot.toLocaleString()}</span></div>`;
+    }
+  }
+  if (mpGrid) {
+    mpGrid.innerHTML = getMediosPago().map(m=>`
+      <button class="pos-pay-btn${_posSelectedMP===m.id?' selected':''}" onclick="_pos2SelectMP('${m.id}')">
+        ${m.icono||''}<br>${m.nombre}${m.recargo>0?`<br><small>(+${m.recargo}%)</small>`:''}
+      </button>`).join('');
+  }
+  if (btn) btn.disabled = !_posSelectedMP || !_posCart.length;
+}
+
+function _pos2SelectMP(id) {
+  _posSelectedMP = id;
+  _pos2RenderCartContents();
+}
+
+function posClearCart2() {
+  if (_posCart.length && !confirm('¿Limpiar el ticket?')) return;
+  _posCart = [];
+  _posSelectedMP = null;
+  _pos2CloseCart();
+  _pos2RenderCartPill();
+}
+
+// Escape key handler — closes topmost pos2 overlay
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  if (!_currentSucursalId) return;
+  if (document.getElementById('pos2CartOverlay')?.style.display === 'flex') { _pos2CloseCart(); return; }
+  if (document.getElementById('pos2ProdOverlay')?.style.display === 'flex') { _pos2CloseProd(); return; }
+  if (document.getElementById('pos2CatOverlay')?.style.display === 'flex')  { _pos2CloseCat(); return; }
+});
+
+// ──── END POS2 ─────────────────────────────────────────
 function _renderPosCatTabs() {
   const tabs = document.getElementById('posCatTabs');
   if (!tabs) return;
@@ -7390,7 +7714,8 @@ function posCheckout() {
   }
   // Sucursal mode: ask for tipo (mostrador/delivery) before checkout
   if (_currentSucursalId) {
-    document.getElementById('posDeliveryNombre').value = document.getElementById('posClienteInput')?.value || '';
+    const ci = document.getElementById('pos2ClienteInput');
+    document.getElementById('posDeliveryNombre').value = ci?.value || '';
     document.getElementById('posDeliveryDir').value = '';
     document.getElementById('posDeliveryTel').value = '';
     document.getElementById('tipoDeliveryExtra').style.display = 'none';
@@ -7428,7 +7753,9 @@ function _posFinalizarVenta(tipo, datosDelivery) {
   const sub = _posCart.reduce((s, i) => s + i.precio * i.qty, 0);
   const recargo = mp?.recargo || 0;
   const total = recargo > 0 ? Math.round(sub * (1 + recargo / 100)) : sub;
-  const clienteInput = document.getElementById('posClienteInput');
+  const clienteInput = _currentSucursalId
+    ? document.getElementById('pos2ClienteInput')
+    : document.getElementById('posClienteInput');
   const clienteNombre = (tipo==='delivery' && datosDelivery?.nombre)
     ? datosDelivery.nombre
     : (clienteInput?.value || 'Mostrador');
@@ -7483,7 +7810,12 @@ function _posFinalizarVenta(tipo, datosDelivery) {
   _posSelectedMP = null;
   _posClienteId = null;
   if (clienteInput) clienteInput.value = '';
-  _renderPosCart();
+  if (_currentSucursalId) {
+    _pos2CloseCart();
+    _pos2RenderCartPill();
+  } else {
+    _renderPosCart();
+  }
 }
 
 // Builds ESC/POS comanda for POS orders (2 copies in one job)

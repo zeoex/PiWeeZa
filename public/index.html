@@ -1594,7 +1594,7 @@ tbody tr:hover{background:#f8fafc}
               <label style="font-weight:600">Productos comprados *</label>
               <button class="btn btn-outline btn-sm" onclick="addCmpItem()">+ Agregar</button>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 80px 110px 36px;gap:4px;font-size:11px;font-weight:600;color:var(--gray);margin-bottom:4px;padding:0 4px">
+            <div class="cmp-grid" style="font-size:11px;font-weight:600;color:var(--gray);margin-bottom:4px;padding:0 4px">
               <span>Producto</span><span>Cant.</span><span>Precio Unit.</span><span></span>
             </div>
             <div id="cmpItems"></div>
@@ -2457,6 +2457,12 @@ input:checked+.slider:before{transform:translateX(20px)}
 .pos2-size-btn:active{transform:scale(.95)}
 .pos2-size-name{font-size:16px;font-weight:800;color:#374151}
 .pos2-size-price{font-size:18px;color:var(--success);font-weight:800}
+/* ── Modal compra: fila de productos fluida ── */
+.cmp-grid{display:grid;grid-template-columns:1fr 80px 110px 36px;gap:4px}
+@media (max-width:480px){
+  .cmp-grid{grid-template-columns:1fr 56px 84px 30px}
+  .cmp-grid .form-control{padding:8px 6px;font-size:12.5px}
+}
 /* ── pos2 refinamientos ── */
 .pos2-crear-btn:disabled{background:#e2e8f0;color:#94a3b8;box-shadow:none;cursor:not-allowed}
 .pos2-prod-grid-modal{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
@@ -5593,7 +5599,7 @@ function addCmpItem() {
 function _renderCmpItems() {
   const prodOpts = _stockData.map(s => `<option value="${s.insumoId}">${s.nombre} (${s.unidad})</option>`).join('');
   document.getElementById('cmpItems').innerHTML = _cmpItems.map((item, i) => `
-    <div style="display:grid;grid-template-columns:1fr 80px 110px 36px;gap:4px;margin-bottom:4px">
+    <div class="cmp-grid" style="margin-bottom:4px">
       <select class="form-control" onchange="_cmpItems[${i}].insumoId=this.value">
         <option value="">— Insumo —</option>
         ${prodOpts.replace(`value="${item.insumoId}"`, `value="${item.insumoId}" selected`)}

@@ -3377,7 +3377,7 @@ function initApp() {
         else deliveryData.unshift(updated);
         saveState();
       }
-      if(document.getElementById('sec-delivery').classList.contains('active')) renderDelivery();
+      if(document.getElementById('sec-pedidos')?.classList.contains('active')) renderDelivery();
       const enDelivery = deliveryData.filter(d=>['nuevo','en_cocina','en_camino','listo'].includes(d.estado)).length;
       const badge = document.getElementById('deliveryBadge');
       if(badge) badge.textContent = enDelivery || 0;

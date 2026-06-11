@@ -28,7 +28,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--red:#e63946;--blue:#1d3557;--light:#f8f9fa;--white:#fff;--gray:#6c757d;--border:#dee2e6;--success:#28a745;--warning:#fd7e14;--danger:#dc3545;--info:#17a2b8;--mz-bg:#0d1b2a;--mz-surface:#112233;--mz-border:rgba(255,255,255,0.08);--mz-libre:#16a34a;--mz-libre-glow:rgba(22,163,74,0.4);--mz-ocupada:#d97706;--mz-ocupada-glow:rgba(217,119,6,0.4);--mz-cuenta:#dc2626;--mz-cuenta-glow:rgba(220,38,38,0.4);--tap:44px}
+:root{--red:#e63946;--blue:#1d3557;--light:#f1f5f9;--white:#fff;--gray:#64748b;--border:#e2e8f0;--success:#16a34a;--warning:#f59e0b;--danger:#dc2626;--info:#0891b2;--primary:#4f46e5;--ink:#0f172a;--card-shadow:0 1px 2px rgba(15,23,42,.05),0 4px 14px rgba(15,23,42,.05);--card-shadow-hover:0 2px 4px rgba(15,23,42,.06),0 10px 28px rgba(15,23,42,.10);--mz-bg:#0d1b2a;--mz-surface:#112233;--mz-border:rgba(255,255,255,0.08);--mz-libre:#16a34a;--mz-libre-glow:rgba(22,163,74,0.4);--mz-ocupada:#d97706;--mz-ocupada-glow:rgba(217,119,6,0.4);--mz-cuenta:#dc2626;--mz-cuenta-glow:rgba(220,38,38,0.4);--tap:44px}
 body{font-family:'Inter',sans-serif;background:var(--light);color:#212529;overflow-x:hidden}
 /* === LOGIN === */
 :root{--login-accent:#7c3aed;--login-accent-l:#a78bfa}
@@ -763,6 +763,163 @@ input.form-control:focus{outline:none;border-color:var(--red)}
   .ha-circle { width: 56px; height: 56px; font-size: 26px; }
   .ha-label { font-size: 10px; }
 }
+
+/* ================================================================
+   FACELIFT 2026 — refresh visual + responsive hardening
+   Capa de overrides al final del style: gana por orden de cascada.
+   ================================================================ */
+html{-webkit-text-size-adjust:100%}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;color:#1e293b}
+
+/* --- Sidebar: slate profundo con gradiente + items pill --- */
+.sidebar{background:linear-gradient(180deg,#0b1220 0%,#101b33 55%,#13203c 100%);box-shadow:inset -1px 0 0 rgba(255,255,255,.06)}
+.sidebar-logo{background:rgba(0,0,0,.25);border-bottom:1px solid rgba(255,255,255,.07)}
+.sidebar-nav{padding:10px 8px}
+.nav-item{border-left:none;border-radius:11px;margin:2px 4px;padding:11px 14px;color:rgba(226,232,240,.72)}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#fff;transform:translateX(2px)}
+.nav-item.active{background:linear-gradient(135deg,rgba(230,57,70,.95),rgba(193,18,31,.95));color:#fff;box-shadow:0 6px 18px rgba(230,57,70,.35)}
+.nav-item.active .nav-icon{filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.sidebar-footer{border-top:1px solid rgba(255,255,255,.07)}
+
+/* --- Topbar: translúcida con blur --- */
+.topbar{background:rgba(255,255,255,.86);backdrop-filter:blur(10px) saturate(1.5);-webkit-backdrop-filter:blur(10px) saturate(1.5);border-bottom:1px solid rgba(15,23,42,.07)}
+.topbar-title{color:var(--ink);letter-spacing:-.3px}
+
+/* --- Cards y stats: bordes suaves, sombras modernas, hover --- */
+.card{border-radius:16px;border:1px solid var(--border);box-shadow:var(--card-shadow)}
+.card-header{border-bottom:1px solid #eef2f7}
+.card-header h3{color:var(--ink)}
+.stat-card{border-radius:16px;border:1px solid var(--border);border-left:4px solid transparent;box-shadow:var(--card-shadow);transition:transform .18s ease,box-shadow .18s ease}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--card-shadow-hover)}
+.stat-card.red,.stat-card.blue,.stat-card.green,.stat-card.orange,.stat-card.teal,.stat-card.purple{border-color:var(--border)}
+.stat-card.red{border-left-color:var(--red)}
+.stat-card.blue{border-left-color:#3b82f6}
+.stat-card.green{border-left-color:var(--success)}
+.stat-card.orange{border-left-color:var(--warning)}
+.stat-card.teal{border-left-color:var(--info)}
+.stat-card.purple{border-left-color:#8b5cf6}
+.section-header h2{color:var(--ink);letter-spacing:-.4px}
+
+/* --- Botones: radios y elevación --- */
+.btn{border-radius:11px;transition:transform .15s ease,box-shadow .15s ease,background .15s ease,filter .15s ease}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 3px 10px rgba(220,38,38,.25)}
+.btn-primary:hover{background:linear-gradient(135deg,#dc2626,#b91c1c);transform:translateY(-1px);box-shadow:0 6px 16px rgba(220,38,38,.32)}
+.btn-success{background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 3px 10px rgba(22,163,74,.22)}
+.btn-success:hover{background:linear-gradient(135deg,#16a34a,#15803d);transform:translateY(-1px)}
+.btn-warning{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 3px 10px rgba(217,119,6,.22)}
+.btn-warning:hover{background:linear-gradient(135deg,#d97706,#b45309);transform:translateY(-1px)}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.btn-danger:hover{background:linear-gradient(135deg,#dc2626,#b91c1c);transform:translateY(-1px)}
+.btn-outline{border-color:#cbd5e1}
+.btn-outline:hover{background:#f8fafc;border-color:#94a3b8}
+
+/* --- Tablas --- */
+th{background:#f8fafc;color:#64748b;border-bottom:1px solid var(--border)}
+td{border-bottom:1px solid #f1f5f9}
+tbody tr{transition:background .12s}
+tbody tr:hover{background:#f8fafc}
+
+/* --- Inputs: focus ring --- */
+.search-input,select.form-control,input.form-control,.form-group input{border-radius:10px}
+.search-input:focus,select.form-control:focus,input.form-control:focus,.form-group input:focus{border-color:#e63946;box-shadow:0 0 0 3px rgba(230,57,70,.12)}
+
+/* --- Modales --- */
+.modal{border-radius:18px;box-shadow:0 24px 80px rgba(2,6,23,.35)}
+.modal-header h3{color:var(--ink)}
+
+/* --- Tabs --- */
+.tabs{background:#e9eef5;border-radius:11px;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{border-radius:8px;white-space:nowrap;flex-shrink:0}
+.tab.active{color:var(--ink)}
+
+/* --- Scrollbars finos SOLO desktop (en mobile/tablet ocupan layout y generan franja) --- */
+@media (min-width:1024px){
+.content::-webkit-scrollbar,.table-wrap::-webkit-scrollbar,.chart-wrap::-webkit-scrollbar,.delivery-pipeline::-webkit-scrollbar{width:8px;height:8px}
+.content::-webkit-scrollbar-thumb,.table-wrap::-webkit-scrollbar-thumb,.chart-wrap::-webkit-scrollbar-thumb,.delivery-pipeline::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+.content::-webkit-scrollbar-track,.table-wrap::-webkit-scrollbar-track{background:transparent}
+}
+@media (max-width:1023px){
+.content::-webkit-scrollbar,.table-wrap::-webkit-scrollbar,.chart-wrap::-webkit-scrollbar,.delivery-pipeline::-webkit-scrollbar{width:0;height:0;display:none}
+.content,.table-wrap,.chart-wrap,.delivery-pipeline{scrollbar-width:none}
+}
+
+/* --- Toast moderno --- */
+.toast{background:rgba(15,23,42,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,.35)}
+
+/* --- Resumen de caja: grid fluido (reemplaza inline 1fr 1fr 1fr) --- */
+.caja-stats3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.caja-stat-val{font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* --- Table-wrap siempre scrolleable (no solo mobile) --- */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* --- Grids: los hijos no fuerzan el ancho del track (overflow en tablet) --- */
+.grid-2>*,.grid-3>*,.stats-grid>*{min-width:0}
+
+/* --- Sidebar: contraste de íconos y botón cerrar sesión --- */
+.nav-item .nav-icon{filter:saturate(1.35) brightness(1.22)}
+.sidebar-footer .btn{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.22);color:#f1f5f9}
+.sidebar-footer .btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4);color:#fff}
+
+/* --- Filas de pills/tabs scrolleables: fade como affordance de scroll --- */
+@media (max-width:1023px){
+  .tabs,.pos2-cat-row,.mpo-cat-pills{mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+}
+
+/* ================= RESPONSIVE HARDENING ================= */
+/* Tablet: tablas scrolleables + KPIs 2x2 + resumen caja en filas */
+@media (min-width:768px) and (max-width:1023px){
+  .content table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+  .content table thead,.content table tbody,.content table tr{width:max-content;min-width:100%}
+  .content th,.content td{white-space:nowrap}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:1023px){
+  .caja-stats3{grid-template-columns:1fr;gap:8px}
+  .caja-stats3>div{display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:10px 14px}
+  .caja-stats3 .stat-label{margin-bottom:0!important}
+  .caja-stat-val{font-size:17px!important}
+}
+@media (max-width:767px){
+  .content{padding:14px 12px 90px}
+  .section-header h2{font-size:18px}
+  .section-header .btn{font-size:12px;padding:8px 12px}
+
+  /* toda tabla scrollea horizontal aunque no tenga wrapper */
+  .content table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+  .content table thead,.content table tbody,.content table tr{width:max-content;min-width:100%}
+  .content th,.content td{white-space:nowrap}
+
+  /* kanban pedidos: swipe columna por columna */
+  .delivery-pipeline{scroll-snap-type:x mandatory;gap:10px}
+  .pipeline-col{flex:0 0 82vw;scroll-snap-align:center}
+
+  /* chart de reportes scrolleable */
+  .chart-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .bar-chart{min-width:560px;padding-right:16px}
+
+  /* título duplicado: el topbar ya muestra el nombre de la sección */
+  .section-header h2{display:none}
+  .section-header{justify-content:flex-end;margin-bottom:14px}
+
+  /* card headers con acciones: que hagan wrap */
+  .card-header{flex-wrap:wrap;row-gap:8px}
+
+  /* modales bottom-sheet con respiro */
+  .modal{max-height:92vh}
+  .modal-footer{padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+
+  /* toast arriba en mobile: no pisa footers de modales ni botones */
+  .toast{left:12px;right:12px;bottom:auto;top:calc(10px + env(safe-area-inset-top,0px));transform:translateY(-90px);text-align:center}
+  .toast.show{transform:translateY(0)}
+}
+
+@media (max-width:380px){
+  .stats-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .stat-value{font-size:20px}
+}
 </style>
 </head>
 <body>
@@ -777,7 +934,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
 
   <div class="login-brand">
     <div class="login-module-label" id="loginTitle">Módulo Administración</div>
-    <div class="login-app-name">Res<span>Tito</span></div>
+    <div class="login-app-name">Pi<span>WeeZa</span></div>
   </div>
 
   <div class="login-card">
@@ -869,7 +1026,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         </div>
       </div>
       <button class="btn btn-outline btn-sm btn-block" onclick="doLogout()">🔴 Cerrar sesión</button>
-      <div class="sidebar-brand" style="text-align:center;font-size:10px;color:rgba(255,255,255,0.35);margin-top:10px;letter-spacing:.5px">PiWeeZa By ZeODev</div>
+      <div class="sidebar-brand" style="text-align:center;font-size:10px;color:rgba(255,255,255,0.35);margin-top:10px;letter-spacing:.5px">PiWeeZa by ZeODev</div>
     </div>
   </div>
 
@@ -956,7 +1113,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
           </div>
         </div>
         <!-- Stats generales hoy -->
-        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:16px">
+        <div class="stats-grid" style="margin-bottom:16px">
           <div class="stat-card green"><div class="stat-label">Ventas Hoy</div><div class="stat-value" id="dash-ventas-hoy">$0</div></div>
           <div class="stat-card blue"><div class="stat-label">Pedidos Hoy</div><div class="stat-value" id="dash-pedidos-hoy">0</div></div>
           <div class="stat-card teal"><div class="stat-label">Ticket Promedio</div><div class="stat-value" id="dash-ticket-prom">$0</div></div>
@@ -1147,7 +1304,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
           </div>
           <div class="card">
             <div class="table-wrap"><table id="productosTable">
-              <thead><tr><th>Producto</th><th>Categoría</th><th>Precio Chica</th><th>Precio Med.</th><th>Precio Grande</th><th>Estado</th><th>Visibilidad</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Producto</th><th>Categoría</th><th>Precio Chica</th><th>Precio Mediana</th><th>Precio Grande</th><th>Estado</th><th>Visibilidad</th><th>Acciones</th></tr></thead>
               <tbody id="productosTbody"></tbody>
             </table></div>
           </div>
@@ -1478,10 +1635,10 @@ input.form-control:focus{outline:none;border-color:var(--red)}
           <div class="card" id="cajaResumenCard">
             <div class="card-header"><h3>Resumen del Turno</h3></div>
             <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
-                <div><div class="stat-label">💵 Efectivo</div><div style="font-size:18px;font-weight:800;color:var(--success)" id="cajaCash">$0</div></div>
-                <div><div class="stat-label">💳 Posnet</div><div style="font-size:18px;font-weight:800;color:var(--info)" id="cajaTarjeta">$0</div></div>
-                <div><div class="stat-label">📲 Transfer.</div><div style="font-size:18px;font-weight:800;color:var(--warning)" id="cajaTransfer">$0</div></div>
+              <div class="caja-stats3" style="margin-bottom:12px">
+                <div><div class="stat-label">💵 Efectivo</div><div class="caja-stat-val" style="color:var(--success)" id="cajaCash">$0</div></div>
+                <div><div class="stat-label">💳 Posnet</div><div class="caja-stat-val" style="color:var(--info)" id="cajaTarjeta">$0</div></div>
+                <div><div class="stat-label">📲 Transferencia</div><div class="caja-stat-val" style="color:var(--warning)" id="cajaTransfer">$0</div></div>
               </div>
               <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
                 <span style="color:var(--gray)">Retiros del turno</span>
@@ -1551,7 +1708,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
         </div>
         <div class="grid-2">
           <div class="card">
-            <div class="card-header"><h3>📊 Ventas Diarias</h3></div>
+            <div class="card-header"><h3>📊 Ventas por Hora — Hoy</h3></div>
             <div class="card-body"><div class="bar-chart" id="reporteChart" style="height:160px"></div></div>
           </div>
           <div class="card">
@@ -1698,7 +1855,7 @@ input.form-control:focus{outline:none;border-color:var(--red)}
             <div class="card-body">
               <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Los cambios en mesas, delivery, clientes y demás se guardan automáticamente en este navegador.</p>
               <button class="btn btn-danger" onclick="confirmarResetDemo()">🗑️ Restablecer datos demo</button>
-              <p style="font-size:11px;color:var(--gray);margin-top:16px;margin-bottom:0">PiWeeZa By ZeODev</p>
+              <p style="font-size:11px;color:var(--gray);margin-top:16px;margin-bottom:0">PiWeeZa by ZeODev</p>
             </div>
           </div>
           <div class="card" id="cardComanderas">
@@ -2297,10 +2454,33 @@ input:checked+.slider:before{transform:translateX(20px)}
 .pos2-size-btn:active{transform:scale(.95)}
 .pos2-size-name{font-size:16px;font-weight:800;color:#374151}
 .pos2-size-price{font-size:18px;color:var(--success);font-weight:800}
+/* ── pos2 refinamientos ── */
+.pos2-crear-btn:disabled{background:#e2e8f0;color:#94a3b8;box-shadow:none;cursor:not-allowed}
+.pos2-prod-grid-modal{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+@media (min-width:1024px){
+  .pos2-main{grid-template-columns:1fr 290px}
+}
+/* ── pos2 responsive: apilar ticket + panel de cobro en mobile ── */
+@media (max-width:767px){
+  .pos2-main{display:flex;flex-direction:column}
+  .pos2-ticket-body{flex:1;min-height:0}
+  .pos2-ticket-side{border-left:none;border-top:2px solid var(--border);flex-shrink:0;max-height:58%;overflow-y:auto}
+  .pos2-mp-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pos2-overlay{position:fixed;z-index:1200}
+  .pos2-overlay-inner{width:min(420px,94vw);max-height:88vh}
+}
+@media (max-width:420px){
+  .pos2-mp-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 </style>
 
 <script>
 const API = '/api';
+// Fecha local YYYY-MM-DD (toISOString da UTC → mostraba "mañana" después de las 21hs ART)
+function _hoyLocal(d) {
+  const x = d instanceof Date ? d : new Date();
+  return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+}
 // Path-based session isolation: /mozo and /admin have independent tokens
 const _TOKEN_KEY = 'pz_token';
 const _USER_KEY  = 'pz_user';
@@ -2789,7 +2969,7 @@ const DEMO_USUARIOS = [
   {id:4,nombre:'Cajero 01',email:'cajero01@pizzaya.com',rol:'cajero',activo:true,ultimo:'2026-05-30 09:00'},
   {id:5,nombre:'Cocinero Pedro',email:'cocinero@pizzaya.com',rol:'cocina',activo:false,ultimo:'2026-05-25 18:00'},
 ];
-const _HOY = new Date().toISOString().slice(0,10);
+const _HOY = _hoyLocal();
 const DEMO_CAJA_MOV = [
   {fecha:_HOY,hora:'09:00',tipo:'ingreso',desc:'Apertura de caja',monto:5000},
   {fecha:_HOY,hora:'11:30',tipo:'ingreso',desc:'Venta Mesa 3 — efectivo',monto:4800,pago:'efectivo'},
@@ -3469,7 +3649,7 @@ async function loadDashboard() {
 
   // Stats generales del día
   try {
-    const hoy = new Date().toISOString().slice(0,10);
+    const hoy = _hoyLocal();
     const [ventasRes, sucRes] = await Promise.all([
       apiFetch(`/ventas/diarias?fecha=${hoy}`),
       apiFetch('/reportes/sucursales')
@@ -3497,8 +3677,14 @@ async function loadDashboard() {
             <div style="font-size:12px;color:var(--gray);display:flex;justify-content:space-between;margin-top:4px"><span>Estado caja</span><strong style="color:${s.caja_abierta?'#059669':'#dc2626'}">${s.caja_abierta?'Abierta':'Cerrada'}</strong></div>
           </div>`).join('')}</div>`;
       }
+    } else {
+      const el = document.getElementById('dashSucursales');
+      if (el) el.innerHTML = '<div style="color:var(--gray);text-align:center;padding:12px 0;font-size:13px">Sin datos de sucursales</div>';
     }
-  } catch(e) {}
+  } catch(e) {
+    const el = document.getElementById('dashSucursales');
+    if (el && el.textContent.includes('Cargando')) el.innerHTML = '<div style="color:var(--gray);text-align:center;padding:12px 0;font-size:13px">Sin datos de sucursales</div>';
+  }
 }
 
 function updateDashboardStats(data) { if(data) loadDashboard(); }
@@ -3523,7 +3709,7 @@ function renderDashDelivery() {
 
 function renderActividades() {
   const acts = [];
-  const hoy = new Date().toISOString().slice(0,10);
+  const hoy = _hoyLocal();
   // From cajaMoves (last 8, most recent first)
   const moves = [...cajaMoves].reverse().slice(0,8);
   moves.forEach(m => {
@@ -4210,7 +4396,7 @@ function renderDeliveryCard(o,stage) {
   const idx = flow.indexOf(stage);
   const nextStage = idx>=0 && idx<flow.length-1 ? flow[idx+1] : null;
   const nextLabels = {en_cocina:'▶ A Cocina',listo:'✔ Marcar Listo',en_camino:'🛵 En Camino',entregado:'✅ Entregado'};
-  const nextClasses = {en_cocina:'btn-warning',listo:'btn-primary',en_camino:'btn-success',entregado:'btn-secondary'};
+  const nextClasses = {en_cocina:'btn-warning',listo:'btn-success',en_camino:'btn-success',entregado:'btn-secondary'};
   const nextBtn = nextStage ? `<button class="btn ${nextClasses[nextStage]||'btn-primary'} btn-sm" onclick="advanceDelivery('${o.id}')">${nextLabels[nextStage]||nextStage}</button>` : '';
   const cancelBtn = stage==='nuevo'
     ? `<button class="btn btn-danger btn-sm" onclick="cancelarDelivery('${o.id}')" title="Cancelar pedido">✕</button>`
@@ -4421,7 +4607,7 @@ function crearDelivery() {
   const clienteId = clienteIdStr ? parseInt(clienteIdStr) : null;
   if (!clienteId || !clientesData.find(c => c.id === clienteId)) {
     const newCId = (clientesData.reduce((m,c)=>Math.max(m,c.id),0)||0)+1;
-    clientesData.push({id:newCId,nombre:cliente,telefono:tel,email:'',pedidos:1,total_gastado:0,ultimo:new Date().toISOString().slice(0,10),ultimaDireccion:dir});
+    clientesData.push({id:newCId,nombre:cliente,telefono:tel,email:'',pedidos:1,total_gastado:0,ultimo:_hoyLocal(),ultimaDireccion:dir});
     clienteInput.dataset.clienteId = newCId;
   } else {
     const cx = clientesData.find(c => c.id === clienteId);
@@ -4831,8 +5017,8 @@ function renderProductos() {
         </div>
       </td>
       <td><span class="tag">${p.categoria}</span></td>
-      <td>${p.precio_chica?'$'+p.precio_chica.toLocaleString():'-'}</td>
-      <td>${p.precio_mediana?'$'+p.precio_mediana.toLocaleString():p.precio?'$'+p.precio.toLocaleString():'-'}</td>
+      <td>${p.precio_chica?'$'+p.precio_chica.toLocaleString():(!p.precio_mediana&&!p.precio_grande&&p.precio)?'$'+p.precio.toLocaleString():'-'}</td>
+      <td>${p.precio_mediana?'$'+p.precio_mediana.toLocaleString():'-'}</td>
       <td>${p.precio_grande?'$'+p.precio_grande.toLocaleString():'-'}</td>
       <td><span class="badge ${p.activo?'badge-success':'badge-secondary'}">${p.activo?'Activo':'Inactivo'}</span></td>
       <td style="font-size:13px">${p.en_carta_qr!==false?'📲':''} ${p.en_menu_online!==false?'📋':''}</td>
@@ -5316,7 +5502,7 @@ async function loadCompras() {
 }
 
 function _renderComprasStats() {
-  const hoy = new Date().toISOString().slice(0,10);
+  const hoy = _hoyLocal();
   const mes  = new Date().toISOString().slice(0,7);
   const hoyC  = _comprasData.filter(c => c.fecha.startsWith(hoy));
   const mesC   = _comprasData.filter(c => c.fecha.startsWith(mes));
@@ -5437,7 +5623,7 @@ function cajaCheck(callback) {
 }
 
 function _cajaNow() {
-  return {fecha:new Date().toISOString().slice(0,10), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})};
+  return {fecha:_hoyLocal(), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})};
 }
 
 function abrirCajaDesdeGuard() {
@@ -5508,25 +5694,25 @@ function _cajaResumen() {
 
 function renderCaja() {
   const r = _cajaResumen();
-  const hoy = new Date().toISOString().slice(0,10);
+  const hoy = _hoyLocal();
   const horaAp = cajaMoves.filter(m=>m.tipo==='ingreso'&&m.desc?.includes('Apertura')).slice(-1)[0]?.hora || '--:--';
 
   if (_currentSucursalId) {
     document.getElementById('cajaResumenCard').innerHTML = `
       <div class="card-header"><h3>Turno</h3></div>
       <div class="card-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+        <div class="caja-stats3">
           <div>
             <div class="stat-label" style="margin-bottom:6px">Monto inicial</div>
-            <div style="font-size:22px;font-weight:800;color:var(--success)">$${cajaInicial.toLocaleString()}</div>
+            <div class="caja-stat-val" style="font-size:22px;color:var(--success)">$${cajaInicial.toLocaleString()}</div>
           </div>
           <div>
             <div class="stat-label" style="margin-bottom:6px">Ventas</div>
-            <div style="font-size:22px;font-weight:800;color:var(--primary)">$${r.totalVentas.toLocaleString()}</div>
+            <div class="caja-stat-val" style="font-size:22px;color:var(--primary)">$${r.totalVentas.toLocaleString()}</div>
           </div>
           <div>
             <div class="stat-label" style="margin-bottom:6px">Retiros</div>
-            <div style="font-size:22px;font-weight:800;color:var(--danger)">$${r.retiros.toLocaleString()}</div>
+            <div class="caja-stat-val" style="font-size:22px;color:var(--danger)">$${r.retiros.toLocaleString()}</div>
           </div>
         </div>
       </div>`;
@@ -5563,7 +5749,7 @@ function renderCaja() {
 
 function renderCajaMov() {
   const fechaInput = document.getElementById('cajaFechaFiltro');
-  const filtro = fechaInput?.value || new Date().toISOString().slice(0,10);
+  const filtro = fechaInput?.value || _hoyLocal();
   let movsFiltrados = cajaMoves.filter(m => (m.fecha || _HOY) === filtro).filter(m => !m.desc?.startsWith('Cierre'));
   const tbody = document.getElementById('cajaMov');
   if (!tbody) return;
@@ -5977,7 +6163,7 @@ function guardarCliente() {
     closeModal('modalCliente');
     saveState(); renderClientes(); showToast('Cliente actualizado','success');
   } else {
-    clientesData.unshift({id:Date.now(),nombre,telefono:document.getElementById('cliTel').value,email:document.getElementById('cliEmail').value,direccion:document.getElementById('cliDir').value,pedidos:0,total_gastado:0,ultimo:new Date().toISOString().slice(0,10)});
+    clientesData.unshift({id:Date.now(),nombre,telefono:document.getElementById('cliTel').value,email:document.getElementById('cliEmail').value,direccion:document.getElementById('cliDir').value,pedidos:0,total_gastado:0,ultimo:_hoyLocal()});
     closeModal('modalCliente');
     saveState(); renderClientes(); showToast('Cliente guardado','success');
   }
@@ -6211,7 +6397,7 @@ function _renderCVOverview(data) {
   let html = `
     <div style="grid-column:1/-1;background:linear-gradient(135deg,#1d3557,#457b9d);color:#fff;border-radius:14px;padding:20px 24px;display:flex;flex-wrap:wrap;gap:24px;align-items:center">
       <div>
-        <div style="font-size:11px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.5px">Total del día · ${fecha}</div>
+        <div style="font-size:11px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.5px">Total del día · ${fecha ? fecha.split('-').reverse().join('/') : ''}</div>
         <div style="font-size:36px;font-weight:800;margin-top:4px">$${totalGlobal.toLocaleString('es-AR')}</div>
       </div>
       <div style="margin-left:auto;text-align:right">
@@ -8044,7 +8230,7 @@ function _posFinalizarVenta(tipo, datosDelivery) {
 
   if (_posClienteId) {
     const c = clientesData.find(x => x.id === _posClienteId);
-    if (c) { c.pedidos=(c.pedidos||0)+1; c.total_gastado=(c.total_gastado||0)+total; c.ultimo=new Date().toISOString().slice(0,10); }
+    if (c) { c.pedidos=(c.pedidos||0)+1; c.total_gastado=(c.total_gastado||0)+total; c.ultimo=_hoyLocal(); }
   }
 
   // In sucursal mode: create pedido entry + print comanda x2

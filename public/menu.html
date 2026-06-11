@@ -152,6 +152,7 @@ body{
   padding:10px 14px;
   scroll-behavior:smooth;
   -webkit-overflow-scrolling:touch;
+  max-width:744px;margin:0 auto;
 }
 .cat-nav::-webkit-scrollbar{display:none}
 
@@ -181,7 +182,7 @@ body{
 }
 
 /* ── MAIN CONTENT ── */
-.content{max-width:760px;margin:0 auto;padding:22px 14px 48px}
+.content{max-width:720px;margin:0 auto;padding:24px 16px 56px}
 
 /* ── SECTION HEADER ── */
 .section-hdr{
@@ -283,29 +284,43 @@ body{
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty-state{
-  text-align:center;padding:70px 20px;
-  color:var(--text-3);font-size:14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;
+  min-height:clamp(320px,calc(100vh - 380px),560px);
+  padding:40px 24px;
 }
+.empty-icon{
+  width:88px;height:88px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,rgba(251,191,36,0.16),rgba(217,119,6,0.04));
+  border:1px solid rgba(251,191,36,0.22);
+  display:flex;align-items:center;justify-content:center;
+  font-size:40px;line-height:1;
+  margin-bottom:20px;
+  box-shadow:0 0 32px var(--accent-glow);
+}
+.empty-title{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.2px;margin-bottom:8px}
+.empty-sub{font-size:14px;color:var(--text-2);line-height:1.6;max-width:300px}
 
 /* ── FOOTER ── */
 .footer{
   text-align:center;padding:22px 20px;
-  font-size:12px;color:var(--text-3);
+  font-size:12px;color:var(--text-2);
   border-top:1px solid var(--border);
   background:var(--bg-2);
   margin-top:20px;
   letter-spacing:0.02em;
 }
-.footer strong{color:var(--text-2)}
+.footer strong{color:var(--text)}
 
 /* ── DESKTOP ── */
 @media(min-width:600px){
-  .hero{height:260px;padding:20px 36px 28px}
+  .hero{height:280px;padding:24px 36px 30px}
   .hero-back{top:24px;left:28px}
-  .hero-text h1{font-size:38px}
+  .hero-identity{width:100%;max-width:712px;margin:0 auto}
+  .hero-text h1{font-size:36px}
   .hero-logo-wrap{width:88px;height:88px}
   .hero-logo-wrap .hero-emoji-inner{font-size:44px}
-  .content{padding:28px 28px 64px}
+  .content{padding:32px 24px 72px}
   .card-media{width:112px}
   .section-hdr{margin:36px 0 16px}
 }
@@ -432,7 +447,11 @@ function renderCard(item) {
 function renderMenu() {
   if (!MENU.length) {
     document.getElementById('menuContent').innerHTML =
-      '<div class="empty-state">No hay productos disponibles en la carta.</div>';
+      '<div class="empty-state">' +
+        '<div class="empty-icon">🍕</div>' +
+        '<div class="empty-title">La carta está en preparación</div>' +
+        '<div class="empty-sub">Todavía no hay productos cargados. Volvé a escanear el QR en unos minutos.</div>' +
+      '</div>';
     document.getElementById('catNav').innerHTML = '';
     return;
   }

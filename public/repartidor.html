@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="RT Delivery"/>
-<title>Repartidor - ResTito</title>
+<meta name="apple-mobile-web-app-title" content="PiWeeZa Delivery"/>
+<title>Repartidor - PiWeeZa</title>
 <!-- PWA -->
 <link rel="manifest" href="/manifest-repartidor.json"/>
 <meta name="theme-color" content="#dc2626"/>
@@ -267,7 +267,7 @@
     display: none;
     flex-direction: column;
     height: 100%;
-    max-width: 480px;
+    max-width: 520px;
     margin: 0 auto;
     position: relative;
     background: var(--bg);
@@ -368,6 +368,7 @@
     flex-shrink: 0;
   }
 
+  #btn-toggle-status:hover { background: #eef0f3; border-color: #d1d5db; box-shadow: 0 1px 3px rgba(15,23,42,.08); }
   #btn-toggle-status:active { background: #e5e7eb; }
 
   .status-dot {
@@ -403,6 +404,12 @@
     max-width: 80px;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  @media (max-width: 430px) {
+    #conn-text { display: none; }
+    #conn-badge { padding: 6px; border-radius: 50%; }
+    .top-bar { gap: 10px; }
   }
 
   @media (max-width: 360px) {
@@ -494,13 +501,13 @@
     border-radius: 16px;
     padding: 14px 12px;
     text-align: center;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(15,23,42,.08);
     transition: border-color .2s, box-shadow .2s;
   }
 
   .stat-pill:hover {
     border-color: #d1d5db;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.09);
+    box-shadow: 0 3px 10px rgba(15,23,42,.10);
   }
 
   .stat-num {
@@ -566,15 +573,15 @@
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-left: 3px solid transparent;
-    border-radius: 18px;
+    border-radius: 16px;
     overflow: hidden;
     transition: transform .2s, box-shadow .2s, border-color .2s;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 3px rgba(15,23,42,.08);
   }
 
   .order-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    box-shadow: 0 4px 16px rgba(15,23,42,.12);
   }
 
   /* Estado border colors + hover glow */
@@ -952,10 +959,11 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    transition: border-color .2s;
+    box-shadow: 0 1px 3px rgba(15,23,42,.08);
+    transition: border-color .2s, box-shadow .2s;
   }
 
-  .history-item:hover { border-color: var(--border-active); }
+  .history-item:hover { border-color: var(--border-active); box-shadow: 0 3px 10px rgba(15,23,42,.10); }
 
   .history-check {
     width: 36px;
@@ -1005,11 +1013,12 @@
     background: #ffffff; border: 1px solid #e5e7eb;
     border-radius: 14px; padding: 12px 14px;
     display: flex; flex-direction: column; gap: 0;
-    transition: border-color .2s;
+    box-shadow: 0 1px 3px rgba(15,23,42,.08);
+    transition: border-color .2s, box-shadow .2s;
     margin: 0 14px 8px;
   }
   .history-item-top { display: flex; align-items: center; gap: 12px; }
-  .history-item:hover { border-color: var(--border-active); }
+  .history-item:hover { border-color: var(--border-active); box-shadow: 0 3px 10px rgba(15,23,42,.10); }
   .hist-comment-text {
     font-size: 12px; color: var(--text-2);
     background: #f8f9fb; border-radius: 8px;
@@ -1034,12 +1043,18 @@
     background: var(--accent-light); color: #fff; border: none;
     border-radius: 8px; padding: 6px 14px;
     font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+    transition: background .2s, transform .15s, box-shadow .2s;
   }
+  .hist-btn-save:hover { background: #b91c1c; box-shadow: 0 2px 8px rgba(220,38,38,0.3); }
+  .hist-btn-save:active { transform: scale(0.96); }
   .hist-btn-cancel {
     background: #f3f4f6; color: #6b7280; border: none;
     border-radius: 8px; padding: 6px 12px;
     font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+    transition: background .2s, transform .15s;
   }
+  .hist-btn-cancel:hover { background: #e5e7eb; }
+  .hist-btn-cancel:active { transform: scale(0.96); }
   .hist-add-comment {
     display: inline-flex; align-items: center; gap: 4px;
     margin-top: 6px; font-size: 11px; font-weight: 600;
@@ -1125,6 +1140,7 @@
     border: 1px solid #e5e7eb;
     border-radius: 16px;
     padding: 18px;
+    box-shadow: 0 1px 3px rgba(15,23,42,.08);
   }
 
   .profile-card-title {
@@ -1169,6 +1185,7 @@
     background: rgba(220,38,38,0.12);
     box-shadow: 0 0 0 1px rgba(220,38,38,0.3);
   }
+  .btn-logout:active { transform: scale(0.98); }
 
   /* ══════════════════════════════════════
      BOTTOM NAV — floating pill island
@@ -1211,6 +1228,11 @@
     font-family: inherit;
     border-radius: 24px;
     padding: 4px;
+  }
+
+  .nav-item:hover:not(.active) {
+    color: #6b7280;
+    background: rgba(0,0,0,0.04);
   }
 
   .nav-item.active {
@@ -1342,6 +1364,11 @@
     transition: transform .15s, box-shadow .2s;
   }
 
+  .rp-btn-ack:hover {
+    box-shadow: 0 6px 28px rgba(220,38,38,0.55);
+    transform: translateY(-1px);
+  }
+
   .rp-btn-ack:active {
     transform: scale(0.97);
     box-shadow: 0 2px 12px rgba(220,38,38,0.3);
@@ -1372,7 +1399,7 @@
 
   <div class="login-brand">
     <div class="login-title">Módulo Repartidor</div>
-    <div class="login-app-name">Res<span>Tito</span></div>
+    <div class="login-app-name">Pi<span>WeeZa</span></div>
   </div>
 
   <div class="login-card">
@@ -1994,7 +2021,7 @@ function renderHistory() {
 
   const all = repHistory;
   const cntEl = document.getElementById('hist-total-count');
-  if (cntEl) cntEl.textContent = all.length ? all.length + ' entregas' : '';
+  if (cntEl) cntEl.textContent = all.length ? all.length + ' entrega' + (all.length !== 1 ? 's' : '') : '';
 
   if (all.length === 0) {
     list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Aún no hay entregas registradas.</p></div>`;
@@ -2064,13 +2091,13 @@ function toggleStatus() {
     dot.className  = 'status-dot disponible';
     text.textContent = 'DISPONIBLE';
     pEstado.textContent = 'Disponible';
-    pEstado.style.color = 'var(--accent)';
+    pEstado.style.color = 'var(--disponible-color)';
     showToast('✅ Ahora estás disponible');
   } else {
     dot.className  = 'status-dot no-disponible';
     text.textContent = 'NO DISPONIBLE';
     pEstado.textContent = 'No disponible';
-    pEstado.style.color = 'var(--primary)';
+    pEstado.style.color = 'var(--no-disponible-color)';
     showToast('⛔ Ahora no estás disponible');
   }
 

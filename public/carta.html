@@ -56,8 +56,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .hero-logo-wrap img{width:100%;height:100%;object-fit:cover;display:none}
 .hero-logo-wrap .hero-emoji-inner{font-size:36px;line-height:1}
 .hero-text{flex:1;min-width:0}
-.hero-text h1{font-size:24px;font-weight:800;color:#fff;letter-spacing:-.3px;line-height:1.15;margin-bottom:4px}
-.hero-text p{font-size:13px;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero-text h1{font-size:25px;font-weight:800;color:#fff;letter-spacing:-.5px;line-height:1.12;margin-bottom:5px;text-shadow:0 2px 16px rgba(0,0,0,.35)}
+.hero-text p{font-size:13px;color:rgba(255,255,255,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em}
 .mesa-badge{
   display:none;
   align-self:flex-start;
@@ -83,6 +83,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   padding:10px 14px;
   scroll-behavior:smooth;
   -webkit-overflow-scrolling:touch;
+  max-width:744px;margin:0 auto;
 }
 .cat-nav::-webkit-scrollbar{display:none}
 .cat-pill{
@@ -99,7 +100,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .cat-pill.active{background:#e74c3c;border-color:#e74c3c;color:#fff;font-weight:600}
 
 /* ── MAIN CONTENT ── */
-.content{max-width:760px;margin:0 auto;padding:20px 14px 40px}
+.content{max-width:720px;margin:0 auto;padding:22px 16px 48px}
 
 /* ── SECTION HEADER ── */
 .section-hdr{
@@ -114,7 +115,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .product-card{
   background:#fff;
   border-radius:14px;
-  box-shadow:0 2px 12px rgba(0,0,0,.07);
+  box-shadow:0 1px 3px rgba(0,0,0,.04),0 5px 16px rgba(0,0,0,.06);
   display:flex;align-items:stretch;
   overflow:hidden;
   margin-bottom:10px;
@@ -123,7 +124,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   min-height:90px;
   cursor:pointer;
 }
-.product-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.12);transform:translateY(-1px)}
+.product-card:hover{box-shadow:0 2px 6px rgba(0,0,0,.05),0 10px 26px rgba(0,0,0,.10);transform:translateY(-1px)}
 .product-card:last-child{margin-bottom:0}
 .card-body{
   flex:1;padding:13px 14px;
@@ -178,7 +179,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   animation:spin .7s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-.empty-state{text-align:center;padding:60px 20px;color:#aaa;font-size:14px}
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;
+  min-height:clamp(320px,calc(100vh - 380px),560px);
+  padding:40px 24px;
+}
+.empty-icon{
+  width:88px;height:88px;border-radius:50%;
+  background:linear-gradient(135deg,#fff0ef,#ffe8e2);
+  border:1px solid #fcd0cc;
+  display:flex;align-items:center;justify-content:center;
+  font-size:40px;line-height:1;
+  margin-bottom:20px;
+  box-shadow:0 8px 24px rgba(231,76,60,.12);
+}
+.empty-title{font-size:18px;font-weight:800;color:#1a1a1a;letter-spacing:-.2px;margin-bottom:8px}
+.empty-sub{font-size:14px;color:#999;line-height:1.6;max-width:300px}
 
 /* ── FOOTER ── */
 .footer{
@@ -363,11 +380,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 
 /* ── DESKTOP ── */
 @media(min-width:600px){
-  .hero{height:280px;padding:28px 32px 32px}
+  .hero{height:280px;padding:32px 32px 36px}
   .hero-back{top:24px;left:24px}
-  .hero-text h1{font-size:30px}
-  .content{padding:24px 24px 60px}
-  .card-media{width:110px}
+  .hero-identity{width:100%;max-width:712px;margin:0 auto}
+  .mesa-badge{align-self:center}
+  .hero-text h1{font-size:32px;letter-spacing:-.7px}
+  .hero-logo-wrap{width:84px;height:84px;border-radius:18px}
+  .hero-logo-wrap .hero-emoji-inner{font-size:42px}
+  .content{padding:32px 24px 72px}
+  .card-media{width:112px}
   .sheet{padding:28px 32px 36px}
 }
 </style>
@@ -535,7 +556,11 @@ function renderCard(item) {
 function renderMenu() {
   if (!MENU.length) {
     document.getElementById('menuContent').innerHTML =
-      '<div class="empty-state">No hay productos disponibles en el menú.</div>';
+      '<div class="empty-state">' +
+        '<div class="empty-icon">🍕</div>' +
+        '<div class="empty-title">El menú está en preparación</div>' +
+        '<div class="empty-sub">Todavía no hay productos cargados. Volvé a intentarlo en unos minutos.</div>' +
+      '</div>';
     document.getElementById('catNav').innerHTML = '';
     return;
   }

@@ -15,6 +15,11 @@ const crypto     = require('crypto');
 const { Server } = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
 
+// Fecha local de Argentina YYYY-MM-DD (el server corre en UTC: toISOString daba "mañana" después de las 21hs ART)
+function hoyLocal(d) {
+  return (d instanceof Date ? d : new Date()).toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
+}
+
 // ─────────────────────────────────────────────
 //  QZ TRAY — certificate + signing
 // ─────────────────────────────────────────────
@@ -311,7 +316,7 @@ const db = {
   db.caja = [
     {
       id: uuidv4(),
-      fecha:        new Date().toISOString().split('T')[0],
+      fecha:        hoyLocal(),
       apertura:     new Date(Date.now() - 6 * 3600000).toISOString(),
       cierre:       null,
       saldoInicial: 5000,
@@ -507,7 +512,7 @@ function cajaActual(sucursal_id = null) {
 }
 
 function emitDashboardStats() {
-  const hoy = new Date().toISOString().split('T')[0];
+  const hoy = hoyLocal();
   const pedidosHoy = db.pedidos.filter(p => p.createdAt.startsWith(hoy));
   const ventaHoy   = pedidosHoy.filter(p => p.estado === 'pagado').reduce((s, p) => s + p.total, 0);
   const caja       = cajaActual();
@@ -1238,7 +1243,7 @@ app.post('/api/caja/abrir', authMiddleware, (req, res) => {
   if (cajaActual(sid)) return res.status(400).json({ error: 'Ya hay una caja abierta' });
   const { saldoInicial } = req.body;
   const caja = {
-    id: uuidv4(), fecha: new Date().toISOString().split('T')[0],
+    id: uuidv4(), fecha: hoyLocal(),
     apertura: new Date().toISOString(), cierre: null,
     saldoInicial: parseFloat(saldoInicial || 0), saldoFinal: null,
     efectivoContado: null, diferencia: null, nota: '',
@@ -1299,7 +1304,7 @@ app.post('/api/caja/movimiento', authMiddleware, (req, res) => {
 });
 
 app.get('/api/caja/resumen', (_req, res) => {
-  const hoy  = new Date().toISOString().split('T')[0];
+  const hoy  = hoyLocal();
   const cajas = db.caja.filter(c => c.fecha === hoy);
 
   const ventasEfectivo = db.pedidos
@@ -1453,9 +1458,9 @@ app.get('/api/facturas/:id', (req, res) => {
 });
 
 app.get('/api/ventas/diarias', authMiddleware, (req, res) => {
-  const fecha = req.query.fecha || new Date().toISOString().slice(0, 10);
+  const fecha = req.query.fecha || hoyLocal();
   const sucursal_id = req.query.sucursal_id || null;
-  let facturas = db.facturas.filter(f => (f.createdAt || '').slice(0, 10) === fecha);
+  let facturas = db.facturas.filter(f => hoyLocal(new Date(f.createdAt || 0)) === fecha);
   if (sucursal_id) facturas = facturas.filter(f => f.sucursal_id === sucursal_id);
   const sucursalesMap = {};
   (db.sucursales || []).forEach(s => { sucursalesMap[s.id] = s.nombre; });
@@ -1884,7 +1889,7 @@ app.delete('/api/sucursales/:id', authMiddleware, async (req, res) => {
 app.get('/api/sucursales/:id/stats', authMiddleware, (req, res) => {
   const sid = req.params.id;
   const facturas = db.facturas.filter(f => f.sucursal_id === sid);
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = hoyLocal();
   const facturasHoy = facturas.filter(f => (f.fecha || f.createdAt || '').startsWith(hoy));
   const ventas7d = facturas.filter(f => {
     const d = new Date(f.fecha || f.createdAt);
@@ -1921,7 +1926,7 @@ app.get('/api/sucursales/:id/caja', authMiddleware, (req, res) => {
 
 app.get('/api/reportes/sucursales', authMiddleware, (req, res) => {
   if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = hoyLocal();
   const resultado = (db.sucursales || []).map(suc => {
     const facturas    = db.facturas.filter(f => f.sucursal_id === suc.id);
     const hoyFacturas = facturas.filter(f => (f.fecha || f.createdAt || '').startsWith(hoy));
@@ -2204,11 +2209,11 @@ app.get('/api/compras/:id', authMiddleware, (req, res) => {
 // ─────────────────────────────────────────────
 app.get('/api/cajas/overview', authMiddleware, (req, res) => {
   if (!['admin', 'supervisor'].includes(req.user.rol)) return res.status(403).json({ error: 'Sin permiso' });
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = hoyLocal();
   const sucursales = (db.sucursales || []).filter(s => s.activa);
   const resultado = sucursales.map(s => {
     const facturas = (db.facturas || []).filter(f =>
-      f.sucursal_id === s.id && (f.createdAt || '').slice(0, 10) === hoy
+      f.sucursal_id === s.id && hoyLocal(new Date(f.createdAt || 0)) === hoy
     );
     const total = facturas.reduce((sum, f) => sum + (f.total || 0), 0);
     const byMethod = {};
@@ -2262,7 +2267,7 @@ app.post('/api/cajas/sucursal/:sucursalId/abrir', authMiddleware, (req, res) => 
   if (cajaActual(sucursalId)) return res.status(400).json({ error: `${sucursal.nombre} ya tiene una caja abierta` });
   const { saldoInicial = 0, nota = '' } = req.body;
   const caja = {
-    id: uuidv4(), fecha: new Date().toISOString().split('T')[0],
+    id: uuidv4(), fecha: hoyLocal(),
     apertura: new Date().toISOString(), cierre: null,
     saldoInicial: parseFloat(saldoInicial), saldoFinal: null,
     efectivoContado: null, diferencia: null,

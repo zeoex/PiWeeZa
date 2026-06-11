@@ -3,29 +3,31 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>COCINA - ResTito</title>
+<title>COCINA - PiWeeZa</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#1a1a2e;
-  --bg2:#16213e;
-  --bg3:#0f3460;
-  --card:#1e2a45;
-  --card2:#243050;
-  --red:#e63946;
-  --yellow:#f4a261;
-  --green:#2a9d8f;
-  --text:#e0e0f0;
-  --text2:#a0aec0;
-  --border:#2d3a5c;
-  --shadow:0 4px 20px rgba(0,0,0,0.4);
+  --bg:#0f172a;
+  --bg2:#1e293b;
+  --bg3:#334155;
+  --card:#1e293b;
+  --card2:#273548;
+  --red:#ef4444;
+  --yellow:#f59e0b;
+  --green:#10b981;
+  --text:#e2e8f0;
+  --text2:#94a3b8;
+  --border:rgba(255,255,255,.08);
+  --shadow:0 8px 24px rgba(0,0,0,.35);
 }
 body{
   font-family:'Barlow',sans-serif;
-  background:var(--bg);
+  background:linear-gradient(160deg,#0f172a 0%,#1e293b 100%);
+  background-attachment:fixed;
   color:var(--text);
   height:100vh;
+  height:100dvh;
   display:flex;
   flex-direction:column;
   overflow:hidden;
@@ -33,8 +35,10 @@ body{
 
 /* ── TOPBAR ── */
 .topbar{
-  background:var(--bg2);
-  border-bottom:2px solid var(--bg3);
+  background:rgba(30,41,59,.85);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 2px 12px rgba(0,0,0,.25);
   padding:0 24px;
   height:64px;
   display:flex;
@@ -61,25 +65,29 @@ body{
   animation:pulse-badge 2s infinite;
 }
 @keyframes pulse-badge{
-  0%,100%{box-shadow:0 0 0 0 rgba(230,57,70,0.5)}
-  50%{box-shadow:0 0 0 8px rgba(230,57,70,0)}
+  0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.5)}
+  50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}
 }
 .topbar-actions{display:flex;align-items:center;gap:12px}
 .btn-nueva{
-  background:linear-gradient(135deg,#667eea,#764ba2);
-  color:#fff;border:none;border-radius:8px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;border:none;border-radius:10px;
   padding:10px 18px;
   font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;
   cursor:pointer;letter-spacing:.5px;transition:all .2s;text-transform:uppercase;
+  box-shadow:0 4px 14px rgba(99,102,241,.25);
+  white-space:nowrap;
 }
-.btn-nueva:hover{background:linear-gradient(135deg,#5a6fd6,#6a43a0);transform:translateY(-1px)}
+.btn-nueva:hover{background:linear-gradient(135deg,#4f46e5,#7c3aed);transform:translateY(-1px)}
+.btn-kbd{font-size:10px;opacity:.7;background:rgba(0,0,0,.3);padding:1px 4px;border-radius:3px;margin-left:6px}
 .btn-volver{
-  background:transparent;color:var(--text2);
-  border:1px solid var(--border);border-radius:8px;
+  background:rgba(255,255,255,.04);color:var(--text2);
+  border:1px solid var(--border);border-radius:10px;
   padding:10px 16px;
   font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;
   cursor:pointer;transition:all .2s;
   text-decoration:none;display:flex;align-items:center;gap:6px;
+  white-space:nowrap;
 }
 .btn-volver:hover{background:var(--card);color:#fff;border-color:var(--text2)}
 
@@ -97,9 +105,10 @@ body{
 /* ── COLUMN ── */
 .column{
   display:flex;flex-direction:column;
-  background:var(--card);
-  border-radius:12px;overflow:hidden;
+  background:rgba(30,41,59,.65);
+  border-radius:16px;overflow:hidden;
   border:1px solid var(--border);
+  box-shadow:0 4px 18px rgba(0,0,0,.2);
   min-height:0;
 }
 .col-header{
@@ -114,12 +123,12 @@ body{
   display:flex;align-items:center;justify-content:center;
   background:rgba(0,0,0,0.3);
 }
-.col-pendiente .col-header{background:rgba(230,57,70,0.12);border-bottom:3px solid var(--red)}
-.col-pendiente .col-header h2{color:var(--red)}
-.col-preparacion .col-header{background:rgba(244,162,97,0.12);border-bottom:3px solid var(--yellow)}
-.col-preparacion .col-header h2{color:var(--yellow)}
-.col-listo .col-header{background:rgba(42,157,143,0.12);border-bottom:3px solid var(--green)}
-.col-listo .col-header h2{color:var(--green)}
+.col-pendiente .col-header{background:rgba(239,68,68,0.12);border-bottom:3px solid var(--red)}
+.col-pendiente .col-header h2{color:#f87171}
+.col-preparacion .col-header{background:rgba(245,158,11,0.12);border-bottom:3px solid var(--yellow)}
+.col-preparacion .col-header h2{color:#fbbf24}
+.col-listo .col-header{background:rgba(16,185,129,0.12);border-bottom:3px solid var(--green)}
+.col-listo .col-header h2{color:#34d399}
 
 .col-body{
   flex:1;overflow-y:auto;
@@ -137,7 +146,8 @@ body{
 /* ── COMANDA CARD ── */
 .comanda{
   background:var(--card2);
-  border-radius:10px;border:1px solid var(--border);
+  border-radius:14px;border:1px solid var(--border);
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
   overflow:hidden;transition:transform .15s,box-shadow .15s;
   cursor:grab;user-select:none;
 }
@@ -161,8 +171,8 @@ body{
   padding:4px 10px;border-radius:12px;
   letter-spacing:.8px;text-transform:uppercase;flex-shrink:0;
 }
-.badge-mesa{background:rgba(102,126,234,0.2);color:#a5b4fc;border:1px solid rgba(102,126,234,0.35)}
-.badge-delivery{background:rgba(244,162,97,0.2);color:#fbbf24;border:1px solid rgba(244,162,97,0.35)}
+.badge-mesa{background:rgba(99,102,241,0.18);color:#a5b4fc;border:1px solid rgba(99,102,241,0.35)}
+.badge-delivery{background:rgba(245,158,11,0.18);color:#fbbf24;border:1px solid rgba(245,158,11,0.35)}
 
 .comanda-info{
   padding:8px 14px;
@@ -179,9 +189,9 @@ body{
   padding:4px 10px;border-radius:8px;
   font-variant-numeric:tabular-nums;
 }
-.timer-ok{background:rgba(42,157,143,0.18);color:#4ade80}
-.timer-warn{background:rgba(244,162,97,0.18);color:var(--yellow)}
-.timer-danger{background:rgba(230,57,70,0.18);color:var(--red);animation:blink .8s step-end infinite}
+.timer-ok{background:rgba(16,185,129,0.18);color:#34d399}
+.timer-warn{background:rgba(245,158,11,0.18);color:#fbbf24}
+.timer-danger{background:rgba(239,68,68,0.18);color:#f87171;animation:blink .8s step-end infinite}
 @keyframes blink{50%{opacity:.4}}
 .timer-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
 
@@ -199,18 +209,18 @@ body{
 /* ── ACTION BUTTON ── */
 .comanda-footer{padding:10px 14px;border-top:1px solid var(--border)}
 .btn-accion{
-  width:100%;padding:12px;border:none;border-radius:8px;
+  width:100%;padding:12px;border:none;border-radius:10px;
   font-family:'Barlow',sans-serif;font-size:14px;font-weight:800;
   letter-spacing:1px;text-transform:uppercase;cursor:pointer;
   transition:all .2s;
   display:flex;align-items:center;justify-content:center;gap:8px;
   touch-action:manipulation;
 }
-.btn-iniciar{background:linear-gradient(135deg,var(--yellow),#e76f51);color:#1a1a2e}
+.btn-iniciar{background:linear-gradient(135deg,#f59e0b,#f97316);color:#0f172a}
 .btn-iniciar:hover{filter:brightness(1.12);transform:translateY(-1px)}
-.btn-listo{background:linear-gradient(135deg,var(--green),#52b788);color:#fff}
+.btn-listo{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
 .btn-listo:hover{filter:brightness(1.12);transform:translateY(-1px)}
-.btn-entregar{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+.btn-entregar{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
 .btn-entregar:hover{filter:brightness(1.12);transform:translateY(-1px)}
 
 /* ── STATUS BAR ── */
@@ -233,7 +243,7 @@ body{
 .toast{
   background:var(--card2);border:1px solid var(--green);
   border-left:4px solid var(--green);color:#fff;
-  padding:12px 18px;border-radius:8px;font-size:14px;font-weight:600;
+  padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;
   box-shadow:var(--shadow);max-width:300px;
   animation:toast-in .3s ease-out,toast-out .3s ease-in 2.7s forwards;
   pointer-events:auto;
@@ -247,8 +257,8 @@ body{
   font-size:11px;font-weight:700;
   padding:4px 10px;border-radius:12px;letter-spacing:.5px;
 }
-.conn-online{background:rgba(42,157,143,0.18);color:#4ade80;border:1px solid rgba(42,157,143,0.35)}
-.conn-offline{background:rgba(244,162,97,0.15);color:#fbbf24;border:1px solid rgba(244,162,97,0.3)}
+.conn-online{background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.35)}
+.conn-offline{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)}
 .conn-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
 .conn-online .conn-dot{animation:pulse-dot 1.5s infinite}
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
@@ -269,7 +279,7 @@ body{
   .clock{font-size:26px}
 }
 
-/* ── TABLET (hasta 1023px) ── */
+/* ── TABLET (768–1023px): carrusel horizontal con scroll-snap ── */
 @media(max-width:1023px){
   .board{
     display:flex;
@@ -283,30 +293,58 @@ body{
     scroll-snap-type:x mandatory;
   }
   .column{
-    min-width:300px;
-    flex:0 0 300px;
+    min-width:320px;
+    flex:0 0 320px;
     scroll-snap-align:start;
   }
   .clock{font-size:24px}
+  /* header compacto en tablet: nada se corta ni hace wrap raro */
+  .topbar{padding:0 14px}
+  .topbar-brand span{letter-spacing:1px;white-space:nowrap}
+  .topbar-center{gap:14px}
+  .topbar-actions{gap:8px}
+  .btn-nueva{padding:9px 12px}
+  .btn-lbl-ext,.btn-kbd{display:none}
 }
 
-/* ── MOBILE (hasta 767px) ── */
+/* ── MOBILE (<768px): columnas apiladas verticalmente ── */
 @media(max-width:767px){
-  .topbar{padding:8px 12px;height:auto;flex-wrap:wrap;gap:8px}
-  .topbar-brand h1{font-size:15px}
-  .topbar-brand span{font-size:10px}
+  /* header en 2 filas: marca + reloj/badge arriba, acciones abajo */
+  .topbar{padding:10px 12px;height:auto;flex-wrap:wrap;gap:8px;row-gap:10px}
+  .topbar-brand{order:1}
+  .topbar-brand h1{font-size:16px}
+  .topbar-brand span{display:none}
   .topbar-brand .icon{font-size:22px}
-  .topbar-center{gap:12px}
+  .topbar-center{order:2;margin-left:auto;gap:10px}
   .clock{font-size:20px}
-  .badge-pendientes{font-size:12px;padding:5px 10px}
-  .topbar-actions{gap:8px}
-  .btn-nueva{padding:8px 12px;font-size:12px}
-  .btn-volver{padding:8px 12px;font-size:12px}
-  .board{gap:8px;padding:8px;padding-bottom:12px}
-  .column{min-width:260px;flex:0 0 260px}
+  .badge-pendientes{font-size:11px;padding:5px 10px}
+  .topbar-actions{order:3;flex-basis:100%;justify-content:space-between;gap:8px}
+  .btn-nueva{padding:9px 14px;font-size:12px}
+  .btn-volver{padding:9px 14px;font-size:12px}
+  .btn-lbl-ext,.btn-kbd{display:none}
+
+  /* board apilado vertical: una columna debajo de la otra, scroll vertical */
+  .board{
+    flex-direction:column;
+    overflow-x:hidden;
+    overflow-y:auto;
+    scroll-snap-type:none;
+    gap:12px;
+    padding:12px;
+  }
+  .column{min-width:0;width:100%;flex:0 0 auto;scroll-snap-align:none}
+  .col-body{flex:none;overflow:visible}
+  .col-empty{padding:20px 16px}
+
   .btn-accion{min-height:48px;font-size:14px;padding:14px}
-  .statusbar{padding:8px 12px;gap:16px;flex-wrap:wrap}
+  .statusbar{padding:8px 10px;gap:8px 18px;flex-wrap:wrap;justify-content:space-evenly}
   .stat-sep{display:none}
+  .stat-item{font-size:12px}
+  .stat-num{font-size:16px}
+
+  /* toasts abajo: no tapan los controles del header */
+  .toast-container{top:auto;bottom:84px;left:12px;right:12px;align-items:stretch}
+  .toast{max-width:none;text-align:center}
 }
 </style>
 </head>
@@ -318,7 +356,7 @@ body{
     <div class="icon">🍕</div>
     <div>
       <h1>Cocina</h1>
-      <span>Pizzería Pro — KDS</span>
+      <span>PiWeeZa — KDS</span>
     </div>
   </div>
 
@@ -336,7 +374,7 @@ body{
       <div class="conn-dot"></div>
       <span id="conn-text">DEMO</span>
     </div>
-    <button class="btn-nueva" onclick="simularNuevaComanda()">+ NUEVA COMANDA &nbsp;<kbd style="font-size:10px;opacity:.7;background:rgba(0,0,0,.3);padding:1px 4px;border-radius:3px">F1</kbd></button>
+    <button class="btn-nueva" onclick="simularNuevaComanda()">+ NUEVA<span class="btn-lbl-ext"> COMANDA</span><kbd class="btn-kbd">F1</kbd></button>
     <a href="index.html" class="btn-volver">&#8592; Panel</a>
   </div>
 </header>
@@ -398,7 +436,7 @@ body{
   </div>
   <div class="stat-sep">|</div>
   <div class="stat-item" style="font-size:12px">
-    Refresh:
+    Actualizado:
     <span id="last-refresh" style="color:#fff;margin-left:4px;font-variant-numeric:tabular-nums">--:--:--</span>
   </div>
 </footer>

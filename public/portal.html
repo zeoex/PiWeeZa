@@ -175,12 +175,21 @@
     background: linear-gradient(90deg, transparent, rgba(167,139,250,0.35) 30%, rgba(56,189,248,0.35) 70%, transparent);
   }
 
-  /* ───── GRID ───── */
+  /* ───── GRID ─────
+     Mobile-first: 2 columnas. En >=768px pasa a tracks centrados
+     de ancho fijo (2-3 columnas según cantidad de cards). */
   .grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
     width: 100%;
+  }
+
+  /* Sección con una sola card: centrada a ancho completo de tile */
+  .grid > .tile:only-child {
+    grid-column: 1 / -1;
+    width: min(100%, 240px);
+    justify-self: center;
   }
 
   /* ───── TILE ───── */
@@ -374,12 +383,44 @@
     color: rgba(167,139,250,0.4);
   }
 
+  /* ───── DESKTOP / TABLET (>=768px) ─────
+     Cards en grilla centrada de 2-3 columnas con encabezados de sección. */
+  @media (min-width: 768px) {
+    .wrapper { max-width: 960px; }
+    .grid {
+      grid-template-columns: repeat(auto-fit, minmax(230px, 270px));
+      justify-content: center;
+      gap: 22px;
+    }
+    .portal-section { margin-top: 38px; margin-bottom: 0; }
+    .portal-section:first-child { margin-top: 0; }
+    .portal-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .portal-label::before,
+    .portal-label::after {
+      content: '';
+      height: 1px;
+      width: 72px;
+      flex-shrink: 0;
+    }
+    .portal-label::before {
+      background: linear-gradient(90deg, transparent, rgba(167,139,250,0.28));
+    }
+    .portal-label::after {
+      background: linear-gradient(90deg, rgba(167,139,250,0.28), transparent);
+    }
+  }
+
   /* ───── RESPONSIVE ───── */
   @media (max-width: 700px) {
     .brand-name { font-size: 38px; letter-spacing: -1.5px; }
     .brand-icon-svg { width: 46px; height: 46px; }
     .brand-row { gap: 12px; }
-    .grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
     .tile { padding: 28px 16px 22px; }
     .tile-icon { width: 68px; height: 68px; font-size: 30px; margin-bottom: 16px; border-radius: 18px; }
     .tile-icon img { width: 68px; height: 68px; }
@@ -394,6 +435,14 @@
     .tile-icon img { width: 60px; height: 60px; }
     .tile-label { font-size: 13px; }
     .tile-sub   { font-size: 11px; }
+  }
+
+  /* ───── WIDE DESKTOP (>=900px): secciones lado a lado ───── */
+  @media (min-width: 900px) {
+    .wrapper-sections { display: flex; gap: 30px; align-items: flex-start; justify-content: center; width: 100%; }
+    .portal-section { flex: 1; min-width: 0; max-width: 300px; margin-top: 0 !important; }
+    .grid { grid-template-columns: 1fr; justify-content: stretch; gap: 18px; }
+    .portal-label::before, .portal-label::after { width: 28px; }
   }
 </style>
 </head>
@@ -473,7 +522,7 @@
 
   <!-- FOOTER -->
   <footer class="footer">
-    PiWeeZa By <span>ZeODev</span> &reg;
+    PiWeeZa by <span>ZeODev</span> &reg;
   </footer>
 
   <script>

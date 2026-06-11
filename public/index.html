@@ -2231,7 +2231,7 @@ tbody tr:hover{background:#f8fafc}
   <div class="modal">
     <div class="modal-header"><h3>🟡 Caja Cerrada</h3><button class="modal-close" onclick="closeModal('modalAbrirCaja')">✕</button></div>
     <div class="modal-body">
-      <div style="text-align:center;padding:12px 0 16px;font-size:15px;color:var(--gray)">La caja está cerrada.<br>¿Desea abrirla para continuar?</div>
+      <div style="text-align:center;padding:12px 0 16px;font-size:15px;color:var(--gray)">¿Está seguro de abrir la caja<span id="abrirCajaModalSuc"></span>?</div>
       <div class="form-group">
         <label>Monto inicial / cambio ($)</label>
         <input class="form-control" id="cajaAbrirMonto" type="number" placeholder="5000" value="5000"/>
@@ -3264,7 +3264,7 @@ function _setSucursalMode(sucursalId) {
   _applyConfigVisibility();
   // Mostrar nombre de la sucursal en el sidebar
   apiFetch('/sucursales').then(r => r.json()).then(suc => {
-    const s = (suc || []).find(x => x.id === _currentSucursalId);
+    const s = (suc || []).find(x => x.id === _currentSucursalId || x.slug === _currentSucursalId || x.slug === _pathSucId);
     if (s) {
       _currentSucursalNombre = s.nombre;
       const el = document.getElementById('sidebarBiz');
@@ -3419,17 +3419,19 @@ function initApp() {
           let escData = null;
           if (job.type === 'delivery' && job.delivery) {
             escData = epComandaDelivery(job.delivery);
+          } else if (job.type === 'cierre' && job.cierre) {
+            escData = epCierreCaja(job.cierre);
           } else if (job.items && job.mesa) {
             escData = epComanda(job.mesa, job.items);
           }
           if (escData) {
             QzTray.send(escData).then(ok => {
-              if (ok) showToast('🖨️ Comanda impresa', 'success');
+              if (ok) showToast('🖨️ ' + (job.label || 'Comanda') + ' impresa', 'success');
               else    showToast('⚠️ QZ Tray: error al imprimir', 'error');
             });
           }
         } else {
-          showToast('⚠️ Nueva comanda — conectá QZ Tray para imprimir', 'warning');
+          showToast('⚠️ ' + (job.label || 'Nueva comanda') + ' — conectá QZ Tray para imprimir', 'warning');
         }
         return;
       }
@@ -3451,6 +3453,8 @@ function initApp() {
         let escData = null;
         if (job.type === 'delivery' && job.delivery) {
           escData = epComandaDelivery(job.delivery);
+        } else if (job.type === 'cierre' && job.cierre) {
+          escData = epCierreCaja(job.cierre);
         } else if (job.items && job.mesa) {
           escData = job.type==='cuenta' ? epCuenta(job.mesa,job.items) : epComanda(job.mesa,job.items);
         }
@@ -4124,7 +4128,7 @@ function abrirMesa(id) {
     closeModal('modalMesa');
     _pendingCajaAction = () => clickMesa(id);
     document.getElementById('cajaAbrirMonto').value = '5000';
-    openModal('modalAbrirCaja');
+    _abrirCajaPrompt();
     return;
   }
   const m = mesasData.find(x=>String(x.id)===String(id));
@@ -4620,7 +4624,7 @@ function crearDelivery() {
     closeModal('modalNuevoDelivery');
     _pendingCajaAction = () => abrirModalNuevoDelivery();
     document.getElementById('cajaAbrirMonto').value = '5000';
-    openModal('modalAbrirCaja');
+    _abrirCajaPrompt();
     return;
   }
   const clienteInput = document.getElementById('dlvCliente');
@@ -4722,6 +4726,62 @@ function epComandaDelivery(o) {
   if (o.repartidor) s += 'Repartidor: '+o.repartidor+NL;
   s += NL+NL+NL+G+'V\x42\x00';
   return [{type:'raw',format:'plain',data:s,options:{language:'ESCPOS'}}];
+}
+
+function epCierreCaja(c) {
+  const E='\x1B', G='\x1D', NL='\n';
+  const biz = getBizConfig();
+  const cols = printConfig.paperWidth==='58mm' ? 32 : 42;
+  const SEP = '-'.repeat(cols);
+  const row = (l, r) => l + ' '.repeat(Math.max(1, cols - l.length - r.length)) + r + NL;
+  const money = v => '$' + (v||0).toLocaleString('es-AR');
+  const dif = v => v==null ? '---' : ((v>=0?'+':'-') + '$' + Math.abs(v).toLocaleString('es-AR'));
+  let s = E+'@';
+  s += E+'a\x01'+E+'E\x01'+G+'!\x10'+(biz.nombre||'PiWeeZa')+NL+G+'!\x00'+E+'E\x00';
+  if (_currentSucursalNombre) s += E+'a\x01'+_currentSucursalNombre+NL;
+  s += SEP+NL;
+  s += E+'a\x01'+G+'!\x11'+E+'E\x01'+'CIERRE DE CAJA'+NL+G+'!\x00'+E+'E\x00';
+  s += E+'a\x01'+(c.fecha||'')+' '+(c.hora||'')+' hs'+NL;
+  s += E+'a\x01'+'Apertura: '+(c.horaApertura||'--')+NL;
+  s += SEP+NL+E+'a\x00';
+  s += E+'E\x01'+'VENTAS DEL SISTEMA'+E+'E\x00'+NL;
+  const tipo = (lbl, sis, dec, df) => {
+    s += row(lbl, money(sis));
+    if (dec != null) { s += row('  Declarado', money(dec)); s += row('  Diferencia', dif(df)); }
+  };
+  tipo('Efectivo', c.ventasEfectivo, c.declaradoEfectivo, c.diferenciaEfectivo);
+  tipo('Posnet', c.ventasTarjeta, c.declaradoPostnet, c.diferenciaPostnet);
+  tipo('Transferencia', c.ventasTransfer, c.declaradoTransfer, c.diferenciaTransfer);
+  s += SEP+NL;
+  s += E+'E\x01'+row('TOTAL VENTAS', money(c.totalVentas))+E+'E\x00';
+  s += row('Retiros', '-'+money(c.retiros));
+  s += row('Monto inicial', money(c.saldoInicial));
+  s += SEP+NL;
+  s += E+'E\x01'+row('SALDO CAJA', money(c.saldoFinal))+E+'E\x00';
+  s += SEP+NL;
+  s += NL+'Firma encargado:'+NL+NL+'______________________'+NL;
+  s += NL+NL+NL+G+'V\x42\x00';
+  return [{type:'raw',format:'plain',data:s,options:{language:'ESCPOS'}}];
+}
+
+// Imprime el cierre: QZ Tray local (comandera) → hub de impresión → window.print
+async function imprimirCierre(c) {
+  c = c || _ultimoCierre || cajaCierres[0];
+  if (!c) { showToast('No hay cierre para imprimir','error'); return; }
+  if (QzTray.isOn()) {
+    const ok = await QzTray.send(epCierreCaja(c));
+    if (ok) { showToast('🖨️ Cierre impreso','success'); return; }
+  }
+  try {
+    await fetch('/api/print', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ type:'cierre', cierre:c, html:buildPrintDoc('Cierre de Caja', _cierreHtmlBody({...c, controlado:true})), label:'Cierre de Caja', sucursal_id:_currentSucursalId||null })
+    });
+    showToast('🖨️ Cierre enviado a impresora','success');
+  } catch(e) {
+    _printCierreTpl({...c, controlado:true});
+  }
 }
 
 async function imprimirDelivery(id) {
@@ -5644,7 +5704,7 @@ function cajaCheck(callback) {
   if (cajaAbierta) { callback(); return; }
   _pendingCajaAction = callback;
   document.getElementById('cajaAbrirMonto').value = '5000';
-  openModal('modalAbrirCaja');
+  _abrirCajaPrompt();
 }
 
 function _cajaNow() {
@@ -5794,15 +5854,22 @@ function renderCajaMov() {
     </tr>`).join('');
 }
 
-function abrirCaja() {
-  const monto = parseInt(document.getElementById('cajaInicialInput').value)||5000;
-  cajaInicial=monto; cajaAbierta=true;
-  cajaMoves = [{..._cajaNow(),tipo:'ingreso',desc:'Apertura de caja',monto}];
-  saveState(); renderCaja(); showToast('Caja abierta','success');
-  if (_currentSucursalId) {
-    apiFetch('/caja/abrir', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({saldoInicial:monto})}).catch(()=>{});
-    navTo('venta', document.querySelector('[data-section="venta"]'));
+// Setea el nombre de la sucursal en la pregunta del modal y lo abre
+function _abrirCajaPrompt() {
+  const lbl = document.getElementById('abrirCajaModalSuc');
+  if (lbl) {
+    const nombre = _currentSucursalNombre || getBizConfig().nombre || '';
+    lbl.textContent = nombre ? ` de "${nombre}"` : '';
   }
+  openModal('modalAbrirCaja');
+}
+
+function abrirCaja() {
+  // Pregunta "¿Está seguro de abrir la caja de <sucursal>?" antes de abrir
+  const monto = parseInt(document.getElementById('cajaInicialInput')?.value)||5000;
+  const inp = document.getElementById('cajaAbrirMonto');
+  if (inp) inp.value = monto;
+  _abrirCajaPrompt();
 }
 
 
@@ -5915,7 +5982,8 @@ function prepararCierreFinal() {
   const bc = document.getElementById('btnConfirmarCierre');
   if (bc) bc.style.display = 'none';
   document.getElementById('cierreCajaBody').innerHTML = `
-    <div style="text-align:center;padding:6px 0 12px;font-size:15px;font-weight:700;color:var(--blue)">¿Está seguro de cerrar la caja?</div>
+    <div style="text-align:center;padding:6px 0 4px;font-size:15px;font-weight:700;color:var(--blue)">¿Está seguro de cerrar la caja?</div>
+    <div style="text-align:center;font-size:12.5px;color:#b45309;background:#fef3c7;border-radius:8px;padding:8px 12px;margin-bottom:12px">🖨️ No olvides imprimir tu cierre y adjuntarlo con tu caja.</div>
     <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;font-size:13px">
       <table style="width:100%;border-collapse:collapse">
         <thead><tr style="background:#f8f9fa">
@@ -5956,24 +6024,38 @@ function prepararCierreFinal() {
     </div>`;
 }
 
+let _ultimoCierre = null;
+
 function ejecutarCierreCaja() {
   const r = _cajaResumen();
   const {fecha, hora} = _cajaNow();
   const horaAp = cajaMoves.filter(m=>m.tipo==='ingreso'&&m.desc?.includes('Apertura')).slice(-1)[0]?.hora || '--:--';
   const d = _cierreDeclared || {dinero:0, posnet:0, transf:0};
-  cajaCierres.unshift({fecha, hora, horaApertura: horaAp, saldoInicial: cajaInicial,
+  const cierre = {fecha, hora, horaApertura: horaAp, saldoInicial: cajaInicial,
     ventasEfectivo: r.ventasEfectivo, ventasTarjeta: r.ventasTarjeta,
     ventasTransfer: r.ventasTransfer, totalVentas: r.totalVentas,
     retiros: r.retiros, saldoFinal: d.dinero+d.posnet+d.transf-r.retiros,
     declaradoEfectivo: d.dinero, declaradoPostnet: d.posnet, declaradoTransfer: d.transf,
     diferenciaEfectivo: d.dinero-r.ventasEfectivo,
     diferenciaPostnet: d.posnet-r.ventasTarjeta,
-    diferenciaTransfer: d.transf-r.ventasTransfer});
+    diferenciaTransfer: d.transf-r.ventasTransfer};
+  cajaCierres.unshift(cierre);
+  _ultimoCierre = cierre;
   cajaAbierta = false;
   cajaMoves.push({..._cajaNow(),tipo:'egreso',desc:'Cierre de caja',monto:0});
   _cierreDeclared = null;
-  saveState(); closeModal('modalCierreCaja'); renderCaja();
+  saveState(); renderCaja();
   showToast('Caja cerrada correctamente','success');
+  // Estado de éxito en el modal: habilita imprimir el cierre (comandera via QZ/hub)
+  const bi = document.getElementById('btnImprimirCierre');
+  if (bi) { bi.disabled=false; bi.style.opacity='1'; bi.style.cursor='pointer'; bi.onclick=()=>imprimirCierre(_ultimoCierre); }
+  const bc = document.getElementById('btnConfirmarCierre');
+  if (bc) bc.style.display='none';
+  document.getElementById('cierreCajaBody').innerHTML = `
+    <div style="text-align:center;padding:14px 0 4px;font-size:42px">✅</div>
+    <div style="text-align:center;font-weight:800;font-size:17px;color:var(--success);margin-bottom:8px">Caja cerrada correctamente</div>
+    <div style="text-align:center;font-size:12.5px;color:#b45309;background:#fef3c7;border-radius:8px;padding:8px 12px;margin-bottom:16px">🖨️ No olvides imprimir tu cierre y adjuntarlo con tu caja.</div>
+    <button class="btn btn-primary btn-block" style="font-size:15px;padding:14px" onclick="imprimirCierre(_ultimoCierre)">🖨️ Imprimir cierre</button>`;
   // Sync to db.caja with full cierre data so admin "Cajas & Ventas" shows complete summary
   if (_currentSucursalId) {
     apiFetch('/caja/cerrar', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
@@ -6053,6 +6135,10 @@ function renderCierresHistorial() {
 }
 
 function _printCierreTpl(data) {
+  _printLocal(buildPrintDoc('Cierre de Caja', _cierreHtmlBody(data)));
+}
+
+function _cierreHtmlBody(data) {
   const {fecha, hora, horaApertura, saldoInicial, ventasEfectivo, ventasTarjeta, ventasTransfer,
     totalVentas, retiros, saldoFinal, declaradoEfectivo, declaradoPostnet, declaradoTransfer,
     diferenciaEfectivo, diferenciaPostnet, diferenciaTransfer, controlado} = data;
@@ -6082,7 +6168,7 @@ function _printCierreTpl(data) {
     <hr class="sep">
     <p class="center" style="margin-top:6px">${controlado?'[X]':'[ ]'} CONTROLADO POR ENCARGADO</p>
     <p class="center" style="margin-top:20px">Firma: ____________________</p>`;
-  _printLocal(buildPrintDoc('Cierre de Caja', cuerpo));
+  return cuerpo;
 }
 
 function imprimirCierreCaja() {
@@ -6103,7 +6189,7 @@ function imprimirCierreCaja() {
 function imprimirCierreHistorial(idx) {
   const c = cajaCierres[idx];
   if (!c) return;
-  _printCierreTpl({...c, controlado:true});
+  imprimirCierre(c);
 }
 
 function guardarRetiroCaja() {
@@ -8173,7 +8259,7 @@ function posCheckout() {
   if (!cajaAbierta) {
     _pendingCajaAction = () => { _pendingCajaAction = null; renderVenta(); posCheckout(); };
     document.getElementById('cajaAbrirMonto').value = '5000';
-    openModal('modalAbrirCaja');
+    _abrirCajaPrompt();
     return;
   }
   // Sucursal mode: ask for tipo (mostrador/delivery) before checkout

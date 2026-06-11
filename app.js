@@ -819,8 +819,8 @@ app.patch('/api/mesas/:id', authMiddleware, (req, res) => {
 //  PRINT ROUTES
 // ─────────────────────────────────────────────
 app.post('/api/print', (req, res) => {
-  const { type, html, mesaNumero, label, items, mesa, delivery, printedByClient, sucursal_id } = req.body;
-  if (!html && !printedByClient && !items && !delivery) return res.status(400).json({ error: 'html o items requerido' });
+  const { type, html, mesaNumero, label, items, mesa, delivery, cierre, printedByClient, sucursal_id } = req.body;
+  if (!html && !printedByClient && !items && !delivery && !cierre) return res.status(400).json({ error: 'html o items requerido' });
   const job = {
     id: uuidv4(),
     type: type || 'comanda',
@@ -828,6 +828,7 @@ app.post('/api/print', (req, res) => {
     items: items || null,
     mesa: mesa || null,
     delivery: delivery || null,
+    cierre: cierre || null,
     mesaNumero,
     label: label || null,
     sucursal_id: sucursal_id || null,

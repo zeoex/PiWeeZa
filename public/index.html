@@ -1301,7 +1301,7 @@ tbody tr:hover{background:#f8fafc}
         <div id="prodVistaLista">
           <div class="filter-bar">
             <input class="search-input" placeholder="Buscar producto..." oninput="filterProductos(this.value)"/>
-            <select class="form-control" id="filtroCategoriaProd" onchange="filterProductosCat(this.value)">
+            <select class="form-control" id="filtroCategoriaProd" aria-label="Filtrar productos por categoría" onchange="filterProductosCat(this.value)">
               <option value="">Todas las categorías</option>
             </select>
           </div>
@@ -1657,7 +1657,7 @@ tbody tr:hover{background:#f8fafc}
           <div class="card-header">
             <h3>Movimientos de Caja</h3>
             <div style="display:flex;align-items:center;gap:8px">
-              <input type="date" id="cajaFechaFiltro" class="form-control" style="width:auto;font-size:12px;padding:4px 8px" oninput="renderCajaMov()"/>
+              <input type="date" id="cajaFechaFiltro" aria-label="Filtrar movimientos de caja por fecha" class="form-control" style="width:auto;font-size:12px;padding:4px 8px" oninput="renderCajaMov()"/>
               <button class="btn btn-warning btn-sm" onclick="openModal('modalRetiroCaja')">💸 Retiro</button>
             </div>
           </div>

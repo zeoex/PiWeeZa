@@ -867,7 +867,7 @@ tbody tr:hover{background:#f8fafc}
 
 /* --- Filas de pills/tabs scrolleables: fade como affordance de scroll --- */
 @media (max-width:1023px){
-  .tabs,.pos2-cat-row,.mpo-cat-pills{mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+  .tabs,.pos2-cat-row,.mpo-cat-pills,.delivery-pipeline{mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
 }
 
 /* ================= RESPONSIVE HARDENING ================= */
@@ -1764,7 +1764,7 @@ tbody tr:hover{background:#f8fafc}
             <select id="vdSucursal" class="form-control" style="width:auto;min-width:160px" onchange="renderVentasDia()">
               <option value="">Todas las sucursales</option>
             </select></div>
-          <button class="btn btn-primary btn-sm" onclick="renderVentasDia()">🔄 Actualizar</button>
+          <button class="btn btn-outline btn-sm" onclick="renderVentasDia()">🔄 Actualizar</button>
         </div>
         <div id="vdResumen" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px"></div>
         <div style="overflow-x:auto;background:#fff;border-radius:10px;border:1px solid var(--border)">
@@ -3607,7 +3607,7 @@ function navTo(section, el) {
   else document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('sec-'+section).classList.add('active');
-  const titles = {dashboard:'Vista Principal',sucursales:'🏢 Sucursales','cajas-ventas':'💰 Cajas & Ventas','ventas-dia':'📋 Ventas del Día',venta:'Venta Directa',pedidos:'Pedidos',delivery:'Delivery',productos:'Productos',stock:'📦 Stock & Traslados',compras:'🛒 Compras',caja:'Caja',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración'};
+  const titles = {dashboard:'Vista Principal',sucursales:'Sucursales','cajas-ventas':'Cajas & Ventas','ventas-dia':'Ventas del Día',venta:'Venta Directa',pedidos:'Pedidos',delivery:'Delivery',productos:'Productos',stock:'Stock & Traslados',compras:'Compras',caja:'Caja',clientes:'Clientes',reportes:'Reportes',usuarios:'Usuarios',config:'Configuración'};
   document.getElementById('topbarTitle').textContent = titles[section] || section;
   const loaders = {dashboard:loadDashboard,sucursales:()=>renderSucursales(),'cajas-ventas':loadCajasVentas,'ventas-dia':renderVentasDia,venta:renderVenta,pedidos:renderDelivery,delivery:renderDelivery,productos:renderProductos,stock:loadStock,compras:loadCompras,caja:renderCaja,clientes:renderClientes,reportes:renderReportes,usuarios:renderUsuarios,config:loadPrintConfigUI};
   if(loaders[section]) loaders[section]();
@@ -6334,18 +6334,9 @@ async function renderVentasDia() {
   const resumen = document.getElementById('vdResumen');
   if (resumen) {
     resumen.innerHTML = `
-      <div style="background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px 20px;display:flex;flex-direction:column;gap:4px">
-        <div style="font-size:28px;font-weight:800;color:var(--primary)">${data.totalVentas}</div>
-        <div style="font-size:12px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Ventas</div>
-      </div>
-      <div style="background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px 20px;display:flex;flex-direction:column;gap:4px">
-        <div style="font-size:28px;font-weight:800;color:#059669">$${(data.totalMonto||0).toLocaleString('es-AR')}</div>
-        <div style="font-size:12px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Total recaudado</div>
-      </div>
-      <div style="background:#fff;border-radius:10px;border:1px solid var(--border);padding:16px 20px;display:flex;flex-direction:column;gap:4px">
-        <div style="font-size:28px;font-weight:800;color:#7c3aed">$${(data.ticketProm||0).toLocaleString('es-AR')}</div>
-        <div style="font-size:12px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Ticket promedio</div>
-      </div>
+      <div class="stat-card blue"><div class="stat-label">Ventas</div><div class="stat-value">${data.totalVentas}</div></div>
+      <div class="stat-card green"><div class="stat-label">Total Recaudado</div><div class="stat-value">$${(data.totalMonto||0).toLocaleString('es-AR')}</div></div>
+      <div class="stat-card purple"><div class="stat-label">Ticket Promedio</div><div class="stat-value">$${(data.ticketProm||0).toLocaleString('es-AR')}</div></div>
     `;
   }
 
@@ -7002,8 +6993,8 @@ function renderMediosPagoConfig() {
         <input class="form-control" type="number" value="${m.recargo||0}" min="0" max="99" step="0.5" id="mpRec${i}" style="width:64px"/>
         <span style="font-size:12px;color:var(--gray)">%</span>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="saveMedioPago(${i})">💾</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteMedioPago(${i})">🗑️</button>
+      <button class="btn btn-success btn-sm" onclick="saveMedioPago(${i})" title="Guardar">💾</button>
+      <button class="btn btn-outline btn-sm" onclick="deleteMedioPago(${i})" title="Eliminar" style="color:var(--danger);border-color:#fca5a5">🗑️</button>
     </div>`).join('');
 }
 

@@ -1313,7 +1313,7 @@ tbody tr:hover{background:#f8fafc}
         <div id="prodVistaCats" style="display:none">
           <div class="card">
             <div class="table-wrap"><table>
-              <thead><tr><th>Emoji</th><th>Nombre</th><th>ID</th><th>Va a Comanda</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Nombre</th><th>ID</th><th>Va a Comanda</th><th>Acciones</th></tr></thead>
               <tbody id="categoriasTbody"></tbody>
             </table></div>
           </div>
@@ -2072,15 +2072,15 @@ tbody tr:hover{background:#f8fafc}
       </div>
       <div class="form-group"><label>Descripción</label><input class="form-control" id="prodDesc" placeholder="Descripción breve..."/></div>
       <div class="form-row" style="align-items:flex-start;gap:16px">
-        <div class="form-group" style="flex:0 0 auto">
+        <div class="form-group" style="flex:0 0 auto;display:none">
           <label>Emoji</label>
-          <input class="form-control" id="prodEmoji" placeholder="🍕" value="🍕" style="width:80px" oninput="const fe=document.getElementById('prodFotoEmoji');if(fe.style.display!=='none')fe.textContent=this.value||'🍕'"/>
+          <input class="form-control" id="prodEmoji" placeholder="🍕" value="🍕" style="width:80px"/>
         </div>
         <div class="form-group" style="flex:1">
           <label>Foto del producto <span style="color:var(--gray);font-size:11px;font-weight:400">(cuadrada, sugerido 400×400px · JPG/PNG/WebP)</span></label>
           <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
             <div id="prodFotoPreview" style="width:72px;height:72px;border-radius:10px;border:1.5px dashed var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;flex-shrink:0;cursor:pointer" onclick="document.getElementById('prodFotoInput').click()" title="Clic para subir foto">
-              <span id="prodFotoEmoji">🍕</span>
+              <span id="prodFotoEmoji">📷</span>
               <img id="prodFotoImg" style="width:100%;height:100%;object-fit:cover;display:none" src="" alt=""/>
             </div>
             <div style="display:flex;flex-direction:column;gap:6px">
@@ -2121,7 +2121,7 @@ tbody tr:hover{background:#f8fafc}
       <input type="hidden" id="catEditId"/>
       <div class="form-row">
         <div class="form-group" style="flex:2"><label>Nombre</label><input class="form-control" id="catNombre" placeholder="Pizzas"/></div>
-        <div class="form-group" style="flex:0 0 90px"><label>Emoji</label><input class="form-control" id="catEmoji" placeholder="🍕" style="text-align:center;font-size:20px"/></div>
+        <div class="form-group" style="flex:0 0 90px;display:none"><label>Emoji</label><input class="form-control" id="catEmoji" placeholder="🍕" style="text-align:center;font-size:20px"/></div>
       </div>
       <div class="form-group"><label>ID interno</label><input class="form-control" id="catIdInput" placeholder="pizzas" style="font-family:monospace"/><small style="color:var(--gray);font-size:11px">Solo letras minúsculas, sin espacios. No modificar si ya tiene productos.</small></div>
       <div class="form-group" style="display:flex;align-items:center;gap:10px">
@@ -3802,7 +3802,7 @@ function mesaPedidoHTML(id) {
   const m = mesasData.find(x=>String(x.id)===String(id));
   const esMozo = currentUser?.rol === 'mozo';
   const cats = [...new Set(productosData.map(p=>p.categoria))];
-  const catLabels = Object.fromEntries(categoriasData.map(c=>[c.id,`${c.emoji} ${c.nombre}`]));
+  const catLabels = Object.fromEntries(categoriasData.map(c=>[c.id,c.nombre]));
   const subtotal = (m.pedido||[]).reduce((s,i)=>s+i.precio*i.qty,0);
   const sid = `'${id}'`;
 
@@ -3888,7 +3888,6 @@ function showAddItemProds(mesaId, cat) {
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px">
       ${prods.map(p=>`
         <div class="mpo-prod-card" onclick="seleccionarProductoMesa(${p.id})" style="min-height:80px;border-radius:12px;padding:12px 8px">
-          <div class="mpo-prod-emoji" style="font-size:26px">${p.emoji}</div>
           <div class="mpo-prod-name" style="font-size:12px">${p.nombre}</div>
           ${!esMozo?`<div class="mpo-prod-price">${p.precio_chica?'desde $'+p.precio_chica.toLocaleString():'$'+p.precio.toLocaleString()}</div>`:''}
         </div>`).join('') || '<div style="color:#bbb;font-size:13px;padding:8px">Sin productos</div>'}
@@ -3903,7 +3902,6 @@ function filtrarCatMesa(cat) {
   const prods = productosData.filter(p=>p.categoria===cat&&p.activo);
   document.getElementById('productosMenuMesa').innerHTML = prods.map(p=>`
     <div class="mpo-prod-card" onclick="seleccionarProductoMesa(${p.id})">
-      <div class="mpo-prod-emoji">${p.emoji}</div>
       <div class="mpo-prod-name">${p.nombre}</div>
       ${!esMozo?`<div class="mpo-prod-price">${p.precio_chica?'desde $'+p.precio_chica.toLocaleString():'$'+p.precio.toLocaleString()}</div>`:''}
     </div>`).join('') || '<div style="color:#bbb;font-size:12px;padding:8px">Sin productos</div>';
@@ -3919,7 +3917,7 @@ function seleccionarProductoMesa(prodId) {
   const esComida = getCatsComanda().includes(p.categoria);
   const sid = `'${_mesaModalId}'`;
 
-  document.getElementById('sizePickerTitle').innerHTML = `${p.emoji} ${p.nombre}`;
+  document.getElementById('sizePickerTitle').innerHTML = p.nombre;
 
   const notaHTML = esComida ? `
     <div style="margin-top:14px">
@@ -4779,7 +4777,7 @@ function addDlvItem() {
   const row = document.createElement('div');
   row.className = 'dlv-item-row';
   row.style.cssText = 'display:flex;gap:5px;margin-top:6px;align-items:center;flex-wrap:wrap';
-  const prodOptions = productosData.map(p=>`<option value="${p.id}">${p.emoji||''} ${p.nombre}</option>`).join('');
+  const prodOptions = productosData.map(p=>`<option value="${p.id}">${p.nombre}</option>`).join('');
   const firstProd = productosData[0];
   const sizeHtml = firstProd?.precio_chica
     ? `<select class="form-control dlv-size-sel" style="width:100px;font-size:12px" onchange="dlvActualizarTotal()">
@@ -4863,7 +4861,7 @@ function switchProdTab(tab) {
 }
 
 function _populateCatSelects() {
-  const opts = categoriasData.map(c=>`<option value="${c.id}">${c.emoji} ${c.nombre}</option>`).join('');
+  const opts = categoriasData.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
   const optsFiltro = '<option value="">Todas las categorías</option>' + opts;
   const filtro = document.getElementById('filtroCategoriaProd');
   if (filtro) filtro.innerHTML = optsFiltro;
@@ -4874,7 +4872,6 @@ function _populateCatSelects() {
 function renderCategorias() {
   document.getElementById('categoriasTbody').innerHTML = categoriasData.map(c=>`
     <tr>
-      <td style="font-size:22px;text-align:center">${c.emoji}</td>
       <td><strong>${c.nombre}</strong></td>
       <td style="font-family:monospace;font-size:12px;color:var(--gray)">${c.id}</td>
       <td style="text-align:center"><span class="badge ${c.comanda?'badge-success':'badge-secondary'}">${c.comanda?'Sí':'No'}</span></td>
@@ -5012,7 +5009,7 @@ function renderProductos() {
         <div style="display:flex;align-items:center;gap:10px">
           ${p.foto
             ? `<img src="${p.foto}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0">`
-            : `<span style="font-size:26px;line-height:1;flex-shrink:0">${p.emoji}</span>`}
+            : ''}
           <div><strong>${p.nombre}</strong>${p.descripcion?`<div style="font-size:11px;color:var(--gray)">${p.descripcion}</div>`:''}</div>
         </div>
       </td>
@@ -5060,7 +5057,7 @@ function editProducto(id) {
     document.getElementById('prodFotoRemoveBtn').style.display = '';
     document.getElementById('prodFotoPreview').style.border = '1.5px solid var(--primary)';
   } else {
-    document.getElementById('prodFotoEmoji').textContent = p.emoji || '🍕';
+    document.getElementById('prodFotoEmoji').textContent = '📷';
   }
   openModal('modalProducto');
 }
@@ -7784,7 +7781,7 @@ function _pos2OpenCat(catId) {
         const priceLabel = hasSizes ? `desde $${p.precio_chica.toLocaleString()}` : `$${(p.precio||0).toLocaleString()}`;
         const imgEl = p.foto
           ? `<img src="${p.foto}" style="width:50px;height:50px;object-fit:cover;border-radius:10px">`
-          : `<div class="pos2-prod-emoji">${p.emoji||'🛍️'}</div>`;
+          : '';
         return `<button class="pos2-prod-btn" onclick="_pos2OpenProd(${p.id})">
           ${imgEl}
           <div class="pos2-prod-name">${p.nombre}</div>
@@ -7812,7 +7809,7 @@ function _pos2OpenProd(prodId) {
     showToast('✅ ' + p.nombre + ' agregado', 'success');
     return;
   }
-  document.getElementById('pos2ProdTitle').textContent = (p.emoji||'🛍️') + ' ' + p.nombre;
+  document.getElementById('pos2ProdTitle').textContent = p.nombre;
   document.getElementById('pos2Nota').value = '';
   const sizes = [
     {label:'Chica',  precio:p.precio_chica},
@@ -7859,7 +7856,6 @@ function _pos2RenderCart() {
   } else {
     el.innerHTML = _posCart.map(i=>`
       <div class="pos-item-row">
-        <span class="pos-item-emoji">${i.emoji}</span>
         <div class="pos-item-info">
           <div class="pos-item-name">${i.nombre}</div>
           ${i.size?`<div class="pos-item-sub">${i.size}</div>`:''}
@@ -7918,7 +7914,7 @@ function _renderPosCatTabs() {
   const tabs = document.getElementById('posCatTabs');
   if (!tabs) return;
   const cats = [...new Set(productosData.filter(p => p.activo).map(p => p.categoria))];
-  tabs.innerHTML = `<button class="pos-cat-tab${_posCat==='all'?' active':''}" onclick="posSetCat('all')">✨ Todos</button>` +
+  tabs.innerHTML = `<button class="pos-cat-tab${_posCat==='all'?' active':''}" onclick="posSetCat('all')">Todos</button>` +
     cats.map(c => `<button class="pos-cat-tab${_posCat===c?' active':''}" onclick="posSetCat('${c}')">${c.charAt(0).toUpperCase()+c.slice(1)}</button>`).join('');
 }
 
@@ -7941,7 +7937,7 @@ function _renderPosProdGrid() {
     const sizeBadge = hasSizes ? '<div class="pos-prod-sizes">3 presentaciones</div>' : '';
     const imgHtml = p.foto
       ? `<img class="pos-prod-img" src="${p.foto}" alt="${p.nombre}">`
-      : `<div class="pos-prod-emoji">${p.emoji||'🛍️'}</div>`;
+      : '';
     return `<div class="pos-prod-card" onclick="posTapProduct(${p.id})">
       ${imgHtml}
       <div class="pos-prod-name">${p.nombre}</div>
@@ -7969,7 +7965,7 @@ function posTapProduct(prodId) {
   if (!p) return;
   if (p.precio_chica) {
     // Show presentation picker
-    document.getElementById('posPresentTitle').innerHTML = `${p.emoji||'🛍️'} ${p.nombre}`;
+    document.getElementById('posPresentTitle').innerHTML = p.nombre;
     document.getElementById('posPresentList').innerHTML = `
       <button class="pos-pres-btn" onclick="posAddToCart(${p.id},'Chica',${p.precio_chica});document.getElementById('posPresentOverlay').style.display='none'">
         <span>Chica</span><span>$${p.precio_chica.toLocaleString()}</span>
@@ -8033,7 +8029,6 @@ function _renderPosCart() {
 
   itemsEl.innerHTML = _posCart.map(i => `
     <div class="pos-item-row">
-      <span class="pos-item-emoji">${i.emoji}</span>
       <div class="pos-item-info">
         <div class="pos-item-name">${i.nombre}</div>
         ${i.size ? `<div class="pos-item-sub">${i.size}</div>` : ''}

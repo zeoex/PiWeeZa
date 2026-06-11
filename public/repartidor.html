@@ -260,6 +260,24 @@
     line-height: 1.5;
   }
 
+  .login-remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #6b7280;
+    cursor: pointer;
+    margin: 2px 2px 12px;
+    user-select: none;
+  }
+  .login-remember input {
+    width: 16px;
+    height: 16px;
+    accent-color: #dc2626;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
   /* ══════════════════════════════════════
      APP SHELL
   ══════════════════════════════════════ */
@@ -1435,6 +1453,8 @@
         <input type="hidden" id="login-password"/>
       </div>
 
+      <label class="login-remember"><input type="checkbox" id="loginRemember"/> Recordar cuenta en este dispositivo</label>
+
       <button class="btn-login" id="login-btn" type="button" onclick="handleLogin()">
         Entrar al turno
       </button>
@@ -1654,8 +1674,26 @@ function handleLogin() {
   errEl.textContent = '';
   currentDriver = { user, ...driver };
   try { localStorage.setItem('rep_driver', JSON.stringify(currentDriver)); } catch(e) {}
+  // Recordar cuenta en este dispositivo
+  try {
+    if (document.getElementById('loginRemember')?.checked) localStorage.setItem('rep_remember_user', user);
+    else localStorage.removeItem('rep_remember_user');
+  } catch(e) {}
   bootApp();
 }
+
+// Recordar cuenta: prefill del usuario guardado
+(function(){
+  try {
+    const saved = localStorage.getItem('rep_remember_user');
+    if (saved) {
+      const el = document.getElementById('input-conductor');
+      const chk = document.getElementById('loginRemember');
+      if (el && !el.value) el.value = saved;
+      if (chk) chk.checked = true;
+    }
+  } catch(e) {}
+})();
 
 document.getElementById('input-pin').addEventListener('keydown', e => {
   if (e.key === 'Enter') handleLogin();
@@ -1671,7 +1709,7 @@ function handleLogout() {
   pedidos = [];
   disponible = true;
   try { localStorage.removeItem('rep_driver'); } catch(e) {}
-  document.getElementById('input-conductor').value = '';
+  document.getElementById('input-conductor').value = (function(){ try { return localStorage.getItem('rep_remember_user') || ''; } catch(e) { return ''; } })();
   document.getElementById('input-pin').value = '';
   document.getElementById('login-error').textContent = '';
   document.getElementById('app').classList.remove('visible');

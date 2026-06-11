@@ -76,6 +76,8 @@ body{font-family:'Inter',sans-serif;background:var(--light);color:#212529;overfl
 .btn-sm{padding:7px 12px;font-size:13px}
 .btn-block{width:100%;margin-top:8px}
 .btn-lg{padding:14px 24px;font-size:16px}
+.login-remember{display:flex;align-items:center;gap:8px;font-size:13px;color:#6b7280;cursor:pointer;margin:2px 2px 12px;user-select:none}
+.login-remember input{width:16px;height:16px;accent-color:var(--login-accent);cursor:pointer;flex-shrink:0}
 .login-demo{color:#9ca3af;font-size:11px;text-align:center;margin-top:14px;line-height:1.5}
 .login-error{color:var(--login-accent,#7c3aed);font-size:13px;font-weight:500;text-align:center;margin-top:14px;min-height:18px;display:none}
 /* === LAYOUT === */
@@ -952,6 +954,7 @@ tbody tr:hover{background:#f8fafc}
         <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"/>
       </div>
     </div>
+    <label class="login-remember"><input type="checkbox" id="loginRemember"/> Recordar cuenta en este dispositivo</label>
     <button class="btn-login" onclick="doLogin()">Ingresar</button>
     <div class="login-error" id="loginError"></div>
     <div class="login-demo" id="loginDemo"></div>
@@ -3181,10 +3184,29 @@ async function doLogin() {
       token = 'demo-token'; currentUser = demoUser;
     } else { errEl.style.display = 'block'; return; }
   }
+  // Recordar cuenta: guarda el email por dispositivo (scoped por ruta admin/sucursal)
+  try {
+    if (document.getElementById('loginRemember')?.checked) localStorage.setItem(_REMEMBER_KEY, email);
+    else localStorage.removeItem(_REMEMBER_KEY);
+  } catch(e) {}
   localStorage.setItem(_TOKEN_KEY, token);
   localStorage.setItem(_USER_KEY, JSON.stringify(currentUser));
   initApp();
 }
+
+// Recordar cuenta: prefill del email guardado (key por ruta: /admin y cada /sucursal/:id separados)
+const _REMEMBER_KEY = 'pz_remember_email::' + (_pathSucId ? 'sucursal:' + _pathSucId : window.location.pathname.replace(/\/$/,'') || '/');
+(function(){
+  try {
+    const saved = localStorage.getItem(_REMEMBER_KEY);
+    if (saved) {
+      const emailEl = document.getElementById('loginEmail');
+      const chk = document.getElementById('loginRemember');
+      if (emailEl && !emailEl.value) emailEl.value = saved;
+      if (chk) chk.checked = true;
+    }
+  } catch(e) {}
+})();
 
 document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 // Apply logo/name to login screen before user logs in

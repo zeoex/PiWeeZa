@@ -65,22 +65,14 @@ const BASE = process.env.BASE || 'http://localhost:3077';
   const pedidosAntes = await p.evaluate(() => deliveryData.length);
   await p.evaluate(() => { const b = [...document.querySelectorAll('.section-header .btn')].find(x => x.textContent.includes('Nuevo Pedido')); if (b) b.click(); });
   await p.waitForTimeout(500);
-  const crearOk = await p.evaluate(async () => {
-    // completar cliente y teléfono directos
-    const nom = document.querySelector('#delCliente, #npCliente, input[placeholder*="cliente" i]');
-    if (nom) nom.value = 'Cliente E2E';
-    const tel = document.querySelector('#delTel, #npTel, input[placeholder*="4567" i]');
-    if (tel) tel.value = '11-5555-0000';
-    const dir = document.querySelector('#delDir, #npDir, input[placeholder*="Corrientes" i]');
-    if (dir) dir.value = 'Calle Falsa 123';
-    await new Promise(r => setTimeout(r, 200));
-    const crear = [...document.querySelectorAll('button')].find(x => /crear pedido/i.test(x.textContent) && x.offsetParent);
-    if (crear) { crear.click(); return true; }
-    return false;
-  });
+  // Usar fill (dispara eventos input) con los IDs reales del modal
+  await p.fill('#dlvCliente', 'Cliente E2E');
+  await p.fill('#dlvTel', '11-5555-0000');
+  await p.fill('#dlvDir', 'Calle Falsa 123');
+  await p.evaluate(() => { const crear = [...document.querySelectorAll('button')].find(x => /crear pedido/i.test(x.textContent) && x.offsetParent); if (crear) crear.click(); });
   await p.waitForTimeout(1000);
   const pedidosDespues = await p.evaluate(() => deliveryData.length);
-  ok('Pedidos: crear pedido delivery', crearOk && pedidosDespues > pedidosAntes);
+  ok('Pedidos: crear pedido delivery', pedidosDespues > pedidosAntes);
   // avanzar estado
   if (pedidosDespues > pedidosAntes) {
     await p.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /a cocina/i.test(x.textContent) && x.offsetParent); if (b) b.click(); });

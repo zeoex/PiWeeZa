@@ -49,23 +49,29 @@ const BASE = process.env.BASE || 'http://localhost:3077';
   const llego = comandasDespues > comandasIniciales;
   console.log('2. comanda llegó a cocina en vivo:', llego ? '✅' : `❌ (antes ${comandasIniciales}, después ${comandasDespues})`);
 
-  // la comanda debe aparecer en la columna PENDIENTE
+  // Seguir la comanda recién llegada por su ID (robusto a comandas residuales del server)
   if (llego) {
-    const enPendiente = await cocina.evaluate(() => document.getElementById('count-pendiente').textContent);
-    console.log('3. comanda visible en columna PENDIENTE:', enPendiente >= '1' ? '✅ ('+enPendiente+')' : '❌ ('+enPendiente+')');
+    // id de la comanda más nueva (la de mayor createdAt)
+    const cid = await cocina.evaluate(() => {
+      const c = [...comandas].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+      return c ? c.id : null;
+    });
+    const estadoDe = () => cocina.evaluate((id) => comandas.find(c => String(c.id) === String(id))?.estado, cid);
+    // ¿está en el DOM de la columna pendiente?
+    const enColPend = await cocina.evaluate((id) => !!document.querySelector(`#body-pendiente #comanda-${id}, #body-pendiente [id*="${id}"]`), cid);
+    console.log('3. comanda visible en columna PENDIENTE:', (await estadoDe()) === 'pendiente' && enColPend ? '✅' : `❌ (estado ${await estadoDe()})`);
 
-    // cocina avanza estado: pendiente → preparacion (estado válido real)
-    await cocina.evaluate(() => { const c = comandas[0]; if (c) cambiarEstado(c.id, 'preparacion'); });
-    await cocina.waitForTimeout(1500);
-    const enPrep = await cocina.evaluate(() => document.getElementById('count-preparacion').textContent);
-    const pendVacio = await cocina.evaluate(() => document.getElementById('count-pendiente').textContent);
-    console.log('4. comanda movida a EN PREPARACIÓN:', enPrep >= '1' && pendVacio === '0' ? '✅' : `❌ (prep ${enPrep}, pend ${pendVacio})`);
+    // avanzar ESA comanda: pendiente → preparacion
+    await cocina.evaluate((id) => cambiarEstado(id, 'preparacion'), cid);
+    await cocina.waitForTimeout(1200);
+    const enColPrep = await cocina.evaluate((id) => !!document.querySelector(`#body-preparacion [id*="${id}"]`), cid);
+    console.log('4. comanda movida a EN PREPARACIÓN:', (await estadoDe()) === 'preparacion' && enColPrep ? '✅' : `❌ (estado ${await estadoDe()})`);
 
     // avanzar a listo
-    await cocina.evaluate(() => { const c = comandas[0]; if (c) cambiarEstado(c.id, 'listo'); });
-    await cocina.waitForTimeout(1200);
-    const enListo = await cocina.evaluate(() => document.getElementById('count-listo').textContent);
-    console.log('5. comanda movida a LISTO:', enListo >= '1' ? '✅' : `❌ (${enListo})`);
+    await cocina.evaluate((id) => cambiarEstado(id, 'listo'), cid);
+    await cocina.waitForTimeout(1000);
+    const enColListo = await cocina.evaluate((id) => !!document.querySelector(`#body-listo [id*="${id}"]`), cid);
+    console.log('5. comanda movida a LISTO:', (await estadoDe()) === 'listo' && enColListo ? '✅' : `❌ (estado ${await estadoDe()})`);
   }
 
   // crear comanda directa de mesa también
